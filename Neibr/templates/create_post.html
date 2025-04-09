@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="create-card">
+  <h1>创建新帖子</h1>
+  <form method="POST" enctype="multipart/form-data">
+    <!-- 编辑标题 -->
+    <div class="form-group">
+      <label for="title">标题</label>
+      <input type="text" id="title" name="title" class="form-control" required>
+    </div>
+
+    <!-- 编辑标签 -->
+    <div class="form-group">
+      <label for="tags">标签</label>
+      <input type="text" id="tags" name="tags" class="form-control">
+    </div>
+
+    <!-- 编辑文案 -->
+    <div class="form-group">
+      <label for="post_text">文案</label>
+      <textarea id="post_text" name="post_text" class="form-control" rows="6" required></textarea>
+    </div>
+
+    <!-- 上传媒体文件 -->
+    <div class="form-group">
+      <label for="files">上传媒体文件</label>
+      <input type="file" id="files" name="files" class="form-control-file" multiple>
+    </div>
+
+    <!-- 隐藏设置 -->
+    <div class="form-group hidden-checkbox">
+      <label>
+        <input type="checkbox" name="is_hidden">
+        隐藏（仅自己可见）
+      </label>
+    </div>
+
+    <!-- 提交按钮 -->
+    <div class="form-group button-group">
+      <button type="submit" class="btn btn-primary">发布帖子</button>
+    </div>
+  </form>
+</div>
+
+
+<style>
+  /* 卡片容器 */
+  .create-card {
+    background-color: var(--card-bg-color);
+    border: 1px solid var(--card-border-color);
+    border-radius: 12px;
+    padding: 20px 30px;
+    max-width: 800px;
+    margin: 40px auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  .create-card h1 {
+    font-size: 1.8rem;
+    color: var(--text-color);
+    margin-bottom: 25px;
+    text-align: center;
+  }
+  /* 表单组 */
+  .form-group {
+    margin-bottom: 20px;
+  }
+  .form-group label {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 8px;
+    color: var(--text-color);
+  }
+  .form-control {
+    width: 100%;
+    padding: 10px 15px;
+    font-size: 1rem;
+    border: 1px solid var(--card-border-color);
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.3s;
+    background-color: var(--card-bg-color);
+    color: var(--text-color);
+  }
+  .form-control:focus {
+    border-color: #ff4d67;
+  }
+  .form-control-file {
+    padding: 5px 0;
+  }
+  /* 隐藏复选框 */
+  .hidden-checkbox {
+    display: flex;
+    align-items: center;
+  }
+  .hidden-checkbox input[type="checkbox"] {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+  }
+  /* 按钮组 */
+  .button-group {
+    text-align: center;
+  }
+  .btn {
+    padding: 10px 20px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    text-decoration: none;
+    display: inline-block;
+    color: #fff;
+  }
+  .btn-primary {
+    background-color: #ff4d67;
+  }
+  .btn-primary:hover {
+    background-color: #e8435f;
+  }
+</style>
+{% endblock %}

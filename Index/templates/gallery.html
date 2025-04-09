@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="gallery">
+  <h1>{{ title }}</h1>
+  <div class="gallery-container" id="gallery-container">
+    {% if media_type == "image" %}
+      {% for image in images %}
+        <div class="gallery-item">
+          <div class="img-container">
+            <img src="{{ url_for('static', filename='gallery/' ~ folder ~ '/' ~ image) }}" 
+                 alt="{{ image }}" loading="lazy" 
+                 onclick="openModal(this.src, '{{ image }}')">
+            <div class="caption-overlay">{{ image }}</div>
+          </div>
+        </div>
+      {% else %}
+        <p style="text-align: center; color: var(--text-color);">当前没有可展示的图片。</p>
+      {% endfor %}
+      <!-- 用于触发加载更多的观察器 -->
+      <div id="load-more"></div>
+    {% elif media_type == "audio" %}
+      {% for audio in audios %}
+        <div class="gallery-item">
+          <div class="img-container">
+            <img src="https://img.icons8.com/color/100/000000/audio-file.png" 
+                 alt="{{ audio }}" loading="lazy">
+            <div class="caption-overlay">{{ audio }}</div>
+          </div>
+          <audio controls>
+            <source src="{{ url_for('static', filename='gallery/' ~ folder ~ '/' ~ audio) }}">
+            您的浏览器不支持 audio 元素。
+          </audio>
+        </div>
+      {% else %}
+        <p style="text-align: center; color: var(--text-color);">当前没有可展示的音频。</p>
+      {% endfor %}
+    {% elif media_type == "ebook" %}
+      {% for ebook in books %}
+        <div class="gallery-item">
+          <div class="img-container">
+            <a href="{{ url_for('static', filename='gallery/' ~ folder ~ '/' ~ ebook) }}" target="_blank" rel="noopener noreferrer" download="{{ ebook }}">
+              <img src="{{ url_for('static', filename='gallery/' ~ folder ~ '/' ~ ebook) }}"
+                   alt="{{ ebook }}" loading="lazy">
+            </a>
+            <div class="caption-overlay">{{ ebook }}</div>
+          </div>
+        </div>
+      {% else %}
+        <p style="text-align: center; color: var(--text-color);">当前没有可展示的电子书。</p>
+      {% endfor %}
+    {% endif %}
+  </div>
+</div>
+
+{% if media_type == "image" %}
+<!-- 模态框，仅用于图片全屏显示 -->
+<div id="imageModal" class="modal" onclick="closeModal()">
+  <span class="close" onclick="closeModal()">&times;</span>
+  <img class="modal-content" id="modalImage">
+  <div id="modalCaption"></div>
+</div>
+{% endif %}
+
+<style>
+  .gallery {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  .gallery h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--text-color);
+  }
+  /* Masonry 布局 */
+  .gallery-container {
+    column-count: 4;
+    column-gap: 15px;
+  }
+  /* 针对平板及手机的响应式设置 */
+  @media (max-width: 768px) {
+    .gallery-container {
+      column-count: 2;
+    }
+  }
+  @media (max-width: 480px) {
+    .gallery-container {
+      column-count: 1;
+    }
+  }
+  .gallery-item {
+    break-inside: avoid;
+    margin-bottom: 15px;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid var(--card-border-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: transform 0.3s;
+  }
+  .gallery-item:hover {
+    transform: scale(1.02);
+  }
+  .img-container {
+    position: relative;
+  }
+  .gallery-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+  }
+  /* 图片悬停时显示半透明名称 */
+  .caption-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    opacity: 0;
+    transition: opacity 0.3s;
+    padding: 5px;
+    font-size: 0.8rem;
+    text-align: center;
+  }
+  .img-container:hover .caption-overlay {
+    opacity: 1;
+  }
+  /* 其他媒体（音频、电子书）样式 */
+  .gallery-item audio {
+    width: 100%;
+    margin-top: 5px;
+  }
+  /* 模态框样式 */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    padding-top: 60px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.9);
+  }
+  .modal-content {
+    margin: auto;
+    display: block;
+    max-width: 90%;
+    max-height: 80%;
+  }
+  #modalCaption {
+    margin: auto;
+    display: block;
+    text-align: center;
+    color: #ccc;
+    padding: 10px 0;
+  }
+  .close {
+    position: absolute;
+    top: 30px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  .close:hover {
+    color: #bbb;
+  }
+  /* load-more 占位区域 */
+  #load-more {
+    width: 100%;
+    height: 50px;
+  }
+</style>
+{% endblock %}
+
+{% block script %}
+{% if media_type == "image" %}
+<script>
+  function openModal(src, caption) {
+    var modal = document.getElementById("imageModal");
+    var modalImg = document.getElementById("modalImage");
+    var modalCaption = document.getElementById("modalCaption");
+    modal.style.display = "block";
+    modalImg.src = src;
+    modalCaption.innerText = caption;
+  }
+  function closeModal() {
+    var modal = document.getElementById("imageModal");
+    modal.style.display = "none";
+  }
+
+  // 无限滚动加载：每次加载 12 张图片
+  (function() {
+    let offset = {{ images|length }};
+    const folder = "{{ folder }}";
+    let loading = false;
+    const loadMoreEl = document.getElementById('load-more');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !loading) {
+          loading = true;
+          fetch(`/gallery/load_more?folder=${encodeURIComponent(folder)}&offset=${offset}`)
+            .then(response => response.json())
+            .then(data => {
+              if (data.images && data.images.length > 0) {
+                const container = document.getElementById('gallery-container');
+                data.images.forEach(image => {
+                  const item = document.createElement('div');
+                  item.className = 'gallery-item';
+                  
+                  const imgContainer = document.createElement('div');
+                  imgContainer.className = 'img-container';
+                  
+                  const img = document.createElement('img');
+                  img.src = `/static/gallery/${folder}/${image}`;
+                  img.alt = image;
+                  img.loading = 'lazy';
+                  img.onclick = function() { openModal(this.src, image); };
+                  
+                  imgContainer.appendChild(img);
+                  
+                  const caption = document.createElement('div');
+                  caption.className = 'caption-overlay';
+                  caption.textContent = image;
+                  imgContainer.appendChild(caption);
+                  
+                  item.appendChild(imgContainer);
+                  container.insertBefore(item, loadMoreEl);
+                });
+                offset += data.images.length;
+              }
+              loading = false;
+            })
+            .catch(error => {
+              console.error('加载图片出错：', error);
+              loading = false;
+            });
+        }
+      });
+    });
+    observer.observe(loadMoreEl);
+  })();
+</script>
+{% endif %}
+{% endblock %}

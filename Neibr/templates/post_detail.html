@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+  <div class="title">{{ post.title }}</div>
+
+  <div class="tags">
+    {% for tag in post.tags.split(',') %}
+      <span>{{ tag.strip() }}</span>
+    {% endfor %}
+  </div>
+
+  <div class="content-text">{{ post_text }}</div>
+
+  <h3 class="media-title">多媒体文件</h3>
+  <div class="media-container">
+    {% for file in media_files %}
+      {% if file.endswith(('.jpg', '.png', '.gif', '.NEF', '.jpeg', 'gif')) %}
+        <div class="thumbnail-box">
+          <img 
+            src="{{ url_for('static', filename='neibr/' + post.user_id|string + '/' + post.id|string + '/' + file) }}" 
+            onclick="showFullImage(this.src)"
+            alt="image">
+        </div>
+      {% elif file.endswith(('.mp4', '.webm', '.MOV', '.mov')) %}
+        <video controls>
+          <source src="{{ url_for('static', filename='neibr/' + post.user_id|string + '/' + post.id|string + '/' + file) }}" type="video/mp4">
+        </video>
+      {% elif file.endswith(('.mp3', '.wav')) %}
+        <audio controls>
+          <source src="{{ url_for('static', filename='neibr/' + post.user_id|string + '/' + post.id|string + '/' + file) }}" type="audio/mpeg">
+        </audio>
+      {% endif %}
+    {% endfor %}
+  </div>
+  
+  
+
+  <div class="nav-links">
+    {% if previous_post %}
+      <a href="{{ url_for('neibr.post_detail', post_id=previous_post.id) }}">← 上一条</a>
+    {% else %}
+      <div></div>
+    {% endif %}
+
+    <a href="javascript:void(0);" onclick="toggleCommentBox()">评论</a>
+
+    {% if next_post %}
+      <a href="{{ url_for('neibr.post_detail', post_id=next_post.id) }}">下一条 →</a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- 评论区 -->
+<div class="card">
+  <h3>评论</h3>
+  {% if comments %}
+    {% for comment in comments %}
+      <div class="comment">
+        <p><strong>{{ comment.username }}</strong> 于 {{ comment.timestamp }} 说：</p>
+        <p>{{ comment.content }}</p>
+        <hr>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>还没有评论，快来抢沙发吧！</p>
+  {% endif %}
+</div>
+
+<!-- 图片放大预览 -->
+<div id="image-preview-overlay" onclick="closeImagePreview()">
+  <img id="image-preview" src="">
+</div>
+
+<style>
+
+.posts-container .card {
+  background: var(--quick-card-bg);
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  padding: 15px 20px;
+  margin-bottom: 15px;
+}
+.posts-container .card h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  color: #333;
+}
+.posts-container .card .tags {
+  margin-bottom: 10px;
+}
+.posts-container .card .tags span {
+  display: inline-block;
+  background: var(--quick-card-bg);
+  color: #ff2442;
+  border-radius: 16px;
+  padding: 3px 8px;
+  font-size: 12px;
+  margin-right: 4px;
+}
+.posts-container .card a {
+  text-decoration: none;
+  color: #ff2442;
+  transition: color 0.3s;
+}
+.posts-container .card a:hover {
+  color: #d81e36;
+}
+
+
+.card {
+  max-width: 700px;
+  margin: 20px auto;
+  padding: 25px;
+  background: var(--quick-card-bg);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, 'PingFang SC', 'Noto Sans SC', sans-serif;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.tags span {
+  display: inline-block;
+  background: var(--quick-card-bg);
+  color: #ff2442;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 12px;
+  margin-right: 6px;
+  margin-bottom: 6px;
+}
+
+.content-text {
+  font-size: 15px;
+  color: #444;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  margin-bottom: 20px;
+}
+
+.thumbnail-box {
+  width: 150px;
+  height: 150px;
+  overflow: hidden;
+  display: inline-block;
+  margin: 5px;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.thumbnail-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.2s ease-in-out;
+}
+
+.thumbnail-box:hover img {
+  transform: scale(1.1);
+}
+
+#image-preview-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.8);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+#image-preview-overlay img {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+#image-preview-overlay::after {
+  content: "点击任意位置关闭";
+  position: absolute;
+  bottom: 20px;
+  color: #fff;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+
+.media-container img,
+.media-container video,
+.media-container audio {
+  max-width: 100%;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.media-title {
+  margin-top: 30px;
+  margin-bottom: 15px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid #582121;
+  color: #555;
+}
+
+.nav-links {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 25px;
+  padding-top: 15px;
+  border-top: 1px solid #602b2b;
+}
+.nav-links a {
+  text-decoration: none;
+  color: #ff2442;
+  transition: color 0.3s;
+}
+.nav-links a:hover {
+  color: #d81e36;
+}
+
+.comment-box {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--quick-card-bg);
+  border: 1px solid #692727;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  width: 80%;
+  max-width: 500px;
+}
+.comment-box textarea {
+  width: 100%;
+  height: 100px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #672626;
+  border-radius: 5px;
+  resize: none;
+}
+.comment-box .submit-comment,
+.comment-box .close-comment {
+  background-color: #ff2442;
+  color: var(--card-bg-color);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: background-color 0.3s, transform 0.3s;
+}
+.comment-box .submit-comment:hover,
+.comment-box .close-comment:hover {
+  background-color: #d81e36;
+  transform: scale(1.05);
+}
+
+.comment {
+  margin-bottom: 15px;
+  padding: 15px;
+  background: var(--quick-card-bg);
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+.comment p {
+  margin: 5px 0;
+  color: #333;
+  font-size: 14px;
+}
+.comment strong {
+  color: #ff2442;
+  font-weight: bold;
+}
+.comment hr {
+  border: none;
+  border-top: 1px solid #712626;
+  margin: 10px 0;
+}
+.comment h3 {
+  font-size: 18px;
+  color: #444;
+  margin-bottom: 10px;
+}
+</style>
+
+<!-- 评论提交弹窗 -->
+<div id="comment-box" class="comment-box" style="display: none;">
+  <form method="POST">
+    <textarea name="comment" class="form-control" rows="4" placeholder="在这里输入你的评论..." required></textarea>
+    <button type="submit" class="submit-comment">提交</button>
+    <button type="button" class="close-comment" onclick="toggleCommentBox()">关闭</button>
+  </form>
+</div>
+<script>
+  function showFullImage(src) {
+  const previewOverlay = document.getElementById('image-preview-overlay');
+  const previewImage = document.getElementById('image-preview');
+
+  previewImage.src = src;
+  previewOverlay.style.display = 'flex';
+}
+
+function closeImagePreview() {
+  document.getElementById('image-preview-overlay').style.display = 'none';
+}
+
+  function toggleCommentBox() {
+    const commentBox = document.getElementById('comment-box');
+    if (commentBox.style.display === 'none' || commentBox.style.display === '') {
+      commentBox.style.display = 'block';
+    } else {
+      commentBox.style.display = 'none';
+    }
+  }
+</script>
+
+{% endblock %}
+
+

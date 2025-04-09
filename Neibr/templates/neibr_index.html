@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container">
+  <div class="header">
+    <h1>Neighbor</h1>
+    <p>欢迎来到Neighbor，这里是一个邻里社区，你可以在这里发布帖子，与邻居们交流。</p>
+    <p>标签筛选和大群聊天功能敬请期待</p>
+  </div>
+
+  <div class="user-auth">
+    {% if current_user.is_authenticated %}
+      <span>👋 欢迎你，{{ current_user.username }}！</span>
+    {% else %}
+      <a href="{{ url_for('neibr.login') }}">登录 / 注册</a>
+    {% endif %}
+  </div>
+
+  {% if current_user.is_authenticated %}
+  <div class="create-post">
+    <a href="{{ url_for('neibr.create_post') }}">创建新帖子</a>
+  </div>
+  {% endif %}
+
+  <div class="toggle-buttons">
+    <button id="btn-latest" class="active">最新帖子</button>
+    <button id="btn-random">随机帖子</button>
+    <button id="btn-my-posts">我的帖子</button>
+  </div>
+
+  <div id="latest-posts" class="posts-container">
+    {% for post in latest_posts %}
+      <div class="card">
+        <h3>{{ post.title }}</h3>
+        <div class="tags">
+          {% for tag in post.tags.split(',') %}
+            <span>{{ tag.strip() }}</span>
+          {% endfor %}
+        </div>
+        <a href="{{ url_for('neibr.post_detail', post_id=post.id) }}">查看详情 →</a>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div id="random-posts" class="posts-container" style="display:none;">
+    {% for post in random_posts %}
+      <div class="card">
+        <h3>{{ post.title }}</h3>
+        <div class="tags">
+          {% for tag in post.tags.split(',') %}
+            <span>{{ tag.strip() }}</span>
+          {% endfor %}
+        </div>
+        <a href="{{ url_for('neibr.post_detail', post_id=post.id) }}">查看详情 →</a>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div id="my-posts" class="posts-container" style="display:none;">
+    {% for post in my_posts %}
+    <div class="card">
+        <h3>{{ post.title }}</h3>
+        <div class="tags">
+            {% for tag in post.tags.split(',') %}
+            <span>{{ tag.strip() }}</span>
+            {% endfor %}
+        </div>
+        <a href="{{ url_for('neibr.edit_post', post_id=post.id) }}">编辑帖子 →</a>
+    </div>
+    {% else %}
+    <p>你还没有发布任何帖子。</p>
+    {% endfor %}
+</div>
+
+
+<style>
+.card {
+  max-width: 700px;
+  margin: 20px auto;
+  padding: 25px;
+  background: var(--card-bg-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, 'PingFang SC', 'Noto Sans SC', sans-serif;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+.form-group label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 8px;
+}
+.form-control {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+.form-control-file {
+  margin-top: 10px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.3s; /* 添加缩放过渡 */
+}
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+.btn-primary:hover {
+  background-color: #0056b3;
+  transform: scale(1.05); /* 悬停时缩放 */
+}
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+.btn-secondary:hover {
+  background-color: #5a6268;
+  transform: scale(1.05); /* 悬停时缩放 */
+}
+
+.media-container img,
+.media-container video,
+.media-container audio {
+  max-width: 100%;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* 添加统一阴影 */
+}
+
+.container {
+  max-width: 800px;
+  margin: 30px auto;
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Noto Sans SC', sans-serif;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.header h1 {
+  color: #333;
+}
+.header p {
+  color: #666;
+}
+
+.create-post,
+.user-auth {
+  text-align: center;
+  margin-bottom: 25px;
+}
+.create-post a,
+.user-auth a,
+.user-auth button {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #ff2442;
+  color: #fff;
+  text-decoration: none;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.3s;
+}
+.create-post a:hover,
+.user-auth a:hover,
+.user-auth button:hover {
+  background-color: #d81e36;
+  transform: scale(1.05);
+}
+.toggle-buttons {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .toggle-buttons button {
+    padding: 6px 14px;
+    margin: 0 8px;
+    border: none;
+    background-color: #ffe4e9;
+    color: #ff2442;
+    border-radius: 18px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .toggle-buttons button.active,
+  .toggle-buttons button:hover {
+    background-color: #ff2442;
+    color: #fff;
+  }
+</style>
+
+
+
+
+<script>
+    const btnLatest = document.getElementById('btn-latest');
+    const btnRandom = document.getElementById('btn-random');
+    const btnMyPosts = document.getElementById('btn-my-posts');
+    const latestPosts = document.getElementById('latest-posts');
+    const randomPosts = document.getElementById('random-posts');
+    const myPosts = document.getElementById('my-posts');
+
+    btnLatest.onclick = () => {
+        latestPosts.style.display = 'block';
+        randomPosts.style.display = 'none';
+        myPosts.style.display = 'none';
+        btnLatest.classList.add('active');
+        btnRandom.classList.remove('active');
+        btnMyPosts.classList.remove('active');
+    };
+
+    btnRandom.onclick = () => {
+        randomPosts.style.display = 'block';
+        latestPosts.style.display = 'none';
+        myPosts.style.display = 'none';
+        btnRandom.classList.add('active');
+        btnLatest.classList.remove('active');
+        btnMyPosts.classList.remove('active');
+    };
+
+    btnMyPosts.onclick = () => {
+        myPosts.style.display = 'block';
+        latestPosts.style.display = 'none';
+        randomPosts.style.display = 'none';
+        btnMyPosts.classList.add('active');
+        btnLatest.classList.remove('active');
+        btnRandom.classList.remove('active');
+    };
+</script>
+{% endblock %}

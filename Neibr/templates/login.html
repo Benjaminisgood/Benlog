@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card login-card">
+  <h1>登录</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        {% if category == 'login' %}
+          <p class="flash-message {{ category }}">{{ message }}</p>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  <form method="POST">
+    <div class="form-group">
+      <label for="email">邮箱:</label>
+      <input type="email" name="email" id="email" class="form-control" required>
+    </div>
+    <div class="form-group">
+      <label for="password">密码:</label>
+      <input type="password" name="password" id="password" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-primary">登录</button>
+  </form>
+  <p class="register-link">没有账户？ <a href="{{ url_for('neibr.register') }}">注册</a></p>
+</div>
+
+
+
+<style>
+  /* 登录卡片样式 */
+  .login-card {
+    max-width: 400px;
+    margin: 60px auto;
+    padding: 30px;
+    border-radius: 12px;
+    background-color: var(--card-bg-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  .login-card h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--text-color);
+    font-size: 2rem;
+  }
+  /* 表单组 */
+  .form-group {
+    margin-bottom: 20px;
+  }
+  .form-group label {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 8px;
+    color: var(--text-color);
+  }
+  .form-control {
+    width: 100%;
+    padding: 10px 15px;
+    font-size: 1rem;
+    border: 1px solid var(--card-border-color);
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.3s;
+    background-color: var(--card-bg-color);
+    color: var(--text-color);
+  }
+  .form-control:focus {
+    border-color: #ff4d67;
+  }
+  /* 按钮 */
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 8px;
+    background-color: #ff4d67;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  .btn:hover {
+    background-color: #e8435f;
+  }
+  /* 注册链接 */
+  .register-link {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 0.9rem;
+    color: var(--text-color);
+  }
+  .register-link a {
+    color: var(--link-color);
+    text-decoration: none;
+  }
+  .register-link a:hover {
+    text-decoration: underline;
+  }
+  /* 响应式 */
+  @media (max-width: 768px) {
+    .login-card {
+      margin: 40px auto;
+      padding: 20px;
+    }
+  }
+</style>
+{% endblock %}

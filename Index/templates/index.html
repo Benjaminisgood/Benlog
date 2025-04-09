@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="center-content">
+    <h1>Welcome to My Personal Site</h1>
+    <p>欢迎来逛逛啊，下面的快速卡片内容（index模块小组件）自由修改哦</p>
+    <p>blog模块是一些生活和工作的记录和思考，edu模块顾名思义就是学习和科研方面。如果你也想要编辑，就像wiki那样一起共享和编辑知识库文档，只需要获取认证密钥（默认0715）即可。欢迎大家在neibr模块注册登陆，那里是一个网上邻里社区，每个人都可以在里面发帖讨论。</p>
+  </div>
+
+  <div class="search-bar">
+    <form action="{{ url_for('index.llm_query') }}" method="post">
+      <input type="text" name="query" placeholder="支持 LLM 聊天和站内搜索..." required>
+    </form>
+  </div>
+  
+  
+  <div class="quick-links">
+    <a href="/resume" class="quick-card">
+      <img src="https://img.icons8.com/color/100/000000/resume.png" alt="Resume" class="quick-icon">
+      <span class="quick-label">个人求职简历</span>
+    </a>
+    <a href="http://benjaling.icu:9999/files/" class="quick-card">
+      <img src="https://img.icons8.com/color/100/000000/cloud.png" alt="Cloud" class="quick-icon">
+      <span class="quick-label">我的个人网盘</span>
+    </a>
+    <a href="https://www.icloud.com/shortcuts/b8273812a958416a98c0f37fce1014f7" class="quick-card">
+      <img src="https://img.icons8.com/color/100/000000/command.png" alt="Shortcut" class="quick-icon">
+      <span class="quick-label">我的快捷指令</span>
+    </a>
+    <a href="/gallery" class="quick-card">
+      <img src="https://img.icons8.com/color/100/000000/camera.png" alt="Gallery" class="quick-icon">
+      <span class="quick-label">看我的摄影展</span>
+    </a>
+    <a href="/llm" class="quick-card">
+      <img src="https://img.icons8.com/color/100/000000/artificial-intelligence.png" alt="AI Assistant" class="quick-icon">
+      <span class="quick-label">用我的AI助理</span>
+    </a>
+    <a href="webcal://p208-caldav.icloud.com.cn/published/2/MjAzNTY4MjU0NDcyMDM1NlID9qEPDRxN3L5lZTj8_4F3LyTrp0GsBk46fuO6aCfeskAyU7kWXmun6O7I_P62yBPt-8B_G9sQMr26zsovY7k" class="quick-card">
+      <img src="https://img.icons8.com/color/100/000000/calendar.png" alt="Calendar" class="quick-icon">
+      <span class="quick-label">订阅我的日历</span>
+    </a>
+    <a href="http://benjaling.icu:8096" class="quick-card">
+      <img src="https://img.icons8.com/color/100/000000/video.png" alt="Video" class="quick-icon">
+      <span class="quick-label">我的视频网站</span>
+    </a>
+    <a href="/lezhi" class="quick-card">
+      <img src="https://img.icons8.com/color/100/000000/ghost.png" alt="Ghost" class="quick-icon">
+      <span class="quick-label">乐志计划网站</span>
+    </a>
+    <a href="/message_board" class="quick-card">
+      <img src="https://img.icons8.com/color/100/000000/comments.png" alt="Message Board" class="quick-icon">
+      <span class="quick-label">我的留言板板</span>
+    </a>
+    <a href="/survey" class="quick-card">
+      <img src="https://img.icons8.com/color/100/000000/survey.png" alt="Survey" class="quick-icon">
+      <span class="quick-label">一些问卷调查</span>
+    </a>
+    <a href="/darwin_album" class="quick-card">
+      <img src="https://img.icons8.com/color/100/000000/cat.png" alt="Cat Album" class="quick-icon">
+      <span class="quick-label">达尔文的专属相册</span>
+    </a>
+    <a href="/interest" class="quick-card">
+      <img src="https://img.icons8.com/color/100/000000/idea.png" alt="Interest" class="quick-icon">
+      <span class="quick-label">兴趣爱好预约入口</span>
+    </a>
+    <a href="/aboutme" class="quick-card">
+      <img src="https://img.icons8.com/color/100/000000/source-code.png" alt="Source Code" class="quick-icon">
+      <span class="quick-label">我个人网站源代码</span>
+    </a>
+    <a href="/study" class="quick-card">
+      <img src="https://img.icons8.com/color/100/000000/share.png" alt="Resource Sharing" class="quick-icon">
+      <span class="quick-label">课题方向长期更新</span>
+    </a>
+    <a href="/store" class="quick-card">
+      <img src="https://img.icons8.com/color/100/000000/shopping-cart.png" alt="Store" class="quick-icon">
+      <span class="quick-label">逛逛我的个人网店</span>
+    </a>
+
+    <a href="/consultation" class="quick-card">
+      <img src="https://img.icons8.com/color/100/000000/consultation.png" alt="Consultation" class="quick-icon">
+      <span class="quick-label">咨询服务预约入口</span>
+    </a>
+    <a href="/aboutme" class="quick-card">
+      <img src="https://img.icons8.com/color/100/000000/user.png" alt="Intro" class="quick-icon">
+      <span class="quick-label">轻松自我介绍</span>
+    </a>
+    <a href="/pdf_translate" class="quick-card">
+      <img src="https://img.icons8.com/color/100/000000/pdf.png" alt="PDF Tool" class="quick-icon">
+      <span class="quick-label">用文档翻译官</span>
+    </a>
+    <a href="/audios" class="quick-card">
+      <img src="https://img.icons8.com/color/100/000000/guitar.png" alt="Guitar" class="quick-icon">
+      <span class="quick-label">音乐弹唱作品</span>
+    </a>
+    <a href="/paintings" class="quick-card">
+      <img src="https://img.icons8.com/color/100/000000/paint-palette.png" alt="Paintings" class="quick-icon">
+      <span class="quick-label">艺术绘画作品</span>
+    </a>
+    <a href="/ebooks" class="quick-card">
+      <img src="https://img.icons8.com/color/100/000000/books.png" alt="Ebooks" class="quick-icon">
+      <span class="quick-label">电子书籍资源</span>
+    </a>
+  </div>
+  
+  <p class="friend-links">
+    友情链接：
+    <a href="https://www.pseudoyu.com/posts" target="_blank">pseudoyu</a> |
+    <a href="https:apple.com" target="_blank">apple</a> |
+    <a href="https://cn.bing.com" target="_blank">biying</a>
+  </p>
+
+
+<style>
+  .search-bar {
+  max-width: 600px;
+  margin: 40px auto 20px;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  border-radius: 12px;
+  background: var(--quick-card-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--card-border-color);
+}
+
+/* 输入框 */
+  .search-bar input[type="text"] {
+  flex: 1;
+  padding: 10px;
+  font-size: 1rem;
+  border: none;
+  background-color: transparent;
+  color: var(--text-color);
+  outline: none;
+  }
+
+  .search-bar input[type="text"]::placeholder {
+    color: var(--meta-text-color);
+  }
+
+
+
+  .center-content {
+    text-align: center;
+    margin-top: 50px;
+  }
+  .quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+  padding: 40px;
+  margin-top: 20px;
+}
+
+.quick-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 150px;
+  text-decoration: none;
+  background: var(--quick-card-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(200, 200, 200, 0.4);
+  border-radius: 16px;
+  padding: 20px 15px;
+  transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.quick-card:hover {
+  background: var(--quick-card-hover-bg);
+  transform: translateY(-5px) scale(1.08);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.quick-icon {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.quick-label {
+  font-size: 1.1rem;
+  color: var(--quick-label-color);
+  font-weight: 500;
+}
+
+.center-content {
+  text-align: center;
+  margin: 0 auto;
+  padding: 20px;
+}
+.friend-links {
+  text-align: center;
+  margin: 20px auto;
+  font-size: 16px;
+  line-height: 1.5;
+}
+</style>
+<script>
+  // JavaScript for any additional functionality can be added here
+</script>
+
+{% endblock %}

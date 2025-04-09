@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>Education Notes</h1>
+  <button id="new-post-button">新建文档</button>
+
+  <ul class="post-list">
+    {% for note in notes %}
+      <li>
+        <div class="post-card">
+          <a href="{{ url_for('edu.show_note', slug=note.slug) }}">
+            <h3>{{ note.slug }}</h3>
+          </a>
+          <p class="post-meta">
+            <!-- 点击时间信息将触发编辑认证模态窗口 -->
+            <a href="#" class="edit-link" data-edit-url="{{ url_for('edu.edit_auth', slug=note.slug) }}">
+              Last Modified: {{ note.last_modified.strftime("%Y-%m-%d %H:%M:%S") }}
+            </a>
+          </p>
+        </div>
+      </li>
+    {% endfor %}
+    {% if notes|length == 0 %}
+      <p><em>No notes available.</em></p>
+    {% endif %}
+  </ul>
+
+  <!-- 新建文档密码输入模态窗口 -->
+  <div id="new-doc-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="new-doc-close">&times;</span>
+      <h2>请输入认证密码</h2>
+      <form id="new-doc-form" method="POST" action="{{ url_for('edu.new_note') }}">
+        <label for="password">认证密码:</label>
+        <input type="password" name="password" id="new-password" required>
+        <input type="submit" value="创建新文档">
+      </form>
+    </div>
+  </div>
+
+  <!-- 编辑文档密码认证模态窗口 -->
+  <div id="edit-auth-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="edit-auth-close">&times;</span>
+      <h2>请输入认证密码以编辑文档</h2>
+      <form id="edit-auth-form" method="POST" action="">
+        <label for="edit-password">认证密码:</label>
+        <input type="password" name="password" id="edit-password" required>
+        <input type="submit" value="确认编辑">
+      </form>
+    </div>
+  </div>
+
+  <style>
+    /* 按钮样式 */
+    #new-post-button {
+      background-color: var(--link-color, #007bff);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1em;
+      border-radius: 5px;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: background-color 0.2s, transform 0.2s;
+      margin-bottom: 20px;
+    }
+    #new-post-button:hover {
+      background-color: #0056b3;
+      transform: translateY(-2px);
+    }
+    
+    /* 列表与卡片 */
+    .post-list {
+      list-style: none;
+      padding: 0;
+    }
+    .post-list li {
+      margin: 0.5em 0;
+    }
+    .post-card {
+      background: var(--card-bg-color, #fff);
+      border: 1px solid var(--card-border-color, #ddd);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 12px 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .post-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    .post-list li a {
+      color: var(--link-color, #007bff);
+      text-decoration: none;
+    }
+    .post-list li a:hover {
+      text-decoration: underline;
+    }
+    .post-meta {
+      color: var(--meta-text-color, #555);
+      font-size: 0.9em;
+      margin-top: 8px;
+    }
+    .edit-link {
+      color: inherit;
+      border-bottom: 1px dotted transparent;
+      transition: border-bottom 0.2s;
+    }
+    .edit-link:hover {
+      border-bottom: 1px dotted currentColor;
+    }
+    
+    /* 模态框样式 */
+    .modal {
+      display: none; /* 初始隐藏 */
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.6);
+      z-index: 1000;
+      /* 使用 Flex 居中 */
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      width: 320px;
+      position: relative;
+      text-align: center;
+    }
+    .close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      color: #aaa;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .modal-content form {
+      margin-top: 20px;
+    }
+    .modal-content label {
+      display: block;
+      font-size: 0.9em;
+      margin-bottom: 8px;
+      text-align: left;
+    }
+    .modal-content input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      box-sizing: border-box;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .modal-content input[type="submit"] {
+      background-color: var(--link-color, #007bff);
+      color: #fff;
+      border: none;
+      width: 100%;
+      padding: 10px;
+      font-size: 1em;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.2s;
+    }
+    .modal-content input[type="submit"]:hover {
+      background-color: #0056b3;
+      transform: translateY(-2px);
+    }
+  </style>
+
+  <script>
+    // 新建文档模态框事件
+    document.getElementById("new-post-button").addEventListener("click", function(){
+      document.getElementById("new-doc-modal").style.display = "flex";
+    });
+    document.getElementById("new-doc-close").addEventListener("click", function(){
+      document.getElementById("new-doc-modal").style.display = "none";
+    });
+    window.addEventListener("click", function(event) {
+      var modal = document.getElementById("new-doc-modal");
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    });
+
+    // 编辑文档认证模态框事件
+    document.querySelectorAll('.edit-link').forEach(function(link) {
+      link.addEventListener("click", function(e){
+        e.preventDefault();
+        var editUrl = this.dataset.editUrl;  // 获取后端编辑认证的 URL
+        var form = document.getElementById("edit-auth-form");
+        form.action = editUrl;
+        document.getElementById("edit-auth-modal").style.display = "flex";
+      });
+    });
+    document.getElementById("edit-auth-close").addEventListener("click", function(){
+      document.getElementById("edit-auth-modal").style.display = "none";
+    });
+    window.addEventListener("click", function(event) {
+      var modal = document.getElementById("edit-auth-modal");
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    });
+  </script>
+{% endblock %}

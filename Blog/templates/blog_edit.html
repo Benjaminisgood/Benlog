@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>编辑文章</h1>
+  <form method="POST" class="edit-form">
+    <label for="new_slug">文档名称 (重命名)：</label>
+    <input type="text" name="new_slug" id="new_slug" value="{{ slug }}" required>
+    <br><br>
+    <textarea name="content" placeholder="在此处编辑文章内容..." cols="80" rows="20" required>{{ content }}</textarea>
+    <input type="submit" value="保存">
+    <input type="submit" name="delete" value="删除" onclick="return confirm('确定要删除此文件吗？此操作不可恢复！');">
+
+  </form>
+  <style>
+    .edit-form {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: var(--card-bg-color, #fff);
+      border: 1px solid var(--card-border-color, #ddd);
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .edit-form label {
+      font-size: 1em;
+      font-weight: bold;
+    }
+    .edit-form textarea {
+      width: 100%;
+      padding: 15px;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+    .edit-form input[type="submit"] {
+      background-color: var(--link-color, #007bff);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1em;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: background-color 0.2s, transform 0.2s;
+    }
+    .edit-form input[type="submit"]:hover {
+      background-color: #0056b3;
+      transform: translateY(-2px);
+    }
+  </style>
+{% endblock %}

@@ -1,0 +1,9 @@
+include Benlog/static/**/*
+include Benlog/static/gallery/**/*
+include Benlog/templates/*
+include Blog/posts/*
+include Blog/templates/*
+include Edu/notes/*
+include Edu/templates/*
+include Index/templates/*
+include Neibr/templates/*

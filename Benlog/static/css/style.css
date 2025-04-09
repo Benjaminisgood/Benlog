@@ -1,0 +1,64 @@
+/* static/css/style.css 完整版 */
+
+:root {
+  --bg-color: rgba(255, 255, 255, 0);
+  --text-color: #333;
+  --nav-bg-color: rgba(255, 255, 255, 0.7);
+  --nav-text-color: #444;
+  --canvas-bg: rgba(255, 255, 255, 1);
+  --card-bg-color: #fff;
+  --card-border-color: #e0e0e0;
+  --link-color: #3366cc;
+  --meta-text-color: #666;
+  --footer-bg: #f9f9f9;
+  --quick-card-bg: rgba(255, 255, 255, 0.5);
+  --quick-card-hover-bg: rgba(255, 255, 255, 0.7);
+  --quick-label-color: #222;
+}
+
+[data-theme="dark"] {
+  --bg-color: rgba(18, 18, 18, 0);
+  --text-color: #eee;
+  --nav-bg-color: rgba(20, 20, 20, 0.7);
+  --nav-text-color: #ccc;
+  --canvas-bg: rgba(18, 18, 18, 1);
+  --card-bg-color: #242424;
+  --card-border-color: #333;
+  --link-color: #6699ff;
+  --meta-text-color: #aaa;
+  --footer-bg: #181818;
+  --quick-card-bg: rgba(40, 40, 40, 0.5);
+  --quick-card-hover-bg: rgba(60, 60, 60, 0.7);
+  --quick-label-color: #ddd;
+}
+
+
+
+@media (max-width: 768px) {
+  .quick-links {
+    gap: 16px;
+    padding: 20px;
+  }
+  .quick-card {
+    width: 120px;
+  }
+  .quick-icon {
+    width: 48px;
+    height: 48px;
+  }
+  .quick-label {
+    font-size: 1rem;
+  }
+  .search-bar {
+    max-width: 90%;
+  }
+  .card {
+    padding: 15px;
+  }
+  .posts-container .card {
+    padding: 10px 15px;
+  }
+  .comment-box {
+    width: 90%;
+  }
+}

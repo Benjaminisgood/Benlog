@@ -1,0 +1,224 @@
+<!-- Blog/templates/blog_post.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="page-container">
+  <article>
+    <!-- 文章标题，同时也是 frontmatter 的一部分 -->
+    <h1 id="post-title">{{ post_title }}</h1>
+    {% if post_date %}
+      <p class="post-meta">Published on {{ post_date }}</p>
+    {% endif %}
+
+    <!-- 显示 frontmatter 的其它数据 -->
+    {% if frontmatter %}
+      <div class="post-frontmatter">
+        <ul>
+          {% for key, value in frontmatter.items() %}
+            {% if key not in ['title', 'date'] %}
+              <li><strong>{{ key|capitalize }}:</strong> {{ value }}</li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <!-- 文章正文 -->
+    <div class="post-content">
+      {{ post_content|safe }}
+    </div>
+  </article>
+</div>
+
+<!-- 阅读辅助工具：侧边目录 -->
+<div id="reading-assistant" class="collapsed">
+  <div id="assistant-header">
+    <span>目录</span>
+    <button id="toggle-assistant">展开</button>
+  </div>
+  <div id="assistant-content">
+    <ul id="toc-list"></ul>
+  </div>
+</div>
+
+<style>
+  /* 页面整体容器 */
+  .page-container {
+    margin: 0 40px;
+  }
+  /* 文章 meta 信息 */
+  .post-meta {
+    color: var(--meta-text-color);
+    font-size: 0.9em;
+    margin-bottom: 10px;
+  }
+  /* Frontmatter 美化显示 */
+  .post-frontmatter {
+    background: var(--quick-card-bg, #f5f5f5);
+    border-left: 4px solid var(--link-color, #3366cc);
+    padding: 15px;
+    margin: 20px 0;
+    border-radius: 4px;
+    font-size: 14px;
+    color: var(--text-color);
+  }
+  .post-frontmatter ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .post-frontmatter li {
+    margin-bottom: 5px;
+  }
+  /* 文章内容图片居中显示 */
+  .post-content img {
+    display: block;
+    margin: 12px auto;
+    max-width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border: 1px solid var(--card-border-color, #e0e0e0);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+  }
+  .post-content img:hover {
+    transform: scale(1.05);
+  }
+  /* 全屏放大图片 */
+  .fullscreen-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+  .fullscreen-overlay img {
+    max-width: 90%;
+    max-height: 90%;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+    cursor: zoom-out;
+  }
+  /* 侧边目录样式 */
+  #reading-assistant {
+    position: fixed;
+    top: 100px;
+    right: 0;
+    width: 250px;
+    max-height: calc(100vh - 120px);
+    background: var(--card-bg-color, #fff);
+    border: 1px solid var(--card-border-color, #e0e0e0);
+    border-radius: 4px 0 0 4px;
+    box-shadow: -2px 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease;
+    z-index: 1000;
+  }
+  /* 收起状态：侧边目录向右滑出，只留约30px宽 */
+  #reading-assistant.collapsed {
+    transform: translateX(220px);
+  }
+  #assistant-header {
+    background: var(--nav-bg-color, rgba(255,255,255,0.7));
+    color: var(--nav-text-color, #444);
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #assistant-header span {
+    font-size: 16px;
+    font-weight: bold;
+  }
+  #assistant-header button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--nav-text-color, #444);
+  }
+  #assistant-content {
+    padding: 10px;
+    overflow-y: auto;
+    max-height: calc(100vh - 160px);
+  }
+  #toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  #toc-list li {
+    margin-bottom: 5px;
+  }
+  #toc-list li a {
+    text-decoration: none;
+    color: var(--link-color, #3366cc);
+    font-size: 14px;
+  }
+  #toc-list li a:hover {
+    text-decoration: underline;
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const readingAssistant = document.getElementById('reading-assistant');
+    const toggleButton = document.getElementById('toggle-assistant');
+    const assistantHeader = document.getElementById('assistant-header');
+    const tocList = document.getElementById('toc-list');
+    const article = document.querySelector('article');
+
+    // 点击标题切换侧边目录展开/收起
+    assistantHeader.addEventListener('click', function() {
+      readingAssistant.classList.toggle('collapsed');
+      toggleButton.textContent = readingAssistant.classList.contains('collapsed') ? '展开' : '收起';
+    });
+
+    // 生成目录：查找 article 中所有 h1、h2 和 h3 标题
+    if (article && tocList) {
+      const headers = article.querySelectorAll('h1, h2, h3');
+      headers.forEach(header => {
+        if (!header.id) {
+          header.id = header.textContent.trim().replace(/\s+/g, '-').toLowerCase();
+        }
+        const li = document.createElement('li');
+        if (header.tagName.toLowerCase() === 'h2') {
+          li.style.marginLeft = '5px';
+        } else if (header.tagName.toLowerCase() === 'h3') {
+          li.style.marginLeft = '10px';
+        }
+        const a = document.createElement('a');
+        a.href = '#' + header.id;
+        a.textContent = header.textContent;
+        li.appendChild(a);
+        tocList.appendChild(li);
+      });
+    }
+  });
+</script>
+
+<script type="text/javascript" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script>
+  function openModal(src, caption) {
+    var modal = document.getElementById("imageModal");
+    var modalImg = document.getElementById("modalImage");
+    var modalCaption = document.getElementById("modalCaption");
+    modal.style.display = "block";
+    modalImg.src = src;
+    modalCaption.innerText = caption;
+  }
+  function closeModal() {
+    var modal = document.getElementById("imageModal");
+    modal.style.display = "none";
+  }
+</script>
+
+{% endblock %}

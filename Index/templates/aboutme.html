@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="intro-container">
+  <header class="intro-header">
+    <h1>你好，我是XXX</h1>
+    <p>欢迎来到我的个人世界，这里记录着我的成长、探索与梦想！希望这个网站可以作为亲友了解我的窗口，也可以方便到亲友的日常生活。</p>
+  </header>
+
+  <section class="intro-about">
+    <h2>关于我</h2>
+    <p>我出生于</p>
+    <p>期待未来有机会出国看看，我的最近的日程应该可以在首页订阅我的日历得到</p>
+    <p>现在是XX大学XX专业的学生，我对未知充满好奇</p>
+    <p>XX大学研0</p>
+  </section>
+
+  <section class="intro-background">
+    <h2>成长与历程</h2>
+    <div class="timeline">
+      <div class="timeline-item">
+        <h3>20XX</h3>
+        <p>开启了对世界的无限探索。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="intro-skills">
+    <h2>技能</h2>
+    <p>喜欢思考</p>
+  </section>
+
+  <section class="intro-hobbies">
+    <h2>其他</h2>
+    <p>喜欢小孩子同时自己也保持童真和孩童的乐趣。</p>
+  </section>
+
+  <section class="intro-message">
+    <h2>我的负面的特质</h2>
+    <blockquote>
+      <p>讨厌记东西</p>
+    </blockquote>
+  </section>
+</div>
+
+
+
+<style>
+  .intro-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Arial', sans-serif;
+    color: var(--text-color);
+    line-height: 1.6;
+  }
+  .intro-header {
+    text-align: center;
+    padding: 20px;
+    background: var(--quick-card-bg);
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+  }
+  .intro-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+  }
+  .intro-header p {
+    font-size: 1.2rem;
+    margin-bottom: 0;
+  }
+  section {
+    margin-bottom: 30px;
+    background: var(--card-bg-color);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  section h2 {
+    border-bottom: 2px solid var(--card-border-color);
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+    font-size: 1.8rem;
+    color: var(--text-color);
+  }
+  .timeline {
+    border-left: 2px solid var(--card-border-color);
+    margin-left: 20px;
+    padding-left: 20px;
+  }
+  .timeline-item {
+    margin-bottom: 20px;
+  }
+  .timeline-item h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #ff4d67;
+  }
+  .timeline-item p {
+    margin: 5px 0 0;
+    font-size: 1rem;
+  }
+  blockquote {
+    border-left: 4px solid #ff4d67;
+    padding-left: 15px;
+    font-style: italic;
+    color: var(--meta-text-color);
+  }
+</style>
+{% endblock %}
