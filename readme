@@ -17,3 +17,16 @@ source myenv/bin/activate
 pip uninstall Benlog
 pip install ./dist/Benlog-0.1.0-py3-none-any.whl
 benlog
+
+# 提交到github
+git add .
+git add path/to/modified_file.py
+git commit -m "描述本次修改的内容，比如更新了xxx功能"
+git push
+git push origin main
+
+# 网站介绍
+Benlog/static 中储存媒体文件以及帖子
+Blog/posts 中储存文章
+Edu/notes 中储存笔记
+index/templates 中的一些html文件需要编辑以实现个性化
