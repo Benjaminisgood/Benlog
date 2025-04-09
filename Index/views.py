@@ -49,9 +49,14 @@ def placeholder(page):
     """
     # Map page identifiers to a display name
     placeholders = {
-        "board": "留言板",
+        "message_board": "留言板板",
         "survey": "问卷调查",
         "chat": "聊天机器人",
+        "interest": "兴趣爱好预约入口",
+        "store": "个人商店",  
+        "consultation": "咨询预约",
+        "feedback": "意见反馈", 
+        "pdf_translate": "PDF 翻译",
     }
     feature_name = placeholders.get(page, "该模块")  # default to "该" (meaning "this") if not found
     # Render a generic placeholder page

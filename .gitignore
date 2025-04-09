@@ -1,0 +1,19 @@
+# Python 缓存文件
+__pycache__/
+*.py[cod]
+
+# 构建生成文件（例如 whl 包可能位于 dist/ 目录）
+build/
+dist/
+*.egg-info/
+*.whl
+
+# 编辑器相关设置
+.vscode/
+
+# 日志和临时文件
+*.log
+*.tmp
+
+# macOS 系统文件
+.DS_Store
