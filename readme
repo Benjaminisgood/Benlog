@@ -17,6 +17,8 @@ source myenv/bin/activate
 pip uninstall Benlog
 pip install ./dist/Benlog-0.1.0-py3-none-any.whl
 benlog
+gunicorn -w 4 -b 0.0.0.0:80 "Benlog.app:create_app()"
+
 
 # 提交到github
 git add .
