@@ -6,6 +6,7 @@ from . import index_bp
 import os
 import openai
 import random  # 引入 random 模块
+import logging
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -116,10 +117,11 @@ def ebooks():
     books = get_books_from_folder(folder)
     return render_template('gallery.html', title="电子书论文", folder=folder, books=books, media_type="ebook")
 
+logging.basicConfig(level=logging.INFO)
 
 api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
-    raise ValueError("OPENAI_API_KEY 环境变量未设置，请先设置！")
+    logging.warning("OPENAI_API_KEY 环境变量未设置，请先设置！")
 
 @index_bp.route('/llm', methods=['POST'])
 def llm_query():
