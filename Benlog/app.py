@@ -8,6 +8,7 @@ def create_app():
     # 创建 Flask 应用
     # 如果需要从 instance 目录加载配置，可以设置 instance_relative_config=True
     app = Flask(__name__,
+                instance_relative_config=True,  # 使 Flask 从 instance 目录加载配置文件
                 template_folder=os.path.join(base_dir, 'templates'),  # 指定全局模板路径
                 static_folder=os.path.join(base_dir, 'static'))         # 指定全局静态文件路径
 
@@ -16,7 +17,7 @@ def create_app():
         # 设置默认密钥，生产环境应覆盖这个配置
         SECRET_KEY='default-secret-key',
         # 默认使用 SQLite 数据库
-        SQLALCHEMY_DATABASE_URI='sqlite:///site.db',
+        SQLALCHEMY_DATABASE_URI='sqlite:///' + os.path.join(app.instance_path, 'site.db'),
         # 禁用 SQLAlchemy 的修改跟踪
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         # 其他默认配置项，如调试开关、文档创建密码等
