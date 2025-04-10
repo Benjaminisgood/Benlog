@@ -15,7 +15,7 @@ def create_app():
     app.config.from_mapping(
         # 设置默认密钥，生产环境应覆盖这个配置
         SECRET_KEY='default-secret-key',
-        # 默认使用 SQLite 数据库，在 instance 目录下生成一个名为 default.db 的文件
+        # 默认使用 SQLite 数据库
         SQLALCHEMY_DATABASE_URI='sqlite:///site.db',
         # 禁用 SQLAlchemy 的修改跟踪
         SQLALCHEMY_TRACK_MODIFICATIONS=False,

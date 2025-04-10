@@ -9,15 +9,18 @@
     覆盖默认配置:在启动应用时，Flask 会自动加载 instance/config.py 文件（如果存在），并使用其内容覆盖默认配置。请确保在生产环境中提供合适的配置以保证应用安全和稳定运行。
     注意：在开发和测试过程中，如果不需要额外的配置，应用将自动使用内置默认配置启动。
 
-# 打包和安装用到的代码
-rm -rf build dist *.egg-info
+打包和安装用到的代码
+#rm -rf build dist *.egg-info
 python3 setup.py sdist bdist_wheel
 python3 -m venv myenv
 source myenv/bin/activate
-pip uninstall Benlog
+#pip uninstall Benlog
 pip install ./dist/Benlog-0.1.0-py3-none-any.whl
-benlog
+#benlog
 gunicorn -w 4 -b 0.0.0.0:80 "Benlog.app:create_app()"
+flask db init
+flask db migrate -m "Initial migration"
+flask db upgrade
 
 
 # 提交到github

@@ -30,10 +30,14 @@ def init_app(app):
         from .models import User
         return User.query.get(int(user_id))
     
-    # 创建数据库表
-    with app.app_context():
-        db.create_all()  # 在应用上下文中创建表
-    
+    # 不再在应用启动时自动创建数据库表
+    # 推荐使用 Flask-Migrate 管理数据库迁移：
+    # 1. 使用 "flask db init" 初始化迁移目录；
+    # 2. 使用 "flask db migrate -m 'Initial migration'" 生成迁移脚本；
+    # 3. 使用 "flask db upgrade" 应用迁移更新。
+    # with app.app_context():
+    #     db.create_all()  # 已注释：使用迁移工具管理数据库更新
+
 # 导入 views 和 models
 from . import views
 from . import models
