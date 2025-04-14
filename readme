@@ -11,10 +11,11 @@
 
 #打包和安装之后再运行
 #rm -rf build dist *.egg-info
+#pip uninstall Benlog
+
 python3 setup.py sdist bdist_wheel
 python3 -m venv myenv
 source myenv/bin/activate
-#pip uninstall Benlog
 pip install ./dist/Benlog-0.1.0-py3-none-any.whl
 flask --app Benlog.app.py db migrate -m "Initial migration"
 flask --app Benlog.app.py db upgrade
