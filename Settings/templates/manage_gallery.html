@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Gallery Management</h1>
+<p>Choose a folder to manage:</p>
+<ul>
+  {% for folder in folders %}
+    <li>
+      <a href="{{ url_for('setting.view_folder', folder_name=folder) }}">{{ folder }}</a>
+    </li>
+  {% endfor %}
+</ul>
+
+{% endblock %}

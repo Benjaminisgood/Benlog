@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1>Managing Folder: {{ folder_name }}</h1>
+    <a href="{{ url_for('setting.manage_gallery') }}" class="btn btn-back">Back to Gallery List</a>
+
+    <h2>Files in this Folder:</h2>
+    {% if files %}
+        <ul class="file-list">
+        {% for file in files %}
+            <li class="file-item">
+                <span>{{ file }}</span>
+                <div class="file-actions">
+                    <!-- Download Button -->
+                    <a href="{{ url_for('setting.download_file', folder_name=folder_name, filename=file) }}" class="btn btn-download">Download</a>
+                    
+                    <!-- Rename Button -->
+                    <button class="btn btn-rename" data-filename="{{ file }}" data-folder="{{ folder_name }}" onclick="showRenameModal(this)">Rename</button>
+                    
+                    <!-- Copy Link Button -->
+                    <!--<button class="btn btn-copy" onclick="copyMarkdownLink('{{ url_for('setting.download_file', folder_name=folder_name, filename=file) }}')">Copy Link</button> -->
+                    <!-- Copy Link Button -->
+                    <button class="btn btn-copy" onclick="copyMarkdownLink('{{ url_for('static', filename='gallery/' + folder_name + '/' + file) }}')">Copy Link</button>
+                    <!--<button class="btn btn-copy" onclick="copyMarkdownLink('{{ url_for('static', filename='gallery/' + folder_name + '/' + file)|replace('static/', 'http://127.0.0.1/static/') }}')">Copy Markdown Link</button>  -->
+
+
+                    <!-- Delete Button -->
+                    <form action="{{ url_for('setting.delete_file', folder_name=folder_name, filename=file) }}" method="POST" style="display:inline;">
+                        <button type="submit" class="btn btn-delete">Delete</button>
+                    </form>
+                </div>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No files in this folder.</p>
+    {% endif %}
+
+    <h2>Upload New File</h2>
+    <form action="{{ url_for('setting.upload_file', folder_name=folder_name) }}" method="POST" enctype="multipart/form-data" class="upload-form">
+        <input type="file" name="file" required>
+        <button type="submit" class="btn btn-upload">Upload</button>
+    </form>
+
+    <!-- Rename Modal Form -->
+<div id="rename-modal" class="modal">
+    <div class="modal-content">
+        <h3>Rename File</h3>
+        <form action="{{ url_for('setting.rename_file') }}" method="POST">
+            <input type="text" id="new-filename" name="new-filename" required>
+            <input type="hidden" id="old-filename" name="old-filename">
+            <input type="hidden" id="folder-name" name="folder-name" value="{{ folder_name }}">
+            <button type="submit" class="btn btn-rename-submit">Rename</button>
+            <button type="button" class="btn btn-close-modal" onclick="closeRenameModal()">Cancel</button>
+        </form>
+    </div>
+</div>
+
+
+    <!-- Dropzone container -->
+<div class="dropzone-container">
+    <form action="{{ url_for('setting.upload_file', folder_name=folder_name) }}" 
+          method="POST" 
+          enctype="multipart/form-data" 
+          class="dropzone" 
+          id="my-dropzone">
+    </form>
+</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/dropzone@5.9.3/dist/min/dropzone.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/dropzone@5.9.3/dist/min/dropzone.min.css" rel="stylesheet">
+    <script>
+        Dropzone.options.myDropzone = {
+            paramName: "file",  // The name that will be used to transfer the file
+            maxFilesize: 2,  // Maximum file size in MB
+            dictDefaultMessage: "Drag files here or click to upload",  // Placeholder message
+            addRemoveLinks: true,  // Allow file removal
+            autoProcessQueue: true,  // Automatically submit the files when added
+            parallelUploads: 1,  // Limit to 1 file at a time (optional)
+            acceptedFiles: ".jpg,.jpeg,.png,.gif,.pdf",  // Accepted file types (optional)
+            init: function() {
+                this.on("success", function(file, response) {
+                    // Handle response here (optional)
+                    console.log("File successfully uploaded:", file);
+                });
+            }
+        };
+    </script>
+    <script>
+        // Function to show the rename modal
+        function showRenameModal(button) {
+            const filename = button.getAttribute('data-filename');
+            const folder = button.getAttribute('data-folder');
+            document.getElementById('old-filename').value = filename;
+            document.getElementById('new-filename').value = filename; // pre-fill with current filename
+            document.getElementById('folder-name').value = folder;
+            document.getElementById('rename-modal').style.display = 'block';
+        }
+
+        // Function to close the rename modal
+        function closeRenameModal() {
+            document.getElementById('rename-modal').style.display = 'none';
+        }
+
+        // Function to copy the file link to clipboard
+        function copyMarkdownLink(link) {
+        const markdownLink = `![](${link})`;  // Format the link as Markdown for images
+        const textarea = document.createElement('textarea');
+        textarea.value = markdownLink;  // Set the Markdown image link
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        alert('Markdown link copied to clipboard!');
+    }
+    </script>
+</div>
+
+
+<style>
+    .container {
+        padding: 20px;
+    }
+
+    h1, h2 {
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 10px 15px;
+        margin: 5px;
+        text-align: center;
+        border-radius: 5px;
+        text-decoration: none;
+        color: white;
+        background-color: #007bff;
+        border: none;
+    }
+
+    .btn:hover {
+        background-color: #0056b3;
+    }
+
+    .btn-back {
+        background-color: #28a745;
+    }
+
+    .btn-back:hover {
+        background-color: #218838;
+    }
+
+    .btn-delete {
+        background-color: #dc3545;
+    }
+
+    .btn-delete:hover {
+        background-color: #c82333;
+    }
+
+    .btn-download {
+        background-color: #ffc107;
+    }
+
+    .btn-download:hover {
+        background-color: #e0a800;
+    }
+
+    .file-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .file-item {
+        margin: 10px 0;
+    }
+
+    .file-actions {
+        margin-left: 20px;
+    }
+
+    .dropzone-container {
+        margin-top: 20px;
+    }
+
+    .upload-form input[type="file"] {
+        margin-bottom: 15px;
+    }
+    /* Modal Styling */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+        padding-top: 60px;
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 300px;
+    }
+    .btn {
+        display: inline-block;
+        padding: 10px 15px;
+        margin: 5px;
+        text-align: center;
+        border-radius: 5px;
+        text-decoration: none;
+        color: white;
+        background-color: #007bff;
+        border: none;
+    }
+    .btn:hover {
+        background-color: #0056b3;
+    }
+    .btn-rename {
+        background-color: #ffc107;
+    }
+    .btn-rename:hover {
+        background-color: #e0a800;
+    }
+    .btn-copy {
+        background-color: #28a745;
+    }
+    .btn-copy:hover {
+        background-color: #218838;
+    }
+    .btn-delete {
+        background-color: #dc3545;
+    }
+    .btn-delete:hover {
+        background-color: #c82333;
+    }
+    .btn-rename-submit {
+        background-color: #007bff;
+    }
+    .btn-close-modal {
+        background-color: #dc3545;
+    }
+</style>
+{% endblock %}
