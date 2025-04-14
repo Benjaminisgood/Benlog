@@ -42,14 +42,14 @@ def create_app():
     from Index import index_bp
     from Neibr import neibr_bp, init_app  
 
-    app.register_blueprint(index_bp)               # Index blueprint on the root
+    app.register_blueprint(index_bp)
     app.register_blueprint(blog_bp, url_prefix='/blog')
     app.register_blueprint(edu_bp, url_prefix='/edu')
     app.register_blueprint(neibr_bp, url_prefix='/neibr')
 
-    # 注册 Dashboard 蓝图，URL 前缀为 /dashboard
-    from Dashboard import dashboard_bp
-    app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
+    # 注册 setting 蓝图，URL 前缀为 /setting
+    from Settings import setting_bp
+    app.register_blueprint(setting_bp, url_prefix='/setting')
 
     init_app(app)
     
