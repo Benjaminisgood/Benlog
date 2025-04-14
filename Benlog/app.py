@@ -41,13 +41,16 @@ def create_app():
     from Edu import edu_bp
     from Index import index_bp
     from Neibr import neibr_bp, init_app  
-      
+
     app.register_blueprint(index_bp)               # Index blueprint on the root
     app.register_blueprint(blog_bp, url_prefix='/blog')
     app.register_blueprint(edu_bp, url_prefix='/edu')
     app.register_blueprint(neibr_bp, url_prefix='/neibr')
 
-# 初始化 Neibr 模块的数据库和登录管理
+    # 注册 Dashboard 蓝图，URL 前缀为 /dashboard
+    from Dashboard import dashboard_bp
+    app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
+
     init_app(app)
     
     return app

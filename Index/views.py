@@ -14,8 +14,7 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 def home():
     """Site homepage - shows welcome message and navigation."""
     return render_template('index.html', title="Home")
-
-##############################################
+###############################################################
 # 预先定义每种媒体对应的扩展名
 MEDIA_EXTENSIONS = {
     "image": ('.png', '.jpg', '.jpeg', '.gif'),
@@ -129,8 +128,7 @@ def audios():
 def ebooks():
     """展示【电子书和论文】页面，展示全部电子书及论文"""
     return render_gallery_page("电子书论文", "电子书和论文", "ebook")
-#################################################################################
-#新建上次和获取图片URL的路由，
+
 ###########################################################################
 logging.basicConfig(level=logging.INFO)
 
