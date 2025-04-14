@@ -77,22 +77,28 @@ def add_user():
         username = request.form.get('username')
         password = request.form.get('password')
         is_admin = request.form.get('is_admin') == 'on'
-        new_password = request.form.get('password')
-        if new_password:
-            user.password = generate_password_hash(new_password)
- 
+
+        # 校验字段是否完整
         if not all([email, username, password]):
             flash("所有字段均为必填", "error")
             return render_template('add_user.html')
 
+        # 校验用户名和邮箱是否已存在
         if User.query.filter_by(email=email).first() or User.query.filter_by(username=username).first():
             flash("用户名或邮箱已存在", "error")
             return render_template('add_user.html')
 
-        hashed_pw = generate_password_hash(password)
-        new_user = User(email=email, username=username, password=hashed_pw, is_admin=is_admin)
-        db.session.add(new_user)
+        # 创建 User 对象
+        user = User(email=email, username=username, is_admin=is_admin)
+
+        # 对密码进行哈希化
+        if password:
+            user.password = generate_password_hash(password, method='pbkdf2:sha256')
+
+        # 将用户对象添加到数据库
+        db.session.add(user)
         db.session.commit()
+
         flash("用户已创建", "success")
         return redirect(url_for('setting.manage_users'))
 
