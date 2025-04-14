@@ -1,6 +1,53 @@
 {% extends "base.html" %}
-
 {% block content %}
-<h1>Dashboard setting 管理后台</h1>
+<h1>后台管理首页</h1>
+<p>欢迎您，{{ current_user.username }}！</p>
+<li><a href="{{ url_for('edu.manage_notes') }}">📄 管理教育笔记</a></li>
+<li><a href="{{ url_for('blog.manage_posts') }}">📄 管理博客文章</a></li>
+{% if extra_for_user1 %}
+  <div class="admin-feature">
+    <h2>超级管理员功能</h2>
+    <ul>
+      <li><a href="{{ url_for('setting.manage_users') }}">账号管理</a>（修改用户名 / 设置管理员权限）</li>
+      <li><a href="#">Gallery 媒体文件编辑（待实现）</a></li>
+      <li><a href="#">主页卡片模版设置（待实现）</a></li>
+      <li><a href="#">主题色自定义（待实现）</a></li>
+      <li><a href="#">Instance 定义（待实现）</a></li>
+    </ul>
+
+    <p class="hint">👑 您是 ID 为 1 的超级管理员，拥有全站权限。</p>
+  </div>
+{% endif %}
+
+
+<style> 
+.admin-feature {
+    border: 1px solid #ccc;
+    background: #f8f8f8;
+    padding: 1rem;
+    margin-top: 2rem;
+    border-radius: 8px;
+}
+
+.admin-feature h2 {
+    color: #333;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 0.5rem;
+}
+
+.admin-feature ul {
+    list-style: none;
+    padding-left: 1rem;
+}
+
+.admin-feature ul li {
+    margin: 0.5rem 0;
+}
+
+.hint {
+    color: #888;
+    font-size: 0.9rem;
+}
+</style>
 
 {% endblock %}

@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
   <h1>Blog Posts</h1>
-  <button id="new-post-button">新建文章</button>
 
   <ul class="post-list">
     {% for post in posts %}
@@ -12,7 +11,6 @@
           </a>
           <p class="post-meta">
             <!-- 点击时间信息将触发编辑认证模态窗口 -->
-            <a href="#" class="edit-link" data-edit-url="{{ url_for('blog.edit_auth', slug=post.slug) }}">
               Last Modified: {{ post.last_modified.strftime("%Y-%m-%d %H:%M:%S") }}
             </a>
           </p>
@@ -23,32 +21,6 @@
       <p><em>No posts available.</em></p>
     {% endif %}
   </ul>
-
-  <!-- 新建文章密码输入模态窗口 -->
-  <div id="new-doc-modal" class="modal">
-    <div class="modal-content">
-      <span class="close" id="new-doc-close">&times;</span>
-      <h2>请输入认证密码</h2>
-      <form id="new-doc-form" method="POST" action="{{ url_for('blog.new_post') }}">
-        <label for="password">认证密码:</label>
-        <input type="password" name="password" id="new-password" required>
-        <input type="submit" value="创建新文章">
-      </form>
-    </div>
-  </div>
-
-  <!-- 编辑文章密码认证模态窗口 -->
-  <div id="edit-auth-modal" class="modal">
-    <div class="modal-content">
-      <span class="close" id="edit-auth-close">&times;</span>
-      <h2>请输入认证密码以编辑文章</h2>
-      <form id="edit-auth-form" method="POST" action="">
-        <label for="edit-password">认证密码:</label>
-        <input type="password" name="password" id="edit-password" required>
-        <input type="submit" value="确认编辑">
-      </form>
-    </div>
-  </div>
 
   <style>
     /* 按钮样式 */
@@ -176,39 +148,5 @@
     }
   </style>
 
-  <script>
-    // 新建文章模态框事件
-    document.getElementById("new-post-button").addEventListener("click", function(){
-      document.getElementById("new-doc-modal").style.display = "flex";
-    });
-    document.getElementById("new-doc-close").addEventListener("click", function(){
-      document.getElementById("new-doc-modal").style.display = "none";
-    });
-    window.addEventListener("click", function(event) {
-      var modal = document.getElementById("new-doc-modal");
-      if (event.target == modal) {
-        modal.style.display = "none";
-      }
-    });
 
-    // 编辑文章认证模态框事件
-    document.querySelectorAll('.edit-link').forEach(function(link) {
-      link.addEventListener("click", function(e){
-        e.preventDefault();
-        var editUrl = this.dataset.editUrl;  // 获取后端编辑认证 URL
-        var form = document.getElementById("edit-auth-form");
-        form.action = editUrl;
-        document.getElementById("edit-auth-modal").style.display = "flex";
-      });
-    });
-    document.getElementById("edit-auth-close").addEventListener("click", function(){
-      document.getElementById("edit-auth-modal").style.display = "none";
-    });
-    window.addEventListener("click", function(event) {
-      var modal = document.getElementById("edit-auth-modal");
-      if (event.target == modal) {
-        modal.style.display = "none";
-      }
-    });
-  </script>
 {% endblock %}

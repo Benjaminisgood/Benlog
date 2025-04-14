@@ -3,6 +3,7 @@ from flask import request, redirect, flash, render_template, abort, current_app,
 import frontmatter, markdown
 from datetime import datetime
 from . import edu_bp
+from flask_login import login_required, current_user
 
 NOTES_DIR = os.path.join(os.path.dirname(__file__), 'notes')
 
@@ -71,18 +72,60 @@ def show_note(slug):
     )
 
 
-@edu_bp.route('/new', methods=['POST'])
-def new_note():
-    """处理新建文档请求：验证密码并创建一个默认的 Markdown 文件，然后跳转到编辑页面"""
-    password = request.form.get('password')
-    # 获取认证密码，可以配置在 app.config 中，也可以直接写死（这里示例使用 app.config）
-    expected_password = current_app.config.get('DOC_CREATION_PASSWORD', 'mysecret')
-    if password != expected_password:
-        flash("密码错误，无法创建新文档。", "error")
-        return redirect(url_for('edu.list_notes'))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@edu_bp.route('/manage_notes')
+@login_required
+def manage_notes():
+    """管理员笔记管理页面：列出所有 Markdown 文件"""
+    if not (current_user.is_admin or current_user.id == 1):
+        flash("无权限访问笔记管理页面", "error")
+        return redirect(url_for('index.home'))
+
+    if not os.path.exists(NOTES_DIR):
+        abort(500, description=f"Notes directory not found: {NOTES_DIR}")
     
+    notes = []
+    for filename in os.listdir(NOTES_DIR):
+        if filename.endswith('.md'):
+            filepath = os.path.join(NOTES_DIR, filename)
+            last_modified = datetime.fromtimestamp(os.path.getmtime(filepath))
+            slug = filename.rsplit('.', 1)[0]
+            notes.append({
+                'filename': filename,
+                'slug': slug,
+                'last_modified': last_modified
+            })
+
+    notes.sort(key=lambda x: x['last_modified'], reverse=True)
+
+    return render_template('edu_manage_notes.html', notes=notes)
+
+@edu_bp.route('/new', methods=['POST'])
+@login_required
+def new_note():
+    if not (current_user.is_admin or current_user.id == 1):
+        abort(403)
     # 生成新文件名，格式例如 note_20250408123045.md
-    timestamp = datetime.now().strftime('%Y%m%d')
+    timestamp = datetime.now().strftime('%Y%m%d %H:%M:%S')
     filename = f"note_{timestamp}.md"
     filepath = os.path.join(NOTES_DIR, filename)
     
@@ -100,18 +143,12 @@ def new_note():
     flash("新文档已创建，请完善内容。", "success")
     return redirect(url_for('edu.edit_note', slug=slug))
 
-@edu_bp.route('/<slug>/edit_auth', methods=['POST'])
-def edit_auth(slug):
-    """验证编辑前的密码。正确则重定向到实际编辑页面"""
-    password = request.form.get('password')
-    expected_password = current_app.config.get('DOC_CREATION_PASSWORD', 'mysecret')
-    if password != expected_password:
-        flash("密码错误，无法编辑文档。", "error")
-        return redirect(url_for('edu.list_notes'))
-    return redirect(url_for('edu.edit_note', slug=slug))
 
 @edu_bp.route('/<slug>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_note(slug):
+    if not (current_user.is_admin or current_user.id == 1):
+        abort(403)
     """编辑指定笔记，直接读取和保存整个 .md 文件的内容"""
     filename = f"{slug}.md"
     filepath = os.path.join(NOTES_DIR, filename)

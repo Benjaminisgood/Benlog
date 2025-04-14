@@ -18,3 +18,13 @@ dist/
 *.txt
 # macOS 系统文件
 .DS_Store
+# instance
+instance/
+
+#migration
+migrations/
+
+#开发附件
+Benlog/static/neibr/
+Blog/posts/
+Edu/notes/

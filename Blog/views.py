@@ -3,6 +3,7 @@ from flask import request, redirect, flash, render_template, abort, current_app,
 import frontmatter, markdown
 from datetime import datetime
 from . import blog_bp
+from flask_login import login_required, current_user
 
 # POSTS_DIR 存放 blog 模块的 Markdown 文件
 POSTS_DIR = os.path.join(os.path.dirname(__file__), 'posts')
@@ -67,17 +68,39 @@ def show_post(slug):
         frontmatter=post_data.metadata
     )
 
+@blog_bp.route('/manage_posts')
+@login_required
+def manage_posts():
+    """管理员博客管理页面：列出所有 Markdown 文件"""
+    if not (current_user.is_admin or current_user.id == 1):
+        flash("无权限访问博客管理页面", "error")
+        return redirect(url_for('index.home'))
+
+    if not os.path.exists(POSTS_DIR):
+        abort(500, description=f"Posts directory not found: {POSTS_DIR}")
+
+    posts = []
+    for filename in os.listdir(POSTS_DIR):
+        if filename.endswith('.md'):
+            filepath = os.path.join(POSTS_DIR, filename)
+            last_modified = datetime.fromtimestamp(os.path.getmtime(filepath))
+            slug = filename.rsplit('.', 1)[0]
+            posts.append({
+                'filename': filename,
+                'slug': slug,
+                'last_modified': last_modified
+            })
+
+    posts.sort(key=lambda x: x['last_modified'], reverse=True)
+
+    return render_template('blog_manage_posts.html', posts=posts)
 
 @blog_bp.route('/new', methods=['POST'])
+@login_required
 def new_post():
-    """处理新建文章请求：验证密码并创建一个默认的 Markdown 文件，然后跳转到编辑页面"""
-    password = request.form.get('password')
-    # 从 app.config 中获取认证密码（如未配置则默认 'mysecret'）
-    expected_password = current_app.config.get('DOC_CREATION_PASSWORD', 'mysecret')
-    if password != expected_password:
-        flash("密码错误，无法创建新文章。", "error")
-        return redirect(url_for('blog.list_posts'))
-    
+    if not (current_user.is_admin or current_user.id == 1):
+        abort(403)
+
     # 生成新文件名，采用时间戳确保唯一性
     timestamp = datetime.now().strftime('%Y%m%d')
     filename = f"post_{timestamp}.md"
@@ -98,19 +121,13 @@ def new_post():
     return redirect(url_for('blog.edit_post', slug=slug))
 
 
-@blog_bp.route('/<slug>/edit_auth', methods=['POST'])
-def edit_auth(slug):
-    """验证编辑前的密码。正确则重定向到实际编辑页面"""
-    password = request.form.get('password')
-    expected_password = current_app.config.get('DOC_CREATION_PASSWORD', 'mysecret')
-    if password != expected_password:
-        flash("密码错误，无法编辑文章。", "error")
-        return redirect(url_for('blog.list_posts'))
-    return redirect(url_for('blog.edit_post', slug=slug))
 
 
 @blog_bp.route('/<slug>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_post(slug):
+    if not (current_user.is_admin or current_user.id == 1):
+        abort(403)
     """编辑指定文章，直接读取和保存整个 .md 文件的内容"""
     filename = f"{slug}.md"
     filepath = os.path.join(POSTS_DIR, filename)

@@ -19,6 +19,9 @@ pip install ./dist/Benlog-0.1.0-py3-none-any.whl
 #benlog
 gunicorn -w 4 -b 0.0.0.0:80 "Benlog.app:create_app()"
 #cd myenv/lib/python3.9/site-packages
+
+
+#初始化之前要进行数据库初始化
 flask --app Benlog/app.py db init
 flask --app Benlog/app.py db migrate -m "Initial migration"
 flask --app Benlog/app.py db upgrade

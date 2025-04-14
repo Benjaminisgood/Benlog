@@ -2,6 +2,15 @@
 {% block content %}
 <div class="card register-card">
   <h1>注册</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      {% if category == 'login' %}
+        <p class="flash-message {{ category }}">{{ message }}</p>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+  {% endwith %}
   <form method="POST">
     <div class="form-group">
       <label for="email">邮箱:</label>

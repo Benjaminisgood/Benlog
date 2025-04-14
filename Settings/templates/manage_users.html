@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>用户管理</h1>
+
+<table border="1">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>用户名</th>
+      <th>邮箱</th>
+      <th>是否为管理员</th>
+      <th>操作</th>
+    </tr>
+  </thead>
+  <a href="{{ url_for('setting.add_user') }}">➕ 新增用户</a>
+  <tbody>
+    {% for user in users %}
+    <tr>
+      <td>{{ user.id }}</td>
+      <td>{{ user.username }}</td>
+      <td>{{ user.email }}</td>
+      <td>{{ '是' if user.is_admin else '否' }}</td>
+      <td>
+        <a href="{{ url_for('setting.edit_user', user_id=user.id) }}">编辑</a> |
+        <form action="{{ url_for('setting.delete_user', user_id=user.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('确定删除该用户吗？');">
+          <button type="submit" style="color:red;">删除</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<a href="{{ url_for('setting.index') }}">返回管理首页</a>
+{% endblock %}

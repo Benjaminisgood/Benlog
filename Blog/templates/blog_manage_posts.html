@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>📄 博客管理</h1>
+<p>欢迎您，{{ current_user.username }}！</p>
+
+<h2>➕ 新建文章</h2>
+<form method="POST" action="{{ url_for('blog.new_post') }}">
+  <button type="submit">创建</button>
+</form>
+<hr>
+
+
+<ul>
+  {% for post in posts %}
+    <li>
+      <strong>{{ post.slug }}</strong> -
+      Last Modified: {{ post.last_modified.strftime('%Y-%m-%d %H:%M:%S') }}
+      [<a href="{{ url_for('blog.edit_post', slug=post.slug) }}">编辑</a>]
+    </li>
+  {% endfor %}
+</ul>
+
+<a href="{{ url_for('index.home') }}">⬅ 返回主页</a>
+
+{% endblock %}

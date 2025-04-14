@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>新增用户</h1>
+<form method="POST">
+  <label>用户名：</label>
+  <input type="text" name="username" required><br>
+
+  <label>邮箱：</label>
+  <input type="email" name="email" required><br>
+
+  <label>密码：</label>
+  <input type="password" name="password" required><br>
+
+  <label>设置为管理员：</label>
+  <input type="checkbox" name="is_admin"><br><br>
+
+  <button type="submit">创建用户</button>
+</form>
+
+<a href="{{ url_for('setting.manage_users') }}">返回用户列表</a>
+{% endblock %}

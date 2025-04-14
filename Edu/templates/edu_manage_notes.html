@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>📄 笔记管理</h1>
+<p>欢迎您，{{ current_user.username }}！</p>
+
+<h2>➕ 新建笔记</h2>
+<form method="POST" action="{{ url_for('edu.new_note') }}">
+  <button type="submit">创建</button>
+</form>
+<hr>
+
+
+<ul>
+  {% for note in notes %}
+    <li>
+      <strong>{{ note.slug }}</strong> -
+      Last Modified: {{ note.last_modified.strftime('%Y-%m-%d %H:%M:%S') }}
+      [<a href="{{ url_for('edu.edit_note', slug=note.slug) }}">编辑</a>]
+    </li>
+  {% endfor %}
+</ul>
+
+<a href="{{ url_for('index.home') }}">⬅ 返回主页</a>
+
+{% endblock %}

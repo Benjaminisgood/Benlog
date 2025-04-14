@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>编辑用户信息：{{ user.username }}</h1>
+
+<form method="POST">
+    <label>用户名：</label>
+    <input type="text" name="username" value="{{ user.username }}" required><br>
+  
+    <label>邮箱：</label>
+    <input type="email" name="email" value="{{ user.email }}" required><br>
+  
+    <label>是否为管理员：</label>
+    <input type="checkbox" name="is_admin" {% if user.is_admin %}checked{% endif %}><br>
+  
+    <hr>
+    <label>修改密码（可选）：</label>
+    <input type="password" name="password"><br>
+    <small>留空则不修改</small><br><br>
+  
+    <button type="submit">保存修改</button>
+  </form>
+  
+  <form action="{{ url_for('setting.delete_user', user_id=user.id) }}" method="POST" onsubmit="return confirm('确认删除此用户吗？');">
+    <button type="submit" style="color:red;">删除用户</button>
+  </form>
+
+  
+<a href="{{ url_for('setting.manage_users') }}">返回用户管理</a>
+{% endblock %}

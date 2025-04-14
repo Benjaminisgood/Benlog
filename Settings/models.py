@@ -7,10 +7,12 @@ class User(db.Model, UserMixin):
     用户模型，表示系统中注册的用户。
     继承 UserMixin 以提供 Flask-Login 所需的属性和方法。
     """
+    
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     username = db.Column(db.String(60), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False, nullable=False)
 
     def __repr__(self):
         return f'<User {self.username}>'
