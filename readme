@@ -23,6 +23,10 @@ flask --app Benlog/app.py db init
 flask --app Benlog/app.py db migrate -m "Initial migration"
 flask --app Benlog/app.py db upgrade
 
+source myenv/bin/activate
+export FLASK_ENV=development
+export FLASK_DEBUG=1
+flask --app "Benlog.app:create_app" run --host=0.0.0.0 --port=80
 
 # 提交到github
 git add .

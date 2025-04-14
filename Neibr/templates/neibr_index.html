@@ -12,13 +12,13 @@
     {% if current_user.is_authenticated %}
       <span>👋 欢迎你，{{ current_user.username }}！</span>
     {% else %}
-      <a href="{{ url_for('neibr.login') }}">登录 / 注册</a>
+      <a href="{{ url_for('setting.login') }}">登录 / 注册</a>
     {% endif %}
   </div>
 
   {% if current_user.is_authenticated %}
   <div class="create-post">
-    <a href="{{ url_for('neibr.create_post') }}">创建新帖子</a>
+    <a href="{{ url_for('setting.create_post') }}">创建新帖子</a>
   </div>
   {% endif %}
 

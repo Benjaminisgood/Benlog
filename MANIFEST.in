@@ -7,3 +7,4 @@ include Edu/notes/*
 include Edu/templates/*
 include Index/templates/*
 include Neibr/templates/*
+include Settings/templates/*

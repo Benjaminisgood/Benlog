@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 
 # 构建生成文件（例如 whl 包可能位于 dist/ 目录）
+myenv/
 build/
 dist/
 *.egg-info/
@@ -14,6 +15,6 @@ dist/
 # 日志和临时文件
 *.log
 *.tmp
-
+*.txt
 # macOS 系统文件
 .DS_Store

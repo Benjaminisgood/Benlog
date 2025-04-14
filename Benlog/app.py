@@ -36,11 +36,13 @@ def create_app():
         pass
 
 
-    # 注册蓝图
+    # 注册蓝图    
     from Blog import blog_bp
     from Edu import edu_bp
     from Index import index_bp
-    from Neibr import neibr_bp, init_app  
+    from Neibr import neibr_bp 
+    from Neibr import init_app as neibr_init_app
+    from Settings import init_app as settings_init_app
 
     app.register_blueprint(index_bp)
     app.register_blueprint(blog_bp, url_prefix='/blog')
@@ -51,8 +53,9 @@ def create_app():
     from Settings import setting_bp
     app.register_blueprint(setting_bp, url_prefix='/setting')
 
-    init_app(app)
-    
+    settings_init_app(app)
+    neibr_init_app(app)
+
     return app
 
 
