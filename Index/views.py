@@ -10,113 +10,128 @@ import logging
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
-def get_images_from_folder(folder_name):
-    images = []
-    folder_path = os.path.join(BASE_DIR, 'Benlog', 'static', 'gallery', folder_name)
-    if os.path.exists(folder_path):
-        for file in os.listdir(folder_path):
-            if file.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
-                images.append(file)
-    return images
-
-def get_audio_from_folder(folder_name):
-    audios = []
-    folder_path = os.path.join(BASE_DIR, 'Benlog', 'static', 'gallery', folder_name)
-    if os.path.exists(folder_path):
-        for file in os.listdir(folder_path):
-            if file.lower().endswith(('.mp3', '.wav', '.ogg', '.m4a')):
-                audios.append(file)
-    return audios
-
-def get_books_from_folder(folder_name):
-    books = []
-    folder_path = os.path.join(BASE_DIR, 'Benlog', 'static', 'gallery', folder_name)
-    if os.path.exists(folder_path):
-        for file in os.listdir(folder_path):
-            if file.lower().endswith(('.pdf', '.epub', '.txt', '.docx')):
-                books.append(file)
-    return books
-
 @index_bp.route('/')
 def home():
     """Site homepage - shows welcome message and navigation."""
     return render_template('index.html', title="Home")
 
-@index_bp.route('/<page>')
-def placeholder(page):
-    """
-    Placeholder page for features not yet implemented.
-    `page` can be 'board', 'survey', 'chat', etc.
-    """
-    # Map page identifiers to a display name
-    placeholders = {
-        "message_board": "留言板板",
-        "survey": "问卷调查",
-        "chat": "聊天机器人",
-        "interest": "兴趣爱好预约入口",
-        "store": "个人商店",  
-        "consultation": "咨询预约",
-        "feedback": "意见反馈", 
-        "pdf_translate": "PDF 翻译",
-    }
-    feature_name = placeholders.get(page, "该模块")  # default to "该" (meaning "this") if not found
-    # Render a generic placeholder page
-    return render_template('placeholder.html', title=feature_name, feature_name=feature_name)
+##############################################
+# 预先定义每种媒体对应的扩展名
+MEDIA_EXTENSIONS = {
+    "image": ('.png', '.jpg', '.jpeg', '.gif'),
+    "audio": ('.mp3', '.wav', '.ogg', '.m4a'),
+    "ebook": ('.pdf', '.epub', '.txt', '.docx')
+}
 
-@index_bp.route('/gallery')
-def gallery():
-    """用于展示【摄影展】页面，初始加载 12 张图片"""
-    folder = '摄影展'
-    images = get_images_from_folder(folder)
-    # 固定随机种子，使同一文件夹的随机排序一致
-    random.seed(folder)
-    random.shuffle(images)
-    # 取出前 12 张图片
-    initial_batch = images[:12]
-    return render_template('gallery.html', title="摄影展", folder=folder, images=initial_batch, media_type="image")
+def get_media_from_folder(folder_name, media_type):
+    """
+    通用从指定文件夹获取媒体文件列表的函数。
+    
+    参数:
+      folder_name: 媒体文件夹名称（如 '摄影展'、'音乐和弹唱作品' 等）
+      media_type: 媒体类型，支持 "image", "audio", "ebook"
+      
+    返回:
+      符合扩展名条件的文件名列表
+    """
+    extensions = MEDIA_EXTENSIONS.get(media_type)
+    if not extensions:
+        return []
+    
+    media = []
+    folder_path = os.path.join(BASE_DIR, 'Benlog', 'static', 'gallery', folder_name)
+    if os.path.exists(folder_path):
+        for file in os.listdir(folder_path):
+            if file.lower().endswith(extensions):
+                media.append(file)
+    return media
 
+def get_media_batch(media_list, offset=0, batch_size=12):
+    """
+    从媒体列表中获取指定偏移量和批次数量的媒体项，便于懒加载。
+    """
+    return media_list[offset:offset+batch_size]
+
+###############################################################################
+def render_gallery_page(title, folder, media_type, batch_size=None, randomize=False):
+    """
+    通用渲染媒体画廊页面。
+    
+    参数:
+      title: 页面标题
+      folder: 文件夹名称
+      media_type: 媒体类型："image", "audio", "ebook"
+      batch_size: 若传入则仅加载指定数量，适用于初始批量显示
+      randomize: 是否进行随机排序（例如图片展示）
+      
+    返回:
+      渲染后的模板页面，统一传递媒体列表给模板变量 items
+    """
+    media_list = get_media_from_folder(folder, media_type)
+    if randomize and media_type == "image":
+        random.seed(folder)
+        random.shuffle(media_list)
+    if batch_size:
+        media_list = get_media_batch(media_list, offset=0, batch_size=batch_size)
+    return render_template(
+        'gallery.html',
+        title=title,
+        folder=folder,
+        media_type=media_type,
+        items=media_list  # 模板统一用 items 接收数据
+    )
+
+# 统一的加载更多接口，支持所有媒体类型
 @index_bp.route('/gallery/load_more')
 def gallery_load_more():
-    """根据 offset 加载下一批图片，每次 12 张"""
-    folder = request.args.get('folder', '摄影展')
+    """
+    根据前端传入 offset、folder、media_type 加载下一批数据，每批默认 12 项。
+    接口返回 JSON 格式数据，格式为 {'items': [...] }。
+    """
+    folder = request.args.get('folder')
+    if not folder:
+        abort(400, description="Missing folder parameter")
+    media_type = request.args.get('media_type', 'image')
     try:
         offset = int(request.args.get('offset', 0))
     except ValueError:
         offset = 0
-    images = get_images_from_folder(folder)
-    random.seed(folder)
-    random.shuffle(images)
     batch_size = 12
-    next_images = images[offset:offset+batch_size]
-    return jsonify({'images': next_images})
+    media_list = get_media_from_folder(folder, media_type)
+    if media_type == "image":
+        random.seed(folder)
+        random.shuffle(media_list)
+    next_batch = get_media_batch(media_list, offset=offset, batch_size=batch_size)
+    return jsonify({'items': next_batch})
+
+# 各个路由均调用上面统一的渲染函数
+@index_bp.route('/photograph')
+def photograph():
+    """展示【摄影】页面，仅初始加载 12 张图片，支持懒加载"""
+    return render_gallery_page("摄影", "photograph", "image", batch_size=12, randomize=True)
 
 @index_bp.route('/darwin_album')
 def darwin_album():
-    """用于展示【达尔文的专属相册】页面"""
-    folder = '达尔文的专属相册'
-    images = get_images_from_folder(folder)
-    return render_template('gallery.html', title="达尔文的专属相册", folder=folder, images=images, media_type="image")
+    """展示【达尔文的专属相册】页面，展示全部图片"""
+    return render_gallery_page("达尔文的专属相册", "达尔文的专属相册", "image")
 
 @index_bp.route('/paintings')
 def paintings():
-    """用于展示【我的绘画作品】页面"""
-    folder = '我的绘画作品'
-    images = get_images_from_folder(folder)
-    return render_template('gallery.html', title="我的绘画作品", folder=folder, images=images, media_type="image")
+    """展示【我的绘画作品】页面，展示全部图片"""
+    return render_gallery_page("我的绘画作品", "我的绘画作品", "image")
 
 @index_bp.route('/audios')
 def audios():
-    folder = '音乐和弹唱作品'
-    audios = get_audio_from_folder(folder)
-    return render_template('gallery.html', title="音乐和弹唱作品", folder=folder, audios=audios, media_type="audio")
+    """展示【音乐和弹唱作品】页面，展示全部音频文件"""
+    return render_gallery_page("音乐和弹唱作品", "音乐和弹唱作品", "audio")
 
 @index_bp.route('/ebooks')
 def ebooks():
-    """用于展示【音乐作品】页面"""
-    folder = '电子书和论文'
-    books = get_books_from_folder(folder)
-    return render_template('gallery.html', title="电子书论文", folder=folder, books=books, media_type="ebook")
-
+    """展示【电子书和论文】页面，展示全部电子书及论文"""
+    return render_gallery_page("电子书论文", "电子书和论文", "ebook")
+#################################################################################
+#新建上次和获取图片URL的路由，
+###########################################################################
 logging.basicConfig(level=logging.INFO)
 
 api_key = os.getenv("OPENAI_API_KEY")
@@ -158,25 +173,44 @@ def llm_query():
     
     return render_template('llm.html', query=query, answer=answer)
 
-@index_bp.route('/lezhi')
-def lezhi():
-    return render_template('lezhi.html', title="乐志")
+####################################################################
+# 静态页面映射字典（URL标识符 -> (模板文件, 页面标题)）
+STATIC_PAGE_MAPPING = {
+    "lezhi": ("lezhi.html", "乐志"),
+    "resume": ("resume.html", "Resume"),
+    "aboutme": ("aboutme.html", "About Me"),
+    "study": ("study.html", "课题方向"),
+    "interest": ("interest.html", "最近在做的事和兴趣"),
+}
 
-@index_bp.route('/resume')
-def resume():
-    """简历页面"""
-    return render_template('resume.html', title="Resume")
+# 占位页面映射字典（URL标识符 -> 功能显示名称）
+PLACEHOLDER_MAPPING = {
+    "message_board": "留言板板",
+    "survey": "问卷调查",
+    "chat": "聊天机器人",
+    # 如果某个页面既存在于静态页面又存在于占位字典
+    # 则建议以静态页面为准，避免冲突
+    "store": "个人商店",  
+    "consultation": "咨询预约",
+    "feedback": "意见反馈", 
+    "pdf_translate": "PDF 翻译",
+}
 
-@index_bp.route('/aboutme')
-def aboutme():
-    """自我介绍页面"""
-    return render_template('aboutme.html', title="About Me")
-
-@index_bp.route('/study')
-def study():
-    """课题研究方向页面"""
-    return render_template('study.html', title="课题方向")
-
-@index_bp.route('/interest')
-def interest():
-    return render_template('interest.html', title="最近在做的事和兴趣")
+@index_bp.route('/<page>')
+def dynamic_page(page):
+    """
+    统一处理静态页面与占位页面：
+    - 若 page 存在于 STATIC_PAGE_MAPPING，则返回对应静态模板
+    - 若 page 存在于 PLACEHOLDER_MAPPING，则返回通用占位模板 placeholder.html
+    - 否则返回 404
+    """
+    # 静态页面优先处理
+    if page in STATIC_PAGE_MAPPING:
+        template, title = STATIC_PAGE_MAPPING[page]
+        return render_template(template, title=title)
+    # 处理占位页面
+    elif page in PLACEHOLDER_MAPPING:
+        feature_name = PLACEHOLDER_MAPPING[page]
+        return render_template('placeholder.html', title=feature_name, feature_name=feature_name)
+    else:
+        abort(404)

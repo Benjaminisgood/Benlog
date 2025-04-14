@@ -5,51 +5,59 @@
   <h1>{{ title }}</h1>
   <div class="gallery-container" id="gallery-container">
     {% if media_type == "image" %}
-      {% for image in images %}
-        <div class="gallery-item">
-          <div class="img-container">
-            <img src="{{ url_for('static', filename='gallery/' ~ folder ~ '/' ~ image) }}" 
-                 alt="{{ image }}" loading="lazy" 
-                 onclick="openModal(this.src, '{{ image }}')">
-            <div class="caption-overlay">{{ image }}</div>
+      {% if items %}
+        {% for item in items %}
+          <div class="gallery-item">
+            <div class="img-container">
+              <img src="{{ url_for('static', filename='gallery/' ~ folder ~ '/' ~ item) }}" 
+                   alt="{{ item }}" loading="lazy" 
+                   onclick="openModal(this.src, '{{ item }}')">
+              <div class="caption-overlay">{{ item }}</div>
+            </div>
           </div>
-        </div>
+        {% endfor %}
       {% else %}
         <p style="text-align: center; color: var(--text-color);">当前没有可展示的图片。</p>
-      {% endfor %}
-      <!-- 用于触发加载更多的观察器 -->
-      <div id="load-more"></div>
+      {% endif %}
+
     {% elif media_type == "audio" %}
-      {% for audio in audios %}
-        <div class="gallery-item">
-          <div class="img-container">
-            <img src="https://img.icons8.com/color/100/000000/audio-file.png" 
-                 alt="{{ audio }}" loading="lazy">
-            <div class="caption-overlay">{{ audio }}</div>
+      {% if items %}
+        {% for item in items %}
+          <div class="gallery-item">
+            <div class="img-container">
+              <img src="https://img.icons8.com/color/100/000000/audio-file.png" 
+                   alt="{{ item }}" loading="lazy">
+              <div class="caption-overlay">{{ item }}</div>
+            </div>
+            <audio controls>
+              <source src="{{ url_for('static', filename='gallery/' ~ folder ~ '/' ~ item) }}">
+              您的浏览器不支持 audio 元素。
+            </audio>
           </div>
-          <audio controls>
-            <source src="{{ url_for('static', filename='gallery/' ~ folder ~ '/' ~ audio) }}">
-            您的浏览器不支持 audio 元素。
-          </audio>
-        </div>
+        {% endfor %}
       {% else %}
         <p style="text-align: center; color: var(--text-color);">当前没有可展示的音频。</p>
-      {% endfor %}
+      {% endif %}
     {% elif media_type == "ebook" %}
-      {% for ebook in books %}
-        <div class="gallery-item">
-          <div class="img-container">
-            <a href="{{ url_for('static', filename='gallery/' ~ folder ~ '/' ~ ebook) }}" target="_blank" rel="noopener noreferrer" download="{{ ebook }}">
-              <img src="{{ url_for('static', filename='gallery/' ~ folder ~ '/' ~ ebook) }}"
-                   alt="{{ ebook }}" loading="lazy">
-            </a>
-            <div class="caption-overlay">{{ ebook }}</div>
+      {% if items %}
+        {% for item in items %}
+          <div class="gallery-item">
+            <div class="img-container">
+              <a href="{{ url_for('static', filename='gallery/' ~ folder ~ '/' ~ item) }}" 
+                 target="_blank" rel="noopener noreferrer" download="{{ item }}">
+                <img src="{{ url_for('static', filename='gallery/' ~ folder ~ '/' ~ item) }}"
+                     alt="{{ item }}" loading="lazy">
+              </a>
+              <div class="caption-overlay">{{ item }}</div>
+            </div>
           </div>
-        </div>
+        {% endfor %}
       {% else %}
         <p style="text-align: center; color: var(--text-color);">当前没有可展示的电子书。</p>
-      {% endfor %}
+      {% endif %}
     {% endif %}
+    <!-- 用于触发加载更多的观察器 -->
+    <div id="load-more"></div>
   </div>
 </div>
 
@@ -78,7 +86,6 @@
     column-count: 4;
     column-gap: 15px;
   }
-  /* 针对平板及手机的响应式设置 */
   @media (max-width: 768px) {
     .gallery-container {
       column-count: 2;
@@ -181,8 +188,9 @@
 {% endblock %}
 
 {% block script %}
-{% if media_type == "image" %}
 <script>
+  {% if media_type == "image" %}
+  // 图片模态框功能，仅对图片有效
   function openModal(src, caption) {
     var modal = document.getElementById("imageModal");
     var modalImg = document.getElementById("modalImage");
@@ -195,51 +203,96 @@
     var modal = document.getElementById("imageModal");
     modal.style.display = "none";
   }
+  {% endif %}
 
-  // 无限滚动加载：每次加载 12 张图片
+  // 统一的无限滚动加载，根据 media_type 构造不同的 DOM 结构
   (function() {
-    let offset = {{ images|length }};
+    let offset = {{ items|length }};
     const folder = "{{ folder }}";
+    const mediaType = "{{ media_type }}";
     let loading = false;
     const loadMoreEl = document.getElementById('load-more');
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting && !loading) {
           loading = true;
-          fetch(`/gallery/load_more?folder=${encodeURIComponent(folder)}&offset=${offset}`)
+          fetch(`/gallery/load_more?folder=${encodeURIComponent(folder)}&media_type=${encodeURIComponent(mediaType)}&offset=${offset}`)
             .then(response => response.json())
             .then(data => {
-              if (data.images && data.images.length > 0) {
+              if (data.items && data.items.length > 0) {
                 const container = document.getElementById('gallery-container');
-                data.images.forEach(image => {
-                  const item = document.createElement('div');
-                  item.className = 'gallery-item';
-                  
-                  const imgContainer = document.createElement('div');
-                  imgContainer.className = 'img-container';
-                  
-                  const img = document.createElement('img');
-                  img.src = `/static/gallery/${folder}/${image}`;
-                  img.alt = image;
-                  img.loading = 'lazy';
-                  img.onclick = function() { openModal(this.src, image); };
-                  
-                  imgContainer.appendChild(img);
-                  
-                  const caption = document.createElement('div');
-                  caption.className = 'caption-overlay';
-                  caption.textContent = image;
-                  imgContainer.appendChild(caption);
-                  
-                  item.appendChild(imgContainer);
-                  container.insertBefore(item, loadMoreEl);
+                data.items.forEach(item => {
+                  let galleryItem = document.createElement('div');
+                  galleryItem.className = 'gallery-item';
+                  let containerEl = document.createElement('div');
+                  containerEl.className = 'img-container';
+  
+                  if (mediaType === "image") {
+                    let img = document.createElement('img');
+                    img.src = `/static/gallery/${folder}/${item}`;
+                    img.alt = item;
+                    img.loading = 'lazy';
+                    img.onclick = function() { openModal(this.src, item); };
+                    containerEl.appendChild(img);
+  
+                    let caption = document.createElement('div');
+                    caption.className = 'caption-overlay';
+                    caption.textContent = item;
+                    containerEl.appendChild(caption);
+                  }
+                  else if (mediaType === "audio") {
+                    // 音频项：显示图标、描述和播放控件
+                    let icon = document.createElement('img');
+                    icon.src = "https://img.icons8.com/color/100/000000/audio-file.png";
+                    icon.alt = item;
+                    icon.loading = 'lazy';
+                    containerEl.appendChild(icon);
+  
+                    let caption = document.createElement('div');
+                    caption.className = 'caption-overlay';
+                    caption.textContent = item;
+                    containerEl.appendChild(caption);
+  
+                    galleryItem.appendChild(containerEl);
+  
+                    let audioEl = document.createElement('audio');
+                    audioEl.controls = true;
+                    let source = document.createElement('source');
+                    source.src = `/static/gallery/${folder}/${item}`;
+                    audioEl.appendChild(source);
+                    galleryItem.appendChild(audioEl);
+                  }
+                  else if (mediaType === "ebook") {
+                    // 电子书项：点击下载或打开
+                    let anchor = document.createElement('a');
+                    anchor.href = `/static/gallery/${folder}/${item}`;
+                    anchor.target = '_blank';
+                    anchor.rel = 'noopener noreferrer';
+                    anchor.download = item;
+  
+                    let img = document.createElement('img');
+                    img.src = `/static/gallery/${folder}/${item}`;
+                    img.alt = item;
+                    img.loading = 'lazy';
+                    anchor.appendChild(img);
+  
+                    containerEl.appendChild(anchor);
+  
+                    let caption = document.createElement('div');
+                    caption.className = 'caption-overlay';
+                    caption.textContent = item;
+                    containerEl.appendChild(caption);
+                  }
+  
+                  galleryItem.appendChild(containerEl);
+                  container.insertBefore(galleryItem, loadMoreEl);
                 });
-                offset += data.images.length;
+                offset += data.items.length;
               }
               loading = false;
             })
             .catch(error => {
-              console.error('加载图片出错：', error);
+              console.error('加载媒体出错：', error);
               loading = false;
             });
         }
@@ -248,5 +301,4 @@
     observer.observe(loadMoreEl);
   })();
 </script>
-{% endif %}
 {% endblock %}

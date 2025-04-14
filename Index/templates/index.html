@@ -14,7 +14,7 @@
   
   
   <div class="quick-links">
-    <a href="/resume" class="quick-card">
+    <a href="{{ url_for('index.dynamic_page', page='resume') }}" class="quick-card">
       <img src="https://img.icons8.com/color/100/000000/resume.png" alt="Resume" class="quick-icon">
       <span class="quick-label">个人求职简历</span>
     </a>
@@ -26,7 +26,7 @@
       <img src="https://img.icons8.com/color/100/000000/command.png" alt="Shortcut" class="quick-icon">
       <span class="quick-label">我的快捷指令</span>
     </a>
-    <a href="/gallery" class="quick-card">
+    <a href="/photograph" class="quick-card">
       <img src="https://img.icons8.com/color/100/000000/camera.png" alt="Gallery" class="quick-icon">
       <span class="quick-label">看我的摄影展</span>
     </a>
@@ -42,7 +42,7 @@
       <img src="https://img.icons8.com/color/100/000000/video.png" alt="Video" class="quick-icon">
       <span class="quick-label">我的视频网站</span>
     </a>
-    <a href="/lezhi" class="quick-card">
+    <a href="{{ url_for('index.dynamic_page', page='lezhi') }}" class="quick-card">
       <img src="https://img.icons8.com/color/100/000000/ghost.png" alt="Ghost" class="quick-icon">
       <span class="quick-label">乐志计划网站</span>
     </a>
@@ -58,15 +58,16 @@
       <img src="https://img.icons8.com/color/100/000000/cat.png" alt="Cat Album" class="quick-icon">
       <span class="quick-label">达尔文的专属相册</span>
     </a>
-    <a href="/interest" class="quick-card">
+    <a href="{{ url_for('index.dynamic_page', page='interest') }}" class="quick-card">
       <img src="https://img.icons8.com/color/100/000000/idea.png" alt="Interest" class="quick-icon">
       <span class="quick-label">兴趣爱好预约入口</span>
     </a>
+    
     <a href="https://github.com/Benjaminisgood/Benlog" class="quick-card">
       <img src="https://img.icons8.com/color/100/000000/source-code.png" alt="Source Code" class="quick-icon">
       <span class="quick-label">我个人网站源代码</span>
     </a>
-    <a href="/study" class="quick-card">
+    <a href="{{ url_for('index.dynamic_page', page='study') }}" class="quick-card">
       <img src="https://img.icons8.com/color/100/000000/share.png" alt="Resource Sharing" class="quick-icon">
       <span class="quick-label">课题方向长期更新</span>
     </a>
