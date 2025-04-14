@@ -17,7 +17,8 @@ setup(
         "gunicorn",
         "requests",
         "pymdown-extensions",
-        "openai"
+        "openai",
+        "cryptography"
     ],
     entry_points={
         "console_scripts": [
