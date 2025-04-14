@@ -21,7 +21,7 @@ def index():
     # 非管理员直接拒绝访问
     if not is_admin:
         flash("您没有权限访问后台管理页面。", "error")
-        return redirect(url_for('index.home'))  # 假设主页 endpoint 是 'index'
+        return redirect(url_for('index.home'))
     
     # 管理员访问正常渲染
     extra_for_user1 = False

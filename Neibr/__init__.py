@@ -14,7 +14,7 @@ migrate = Migrate()
 # 初始化函数，绑定 db 和 login_manager 到 app
 def init_app(app):
     login_manager.init_app(app)  # 绑定 LoginManager 到 Flask 应用
-    login_manager.login_view = 'login'  # 指定登录视图
+    login_manager.login_view = 'setting.login'  # 指定登录视图
 
     migrate.init_app(app, db)
 
