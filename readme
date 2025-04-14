@@ -31,7 +31,7 @@ benlog
 flask --app Benlog/app.py db init
 flask --app Benlog/app.py db migrate -m "Initial migration"
 flask --app Benlog/app.py db upgrade
-
+python3 -m venv myenv
 source myenv/bin/activate
 export FLASK_ENV=development
 export FLASK_DEBUG=1
