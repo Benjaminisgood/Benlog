@@ -5,6 +5,7 @@ import requests
 import urllib3
 from . import index_bp
 import os
+from os.path import join
 import openai
 import random  # 引入 random 模块
 import logging
@@ -24,6 +25,12 @@ MEDIA_EXTENSIONS = {
     "audio": ('.mp3', '.wav', '.ogg', '.m4a'),
     "ebook": ('.pdf', '.epub', '.txt', '.docx')
 }
+# 用于确保目录存在，如果没有则创建目录
+def ensure_directory_exists(folder):
+    folder_path = os.path.join('path_to_your_media_root', folder)  # 假设路径在 'path_to_your_media_root' 目录下
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+        print(f"Created directory: {folder_path}")
 
 def get_media_from_folder(folder_name, media_type):
     """
@@ -40,6 +47,8 @@ def get_media_from_folder(folder_name, media_type):
     if not extensions:
         return []
     
+    ensure_directory_exists(folder_name)
+
     media = []
     folder_path = os.path.join(BASE_DIR, 'Benlog', 'static', 'gallery', folder_name)
     if os.path.exists(folder_path):
@@ -69,6 +78,8 @@ def render_gallery_page(title, folder, media_type, batch_size=None, randomize=Fa
     返回:
       渲染后的模板页面，统一传递媒体列表给模板变量 items
     """
+    ensure_directory_exists(folder)
+
     media_list = get_media_from_folder(folder, media_type)
     if randomize and media_type == "image":
         random.seed(folder)
@@ -93,6 +104,7 @@ def gallery_load_more():
     folder = request.args.get('folder')
     if not folder:
         abort(400, description="Missing folder parameter")
+    
     media_type = request.args.get('media_type', 'image')
     try:
         offset = int(request.args.get('offset', 0))
@@ -110,26 +122,31 @@ def gallery_load_more():
 @index_bp.route('/photograph')
 def photograph():
     """展示【摄影】页面，仅初始加载 12 张图片，支持懒加载"""
+    ensure_directory_exists("photograph")  # 确保目录存在
     return render_gallery_page("摄影", "photograph", "image", batch_size=12, randomize=True)
 
 @index_bp.route('/darwin_album')
 def darwin_album():
     """展示【达尔文的专属相册】页面，展示全部图片"""
+    ensure_directory_exists("darwin_album")  # 确保目录存在
     return render_gallery_page("达尔文的专属相册", "darwin_album", "image")
 
 @index_bp.route('/paintings')
 def paintings():
     """展示【我的绘画作品】页面，展示全部图片"""
+    ensure_directory_exists("paintings")  # 确保目录存在
     return render_gallery_page("我的绘画作品", "paintings", "image")
 
 @index_bp.route('/audios')
 def audios():
     """展示【音乐和弹唱作品】页面，展示全部音频文件"""
+    ensure_directory_exists("audios")  # 确保目录存在
     return render_gallery_page("音乐和弹唱作品", "audios", "audio")
 
 @index_bp.route('/ebooks')
 def ebooks():
     """展示【电子书和论文】页面，展示全部电子书及论文"""
+    ensure_directory_exists("ebooks")  # 确保目录存在
     return render_gallery_page("电子书论文", "ebooks", "ebook")
 
 ###########################################################################
