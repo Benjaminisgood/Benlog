@@ -2,7 +2,7 @@ from . import setting_bp
 from flask import request
 from Settings.models import User
 from flask import Blueprint, request, render_template, redirect, url_for, flash
-from flask_login import login_user
+from flask_login import login_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from Settings.models import User
 from Settings.extensions import db
@@ -21,7 +21,7 @@ def index():
     # 非管理员直接拒绝访问
     if not is_admin:
         flash("您没有权限访问后台管理页面。", "error")
-        return redirect(url_for('index.home'))
+        return redirect(url_for('setting.logout'))
     
     # 管理员访问正常渲染
     extra_for_user1 = False
@@ -49,7 +49,7 @@ def edit_user(user_id):
     """编辑指定用户信息（仅限超级管理员）"""
     if current_user.id != 1:
         flash("您无权限访问此页面。", "error")
-        return redirect(url_for('setting.index'))
+        return redirect(url_for('setting.manage_users'))
 
     user = User.query.get_or_404(user_id)
 
@@ -70,7 +70,7 @@ def add_user():
     """新增用户，仅超级管理员"""
     if current_user.id != 1:
         flash("无权限访问", "error")
-        return redirect(url_for('setting.index'))
+        return redirect(url_for('setting.manage_users'))
 
     if request.method == 'POST':
         email = request.form.get('email')
@@ -228,9 +228,12 @@ def login():
             return redirect(url_for('index.home'))
         flash('邮箱或密码错误。', 'error')
     
-    return render_template('login.html')
+    return render_template('setting_index.html')
 
-
+@setting_bp.route('/logout')
+def logout():
+    logout_user()  # 登出用户
+    return redirect(url_for('setting.login'))
 ###########################################################
 
 

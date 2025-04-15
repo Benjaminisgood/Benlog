@@ -5,32 +5,23 @@
     <a href="{{ url_for('setting.manage_gallery') }}" class="btn btn-back">Back to Gallery List</a>
 
     <h2>Files in this Folder:</h2>
-    {% if files %}
-        <ul class="file-list">
-        {% for file in files %}
-            <li class="file-item">
-                <span>{{ file }}</span>
-                <div class="file-actions">
-                    <!-- Download Button -->
-                    <a href="{{ url_for('setting.download_file', folder_name=folder_name, filename=file) }}" class="btn btn-download">Download</a>
-                    
-                    <!-- Rename Button -->
-                    <button class="btn btn-rename" data-filename="{{ file }}" data-folder="{{ folder_name }}" onclick="showRenameModal(this)">Rename</button>
-                    
-                    <!-- Copy Link Button -->
-                    <!--<button class="btn btn-copy" onclick="copyMarkdownLink('{{ url_for('setting.download_file', folder_name=folder_name, filename=file) }}')">Copy Link</button> -->
-                    <!-- Copy Link Button -->
-                    <button class="btn btn-copy" onclick="copyMarkdownLink('{{ url_for('static', filename='gallery/' + folder_name + '/' + file) }}')">Copy Link</button>
-                    <!--<button class="btn btn-copy" onclick="copyMarkdownLink('{{ url_for('static', filename='gallery/' + folder_name + '/' + file)|replace('static/', 'http://127.0.0.1/static/') }}')">Copy Markdown Link</button>  -->
-
-
-                    <!-- Delete Button -->
-                    <form action="{{ url_for('setting.delete_file', folder_name=folder_name, filename=file) }}" method="POST" style="display:inline;">
-                        <button type="submit" class="btn btn-delete">Delete</button>
-                    </form>
-                </div>
-            </li>
-        {% endfor %}
+{% if files %}
+    <ul class="file-list">
+    {% for file in files %}
+        <li class="file-item">
+            <span>{{ file }}</span>
+            <div class="file-actions">
+                <!-- Download Button -->
+                <a href="{{ url_for('setting.download_file', folder_name=folder_name, filename=file) }}" class="btn btn-download">Download</a>
+                
+                <!-- Rename Button -->
+                <button class="btn btn-rename" data-filename="{{ file }}" data-folder="{{ folder_name }}" onclick="showRenameModal(this)">Rename</button>
+                
+                <!-- Copy Link Button -->
+                <button class="btn btn-copy" onclick="copyLink('{{ url_for('static', filename='gallery/' + folder_name + '/' + file) }}', '{{ file }}')">Copy Link</button>
+            </div>
+        </li>
+    {% endfor %}
         </ul>
     {% else %}
         <p>No files in this folder.</p>
@@ -102,18 +93,29 @@
             document.getElementById('rename-modal').style.display = 'none';
         }
 
-        // Function to copy the file link to clipboard
-        function copyMarkdownLink(link) {
-        const markdownLink = `![](${link})`;  // Format the link as Markdown for images
-        const textarea = document.createElement('textarea');
-        textarea.value = markdownLink;  // Set the Markdown image link
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        alert('Markdown link copied to clipboard!');
+// Function to copy the file link to clipboard
+function copyLink(link, file) {
+    let markdownLink;
+    
+    // Check if the file is an audio file
+    if (file.endsWith('.mp3') || file.endsWith('.wav') || file.endsWith('.ogg') || file.endsWith('.m4a')) {
+        //markdownLink = `[audio](${link})`;  // Format the link as Markdown for audio files
+        markdownLink = `<audio controls src="${link}" title="${'[audio](${link})'}"></audio>`;
+    } else {
+        markdownLink = `![](${link})`;  // Format the link as Markdown for images (default)
     }
-    </script>
+    
+    // Create a temporary textarea to copy the link
+    const textarea = document.createElement('textarea');
+    textarea.value = markdownLink;  // Set the Markdown formatted link
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    
+    alert('Markdown link copied to clipboard!');
+}
+</script>
 </div>
 
 
