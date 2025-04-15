@@ -16,22 +16,22 @@ from flask import session
 @setting_bp.route('/')
 @login_required
 def index():
-    """后台管理首页：仅管理员可见，ID为1的用户显示额外功能"""
-    is_admin = current_user.is_admin or current_user.id == 1
-    extra_for_user1 = current_user.id == 1
-
-    # 非管理员直接拒绝访问
-    if not is_admin:
-        flash("您没有权限访问后台管理页面。", "error")
-        return redirect(url_for('setting.logout'))
+    """后台管理首页：管理员和ID为1的用户显示额外功能"""
     
-    # 管理员访问正常渲染
-    extra_for_user1 = False
-    if current_user.id == 1:
-        # 预留给 ID 为 1 的用户的特殊功能区域
-        extra_for_user1 = True
+    # 判断是否为管理员，是否为超级管理员
+    is_admin = current_user.is_admin  # 普通管理员
+    is_user1 = current_user.id == 1  # 超级管理员
 
-    return render_template('setting_index.html', extra_for_user1=extra_for_user1)
+    # 定义是否显示额外的内容
+    extra_for_admin = is_admin  # 只有管理员能看到管理员的内容
+    extra_for_user1 = is_user1  # 只有ID为1的用户能看到超级管理员的内容
+
+    # 渲染模板，传递是否显示额外内容的标志
+    return render_template(
+        'setting_index.html',
+        extra_for_admin=extra_for_admin,
+        extra_for_user1=extra_for_user1
+    )
 
 
 @setting_bp.route('/manage_users')
@@ -51,7 +51,7 @@ def edit_user(user_id):
     """编辑指定用户信息（仅限超级管理员）"""
     if current_user.id != 1:
         flash("您无权限访问此页面。", "error")
-        return redirect(url_for('setting.manage_users'))
+        return redirect(url_for('setting.index'))
 
     user = User.query.get_or_404(user_id)
 
@@ -72,7 +72,7 @@ def add_user():
     """新增用户，仅超级管理员"""
     if current_user.id != 1:
         flash("无权限访问", "error")
-        return redirect(url_for('setting.manage_users'))
+        return redirect(url_for('setting.index'))
 
     if request.method == 'POST':
         email = request.form.get('email')
@@ -209,6 +209,7 @@ def register():
         return redirect(url_for('setting.login'))
     
     return render_template('register.html')
+
 @setting_bp.route('/login', methods=['GET', 'POST'])
 def login():
     """
@@ -227,10 +228,11 @@ def login():
         
         if user and check_password_hash(user.password, password):
             login_user(user)
-            return redirect(url_for('index.home'))
+            next_page = request.args.get('next')  # 获取 next 参数
+            return redirect(next_page or url_for('setting.index'))  # 如果 next 存在就重定向到 next 页面，否则跳转到后台首页
         flash('邮箱或密码错误。', 'error')
     
-    return render_template('setting_index.html')
+    return render_template('login.html')  # 确保使用的是 login.html 页面，而不是 index.html
 
 @setting_bp.route('/logout')
 @login_required

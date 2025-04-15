@@ -4,11 +4,15 @@
 <p>欢迎您，{{ current_user.username }}</p>
 <li><a href="{{ url_for('setting.logout') }}">登出</a></li>
 
-<ul class="management-links">
-  <li><a href="{{ url_for('edu.manage_notes') }}">📄 管理教育笔记</a></li>
-  <li><a href="{{ url_for('blog.manage_posts') }}">📄 管理博客文章</a></li>
-</ul>
+{# 如果是管理员，显示管理功能 #}
+{% if extra_for_admin %}
+  <ul class="management-links">
+    <li><a href="{{ url_for('edu.manage_notes') }}">📄 管理教育笔记</a></li>
+    <li><a href="{{ url_for('blog.manage_posts') }}">📄 管理博客文章</a></li>
+  </ul>
+{% endif %}
 
+{# 如果是超级管理员，显示超级管理员功能 #}
 {% if extra_for_user1 %}
   <div class="admin-feature">
     <h2>超级管理员功能</h2>
