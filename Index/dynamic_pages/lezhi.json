@@ -2,20 +2,21 @@
     "title": "乐志",
     "content": "这里是乐志的页面内容。",
     "elements": [
-      {
-        "type": "text",
-        "content": "欢迎来到乐志页面！"
-      },
-      {
-        "type": "image",
-        "src": "https://example.com/lezhi.jpg",
-        "alt": "乐志图片"
-      },
-      {
-        "type": "link",
-        "href": "https://example.com",
-        "text": "访问乐志网站"
-      }
+        {
+            "type": "text",
+            "content": "欢迎来到乐志页面！"
+        },
+        {
+            "type": "link",
+            "src": "https://example.com/lezhi.jpg",
+            "alt": "乐志图片",
+            "content": "https://www.apple.com.cn/"
+        },
+        {
+            "type": "text",
+            "href": "https://example.com",
+            "text": "访问乐志网站",
+            "content": "thanks"
+        }
     ]
-  }
-  
+}
