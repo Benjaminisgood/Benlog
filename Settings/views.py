@@ -1,5 +1,5 @@
 from . import setting_bp
-from flask import request
+from flask import request, send_from_directory
 from Settings.models import User
 from flask import Blueprint, request, render_template, redirect, url_for, flash
 from flask_login import login_user, logout_user
@@ -311,7 +311,8 @@ def view_folder(folder_name):
 @login_required
 def download_file(folder_name, filename):
     folder_path = os.path.join(GALLERY_PATH, folder_name)
-    return send_from_directory(folder_path, filename)
+    return send_from_directory(folder_path, filename, as_attachment=True)
+
 
 # File deletion route
 @setting_bp.route('/delete_file/<folder_name>/<filename>', methods=['POST'])
