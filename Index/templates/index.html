@@ -2,9 +2,27 @@
 {% block content %}
   <div class="center-content">
     <h1>Welcome to My Personal Site</h1>
-    <p>欢迎来逛逛啊，下面的快速卡片内容（index模块小组件）自由修改哦</p>
-    <p>blog模块是一些生活和工作的记录和思考，edu模块顾名思义就是学习和科研方面。如果你也想要编辑，就像wiki那样一起共享和编辑知识库文档，只需要获取认证密钥（默认0715）即可。欢迎大家在neibr模块注册登陆，那里是一个网上邻里社区，每个人都可以在里面发帖讨论。</p>
+    <p>欢迎来逛逛啊</p>
   </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
 
   <div class="search-bar">
     <form action="{{ url_for('index.llm_query') }}" method="post">
@@ -13,6 +31,40 @@
   </div>
   
   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <div class="quick-links">
     <a href="{{ url_for('index.dynamic_page', page='resume') }}" class="quick-card">
       <img src="https://img.icons8.com/color/100/000000/resume.png" alt="Resume" class="quick-icon">
@@ -62,7 +114,6 @@
       <img src="https://img.icons8.com/color/100/000000/idea.png" alt="Interest" class="quick-icon">
       <span class="quick-label">兴趣爱好预约入口</span>
     </a>
-    
     <a href="https://github.com/Benjaminisgood/Benlog" class="quick-card">
       <img src="https://img.icons8.com/color/100/000000/source-code.png" alt="Source Code" class="quick-icon">
       <span class="quick-label">我个人网站源代码</span>
@@ -110,6 +161,66 @@
   </p>
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
 <style>
   .search-bar {
   max-width: 600px;
@@ -202,6 +313,59 @@
   line-height: 1.5;
 }
 </style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <script>
   // JavaScript for any additional functionality can be added here
 </script>
