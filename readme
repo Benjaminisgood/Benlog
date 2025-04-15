@@ -22,6 +22,7 @@ flask --app Benlog.app.py db init
 benlog
 
 #一键运行
+rm -rf myenv
 python3 -m venv myenv
 source myenv/bin/activate
 pip install -r requirements.txt
@@ -40,6 +41,9 @@ gunicorn -w 4 -b 0.0.0.0:80 "Benlog.app:create_app()"
 #cd myenv/lib/python3.9/site-packages
 #gunicorn -w 4 -b 0.0.0.0:80 "Benlog.app:create_app()"
 #cd myenv/lib/python3.9/site-packages
+#which python
+#pip3 install -r requirements.txt
+
 
 
 # 提交到github
