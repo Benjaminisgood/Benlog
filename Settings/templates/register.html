@@ -11,6 +11,7 @@
     {% endfor %}
   {% endif %}
   {% endwith %}
+  
   <form method="POST">
     <div class="form-group">
       <label for="email">邮箱:</label>
@@ -30,50 +31,55 @@
     </div>
     <button type="submit" class="btn btn-primary">注册</button>
   </form>
+  
   <p class="login-link">已有账户？ <a href="{{ url_for('setting.login') }}">登录</a></p>
 </div>
 
-
-
-
+<!-- 局部CSS样式 -->
 <style>
   .register-card {
     max-width: 400px;
     margin: 60px auto;
     padding: 30px;
     border-radius: 12px;
-    background-color: var(--card-bg-color);
+    background-color: var(--card-bg-color); /* 使用全局卡片背景色 */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
+
   .register-card h1 {
     text-align: center;
     margin-bottom: 20px;
-    color: var(--text-color);
+    color: var(--text-color); /* 使用全局文本颜色 */
     font-size: 2rem;
   }
+
   .form-group {
     margin-bottom: 20px;
   }
+
   .form-group label {
     display: block;
     font-size: 1rem;
     margin-bottom: 8px;
-    color: var(--text-color);
+    color: var(--text-color); /* 使用全局文本颜色 */
   }
+
   .form-control {
     width: 100%;
     padding: 10px 15px;
     font-size: 1rem;
-    border: 1px solid var(--card-border-color);
+    border: 1px solid var(--card-border-color); /* 使用全局边框颜色 */
     border-radius: 8px;
     outline: none;
     transition: border-color 0.3s;
-    background-color: var(--card-bg-color);
-    color: var(--text-color);
+    background-color: var(--card-bg-color); /* 使用全局卡片背景色 */
+    color: var(--text-color); /* 使用全局文本颜色 */
   }
+
   .form-control:focus {
-    border-color: #ff4d67;
+    border-color: #ff4d67; /* 固定颜色，用于聚焦时边框颜色 */
   }
+
   .btn {
     display: block;
     width: 100%;
@@ -81,27 +87,32 @@
     font-size: 1rem;
     border: none;
     border-radius: 8px;
-    background-color: #ff4d67;
-    color: #fff;
+    background-color: var(--btn-bg-color); /* 使用全局按钮背景色 */
+    color: var(--btn-text-color); /* 使用全局按钮文本颜色 */
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s ease;
   }
+
   .btn:hover {
-    background-color: #e8435f;
+    background-color: var(--btn-hover-bg-color); /* 使用全局按钮悬停背景色 */
   }
+
   .login-link {
     text-align: center;
     margin-top: 15px;
     font-size: 0.9rem;
-    color: var(--text-color);
+    color: var(--text-color); /* 使用全局文本颜色 */
   }
+
   .login-link a {
-    color: var(--link-color);
+    color: var(--link-color); /* 使用全局链接颜色 */
     text-decoration: none;
   }
+
   .login-link a:hover {
     text-decoration: underline;
   }
+
   @media (max-width: 768px) {
     .register-card {
       margin: 40px auto;

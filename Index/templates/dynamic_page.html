@@ -8,19 +8,96 @@
     <title>{{ page_data.title }}</title>
 </head>
 <body>
-    <h1>{{ page_data.title }}</h1>
-    <div>{{ page_data.content }}</div>
+    <div class="container">
+        <h1 class="page-title">{{ page_data.title }}</h1>
+        <div class="page-content">{{ page_data.content }}</div>
 
-    <!-- 动态渲染页面元素 -->
-    {% for element in page_data.elements %}
-        {% if element.type == 'text' %}
-            <p>{{ element.content }}</p>
-        {% elif element.type == 'image' %}
-            <img src="{{ element.src }}" alt="{{ element.alt }}">
-        {% elif element.type == 'link' %}
-            <a href="{{ element.href }}">{{ element.text }}</a>
-        {% endif %}
-    {% endfor %}
-</body>
-</html>
+        <!-- 动态渲染页面元素 -->
+        <div class="elements-container">
+            {% for element in page_data.elements %}
+                {% if element.type == 'text' %}
+                    <p class="text-element">{{ element.content }}</p>
+                {% elif element.type == 'image' %}
+                    <img class="image-element" src="{{ element.src }}" alt="{{ element.alt }}">
+                {% elif element.type == 'link' %}
+                    <a class="link-element" href="{{ element.href }}">{{ element.text }}</a>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 局部CSS样式 -->
+    <style>
+        .container {
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .page-title {
+            text-align: center;
+            color: var(--text-color); /* 使用全局文本颜色 */
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .page-content {
+            color: var(--meta-text-color); /* 使用全局元数据文本颜色 */
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .elements-container {
+            margin-top: 20px;
+        }
+
+        .text-element {
+            color: var(--text-color); /* 使用全局文本颜色 */
+            font-size: 1.1rem;
+            margin: 10px 0;
+        }
+
+        .image-element {
+            max-width: 100%;
+            height: auto;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .link-element {
+            color: var(--link-color); /* 使用全局链接颜色 */
+            font-weight: bold;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .link-element:hover {
+            color: var(--text-color); /* 悬停时使用全局文本颜色 */
+            text-decoration: underline;
+        }
+
+        /* 响应式设计：适配小屏幕 */
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .page-content {
+                font-size: 0.9rem;
+            }
+
+            .elements-container {
+                padding: 0 15px;
+            }
+
+            .text-element {
+                font-size: 1rem;
+            }
+
+            .link-element {
+                font-size: 1rem;
+            }
+        }
+    </style>
+
 {% endblock %}

@@ -1,35 +1,153 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>用户管理</h1>
+<h1 class="page-heading">用户管理</h1>
 
-<table border="1">
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>用户名</th>
-      <th>邮箱</th>
-      <th>是否为管理员</th>
-      <th>操作</th>
-    </tr>
-  </thead>
-  <a href="{{ url_for('setting.add_user') }}">➕ 新增用户</a>
-  <tbody>
-    {% for user in users %}
-    <tr>
-      <td>{{ user.id }}</td>
-      <td>{{ user.username }}</td>
-      <td>{{ user.email }}</td>
-      <td>{{ '是' if user.is_admin else '否' }}</td>
-      <td>
-        <a href="{{ url_for('setting.edit_user', user_id=user.id) }}">编辑</a> |
-        <form action="{{ url_for('setting.delete_user', user_id=user.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('确定删除该用户吗？');">
-          <button type="submit" style="color:red;">删除</button>
-        </form>
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+<div class="table-container">
+  <a href="{{ url_for('setting.add_user') }}" class="add-user-btn">➕ 新增用户</a>
+  <table class="user-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>用户名</th>
+        <th>邮箱</th>
+        <th>是否为管理员</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+      <tr>
+        <td>{{ user.id }}</td>
+        <td>{{ user.username }}</td>
+        <td>{{ user.email }}</td>
+        <td>{{ '是' if user.is_admin else '否' }}</td>
+        <td>
+          <a href="{{ url_for('setting.edit_user', user_id=user.id) }}" class="edit-btn">编辑</a> |
+          <form action="{{ url_for('setting.delete_user', user_id=user.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('确定删除该用户吗？');">
+            <button type="submit" class="delete-btn">删除</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 
-<a href="{{ url_for('setting.index') }}">返回管理首页</a>
+<a href="{{ url_for('setting.index') }}" class="back-link">返回管理首页</a>
+
+<!-- 局部CSS样式 -->
+<style>
+  /* 页面标题 */
+  .page-heading {
+    text-align: center;
+    color: var(--text-color); /* 使用全局文本颜色 */
+    margin-bottom: 20px;
+    font-size: 2rem;
+  }
+
+  /* 表格容器 */
+  .table-container {
+    margin: 0 auto;
+    width: 80%;
+  }
+
+  .user-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+
+  .user-table th, .user-table td {
+    padding: 12px;
+    text-align: center;
+    border: 1px solid var(--card-border-color); /* 使用全局卡片边框色 */
+  }
+
+  .user-table th {
+    background-color: var(--nav-bg-color); /* 使用全局导航背景色 */
+    color: var(--nav-text-color); /* 使用全局导航文本颜色 */
+  }
+
+  .user-table tbody tr:hover {
+    background-color: var(--quick-card-hover-bg); /* 使用全局悬停背景色 */
+  }
+
+  .add-user-btn {
+    display: block;
+    margin: 20px auto;
+    text-decoration: none;
+    background-color: var(--btn-bg-color); /* 使用全局按钮背景色 */
+    color: var(--btn-text-color); /* 使用全局按钮文本颜色 */
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 1.2rem;
+    text-align: center;
+    transition: background-color 0.3s ease;
+  }
+
+  .add-user-btn:hover {
+    background-color: var(--btn-hover-bg-color); /* 使用全局按钮悬停背景色 */
+  }
+
+  .edit-btn {
+    color: var(--link-color); /* 使用全局链接颜色 */
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s ease;
+  }
+
+  .edit-btn:hover {
+    text-decoration: underline;
+    color: var(--text-color); /* 悬停时使用全局文本颜色 */
+  }
+
+  .delete-btn {
+    background-color: transparent;
+    color: red;
+    border: 1px solid red;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: color 0.3s ease, border-color 0.3s ease;
+  }
+
+  .delete-btn:hover {
+    background-color: red;
+    color: white;
+    border-color: red;
+  }
+
+  .back-link {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    color: var(--link-color); /* 使用全局链接颜色 */
+    text-decoration: none;
+    font-size: 1rem;
+    transition: color 0.3s ease;
+  }
+
+  .back-link:hover {
+    color: var(--text-color); /* 悬停时使用全局文本颜色 */
+    text-decoration: underline;
+  }
+
+  /* 响应式设计：适配小屏幕 */
+  @media (max-width: 768px) {
+    .user-table th, .user-table td {
+      font-size: 0.9rem;
+      padding: 8px;
+    }
+
+    .add-user-btn {
+      width: 100%;
+      padding: 12px 20px;
+    }
+
+    .delete-btn, .edit-btn {
+      font-size: 0.9rem;
+    }
+  }
+</style>
 {% endblock %}

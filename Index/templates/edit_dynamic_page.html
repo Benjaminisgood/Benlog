@@ -9,32 +9,120 @@
     <title>编辑动态页面 - {{ page_data.title }}</title>
 </head>
 <body>
-    <h1>编辑 {{ page_data.title }} 页面</h1>
-    <form method="POST">
-        <label for="title">页面标题：</label>
-        <input type="text" id="title" name="title" value="{{ page_data.title }}" required><br><br>
-        
-        <label for="content">页面内容：</label>
-        <textarea id="content" name="content" required>{{ page_data.content }}</textarea><br><br>
+    <div class="container">
+        <h1 class="page-heading">编辑 {{ page_data.title }} 页面</h1>
+        <form method="POST" class="edit-page-form">
+            <label for="title">页面标题：</label>
+            <input type="text" id="title" name="title" value="{{ page_data.title }}" class="input-field" required><br><br>
+            
+            <label for="content">页面内容：</label>
+            <textarea id="content" name="content" class="input-field" required>{{ page_data.content }}</textarea><br><br>
 
-        <h3>元素：</h3>
-        {% for element in page_data.elements %}
-            <div>
-                <label>元素类型：</label>
-                <select name="elements[{{ loop.index0 }}][type]">
-                    <option value="text" {% if element.type == 'text' %}selected{% endif %}>文本</option>
-                    <option value="image" {% if element.type == 'image' %}selected{% endif %}>图片</option>
-                    <option value="link" {% if element.type == 'link' %}selected{% endif %}>链接</option>
-                </select><br>
+            <h3>元素：</h3>
+            <div id="elements-container">
+                {% for element in page_data.elements %}
+                    <div class="element">
+                        <label for="element_{{ loop.index0 }}_type">元素类型：</label>
+                        <select name="elements[{{ loop.index0 }}][type]" class="select-field">
+                            <option value="text" {% if element.type == 'text' %}selected{% endif %}>文本</option>
+                            <option value="image" {% if element.type == 'image' %}selected{% endif %}>图片</option>
+                            <option value="link" {% if element.type == 'link' %}selected{% endif %}>链接</option>
+                        </select><br>
 
-                <label>内容：</label>
-                <input type="text" name="elements[{{ loop.index0 }}][content]" value="{{ element.content or element.src or element.href }}"><br><br>
+                        <label for="element_{{ loop.index0 }}_content">内容：</label>
+                        <input type="text" name="elements[{{ loop.index0 }}][content]" class="input-field" value="{{ element.content or element.src or element.href }}"><br><br>
+                    </div>
+                {% endfor %}
             </div>
-        {% endfor %}
 
-        <button type="submit">保存更改</button>
-    </form>
-</body>
-</html>
+            <button type="submit" class="btn btn-save">保存更改</button>
+        </form>
+    </div>
+
+    <!-- 局部CSS样式 -->
+    <style>
+        .container {
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* 页面标题 */
+        .page-heading {
+            text-align: center;
+            color: var(--text-color); /* 使用全局文本颜色 */
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        /* 编辑页面表单 */
+        .edit-page-form {
+            background-color: var(--card-bg-color); /* 使用全局卡片背景色 */
+            border: 1px solid var(--card-border-color); /* 使用全局边框颜色 */
+            padding: 20px;
+            border-radius: 10px;
+            box-sizing: border-box;
+        }
+
+        .input-field, .select-field {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--input-border-color); /* 使用全局输入框边框色 */
+            border-radius: 8px;
+            background-color: var(--input-bg-color); /* 使用全局输入框背景色 */
+            color: var(--text-color); /* 使用全局文本颜色 */
+            transition: border-color 0.3s ease;
+        }
+
+        .input-field:focus, .select-field:focus {
+            border-color: var(--input-focus-border-color); /* 使用全局聚焦边框颜色 */
+            outline: none;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: var(--btn-bg-color); /* 使用全局按钮背景色 */
+            color: var(--btn-text-color); /* 使用全局按钮文本颜色 */
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            border: none;
+        }
+
+        .btn:hover {
+            background-color: var(--btn-hover-bg-color); /* 使用全局按钮悬停背景色 */
+        }
+
+        .btn-save {
+            width: 100%;
+        }
+
+        /* 元素区块 */
+        .element {
+            background-color: var(--card-bg-color); /* 使用全局卡片背景色 */
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--card-border-color); /* 使用全局卡片边框色 */
+            border-radius: 8px;
+        }
+
+        /* 响应式设计：适配小屏幕 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .input-field, .select-field {
+                font-size: 0.9rem;
+            }
+
+            .btn {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
 
 {% endblock %}

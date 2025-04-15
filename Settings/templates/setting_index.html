@@ -1,9 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>后台管理首页</h1>
-<p>欢迎您，{{ current_user.username }}！</p>
-<li><a href="{{ url_for('edu.manage_notes') }}">📄 管理教育笔记</a></li>
-<li><a href="{{ url_for('blog.manage_posts') }}">📄 管理博客文章</a></li>
+<h1 class="page-heading">后台管理首页</h1>
+<p>欢迎您，{{ current_user.username }}</p>
+<li><a href="{{ url_for('setting.logout') }}">登出</a></li>
+
+<ul class="management-links">
+  <li><a href="{{ url_for('edu.manage_notes') }}">📄 管理教育笔记</a></li>
+  <li><a href="{{ url_for('blog.manage_posts') }}">📄 管理博客文章</a></li>
+</ul>
+
 {% if extra_for_user1 %}
   <div class="admin-feature">
     <h2>超级管理员功能</h2>
@@ -14,40 +19,84 @@
       <li><a href="#">主题色自定义（待实现）</a></li>
       <li><a href="#">Instance 定义（待实现）</a></li>
     </ul>
-
     <p class="hint">👑 您是 ID 为 1 的超级管理员，拥有全站权限。</p>
   </div>
 {% endif %}
 
+<!-- 局部CSS样式 -->
+<style>
+  /* 页面标题样式 */
+  .page-heading {
+    text-align: center;
+    color: var(--text-color); /* 使用全局文本颜色 */
+    margin-bottom: 20px;
+    font-size: 2rem;
+  }
 
-<style> 
-.admin-feature {
-    border: 1px solid #ccc;
-    background: #f8f8f8;
+  /* 管理链接列表样式 */
+  .management-links {
+    list-style: none;
+    padding: 0;
+    text-align: center;
+  }
+
+  .management-links li {
+    margin: 10px 0;
+  }
+
+  .management-links a {
+    text-decoration: none;
+    color: var(--link-color); /* 使用全局链接颜色 */
+    font-weight: bold;
+    transition: color 0.3s ease;
+  }
+
+  .management-links a:hover {
+    color: var(--text-color); /* 悬停时使用全局文本颜色 */
+    text-decoration: underline;
+  }
+
+  /* 超级管理员功能区域 */
+  .admin-feature {
+    border: 1px solid var(--card-border-color); /* 使用全局边框颜色 */
+    background: var(--card-bg-color); /* 使用全局卡片背景色 */
     padding: 1rem;
     margin-top: 2rem;
     border-radius: 8px;
-}
+  }
 
-.admin-feature h2 {
-    color: #333;
-    border-bottom: 1px solid #ddd;
+  .admin-feature h2 {
+    color: var(--text-color); /* 使用全局文本颜色 */
+    border-bottom: 1px solid var(--card-border-color); /* 使用全局边框颜色 */
     padding-bottom: 0.5rem;
-}
+    margin-bottom: 1rem;
+  }
 
-.admin-feature ul {
+  .admin-feature ul {
     list-style: none;
     padding-left: 1rem;
-}
+  }
 
-.admin-feature ul li {
+  .admin-feature ul li {
     margin: 0.5rem 0;
-}
+  }
 
-.hint {
-    color: #888;
+  /* 提示信息样式 */
+  .hint {
+    color: var(--meta-text-color); /* 使用全局元数据文本颜色 */
     font-size: 0.9rem;
-}
+  }
+
+  /* 响应式设计：适配小屏幕 */
+  @media (max-width: 768px) {
+    .admin-feature {
+      padding: 1rem;
+    }
+
+    .management-links a {
+      font-size: 0.9rem; /* 在小屏幕上调整字体大小 */
+    }
+  }
 </style>
 
 {% endblock %}

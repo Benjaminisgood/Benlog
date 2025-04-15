@@ -7,92 +7,127 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- 新建动态网页按钮 -->
     <a href="{{ url_for('setting.new_dynamic_page') }}">
-        <button>新建动态网页</button>
+        <button class="new-page-button">新建动态网页</button>
     </a>
         
     <title>编辑页面列表</title>
 </head>
 <body>
-    <h1>可编辑的动态页面</h1>
-    <ul>
-        {% for page in editable_pages %}
-            <li>
-                <a href="{{ page.edit_url }}">{{ page.title }}</a> - 编辑
-            </li>
-        {% else %}
-            <li>没有可编辑的页面。</li>
-        {% endfor %}
-    </ul>
+    <header>
+        <h1>可编辑的动态页面</h1>
+    </header>
+
+    <div class="main-content">
+        <ul class="page-list">
+            {% for page in editable_pages %}
+                <li class="page-item">
+                    <a href="{{ page.edit_url }}" class="edit-link">{{ page.title }}</a> - 编辑
+                </li>
+            {% else %}
+                <li class="no-pages">没有可编辑的页面。</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <footer>
+        <p>© 2025 编辑页面列表</p>
+    </footer>
 </body>
 </html>
-<style>body {
+
+<!-- 局部CSS样式 -->
+<style>
+  /* 基础样式 */
+  body {
     background-color: var(--bg-color);
     color: var(--text-color);
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
   }
-  
+
   header {
-    background-color: var(--nav-bg-color);
-    color: var(--nav-text-color);
+    background-color: var(--nav-bg-color); /* 使用全局导航栏背景色 */
+    color: var(--nav-text-color); /* 使用全局导航栏文本颜色 */
     padding: 20px;
     text-align: center;
   }
-  
+
   .main-content {
     padding: 20px;
   }
-  
+
   .page-list {
     list-style: none;
     padding: 0;
   }
-  
+
   .page-item {
     padding: 10px;
-    border: 1px solid var(--card-border-color);
+    border: 1px solid var(--card-border-color); /* 使用全局卡片边框颜色 */
     margin: 5px 0;
-    background-color: var(--card-bg-color);
+    background-color: var(--card-bg-color); /* 使用全局卡片背景色 */
     transition: background-color 0.3s ease;
   }
-  
+
   .page-item:hover {
-    background-color: var(--quick-card-hover-bg);
+    background-color: var(--quick-card-hover-bg); /* 使用全局的悬停背景色 */
   }
-  
+
   .edit-link {
-    color: var(--link-color);
+    color: var(--link-color); /* 使用全局链接颜色 */
     text-decoration: none;
     font-weight: bold;
   }
-  
+
+  .edit-link:hover {
+    text-decoration: underline;
+  }
+
   .no-pages {
-    color: var(--meta-text-color);
+    color: var(--meta-text-color); /* 使用全局的元数据文本颜色 */
     font-style: italic;
   }
-  
+
+  /* 新建页面按钮 */
   .new-page-button {
-    background-color: #4CAF50;
-    color: white;
+    background-color: var(--btn-bg-color); /* 使用全局按钮背景色 */
+    color: var(--btn-text-color); /* 使用全局按钮文本颜色 */
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     text-decoration: none;
+    transition: background-color 0.3s;
   }
-  
+
   .new-page-button:hover {
-    background-color: #45a049;
+    background-color: var(--btn-hover-bg-color); /* 使用全局按钮悬停背景色 */
   }
-  
+
   footer {
-    background-color: var(--footer-bg);
+    background-color: var(--footer-bg); /* 使用全局页脚背景色 */
     text-align: center;
     padding: 10px;
     position: fixed;
     bottom: 0;
     width: 100%;
-    color: var(--meta-text-color);
-  }</style>
+    color: var(--meta-text-color); /* 使用全局元数据文本颜色 */
+  }
+
+  /* 响应式设计：适配小屏幕 */
+  @media (max-width: 768px) {
+    .main-content {
+      padding: 15px;
+    }
+
+    .page-item {
+      font-size: 0.9rem; /* 调整字体大小，适配小屏 */
+    }
+
+    .new-page-button {
+      width: 100%; /* 按钮宽度适应屏幕 */
+    }
+  }
+</style>
 {% endblock %}

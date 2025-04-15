@@ -5,23 +5,23 @@
     <a href="{{ url_for('setting.manage_gallery') }}" class="btn btn-back">Back to Gallery List</a>
 
     <h2>Files in this Folder:</h2>
-{% if files %}
-    <ul class="file-list">
-    {% for file in files %}
-        <li class="file-item">
-            <span>{{ file }}</span>
-            <div class="file-actions">
-                <!-- Download Button -->
-                <a href="{{ url_for('setting.download_file', folder_name=folder_name, filename=file) }}" class="btn btn-download">Download</a>
-                
-                <!-- Rename Button -->
-                <button class="btn btn-rename" data-filename="{{ file }}" data-folder="{{ folder_name }}" onclick="showRenameModal(this)">Rename</button>
-                
-                <!-- Copy Link Button -->
-                <button class="btn btn-copy" onclick="copyLink('{{ url_for('static', filename='gallery/' + folder_name + '/' + file) }}', '{{ file }}')">Copy Link</button>
-            </div>
-        </li>
-    {% endfor %}
+    {% if files %}
+        <ul class="file-list">
+        {% for file in files %}
+            <li class="file-item">
+                <span>{{ file }}</span>
+                <div class="file-actions">
+                    <!-- Download Button -->
+                    <a href="{{ url_for('setting.download_file', folder_name=folder_name, filename=file) }}" class="btn btn-download">Download</a>
+                    
+                    <!-- Rename Button -->
+                    <button class="btn btn-rename" data-filename="{{ file }}" data-folder="{{ folder_name }}" onclick="showRenameModal(this)">Rename</button>
+                    
+                    <!-- Copy Link Button -->
+                    <button class="btn btn-copy" onclick="copyLink('{{ url_for('static', filename='gallery/' + folder_name + '/' + file) }}', '{{ file }}')">Copy Link</button>
+                </div>
+            </li>
+        {% endfor %}
         </ul>
     {% else %}
         <p>No files in this folder.</p>
@@ -34,29 +34,28 @@
     </form>
 
     <!-- Rename Modal Form -->
-<div id="rename-modal" class="modal">
-    <div class="modal-content">
-        <h3>Rename File</h3>
-        <form action="{{ url_for('setting.rename_file') }}" method="POST">
-            <input type="text" id="new-filename" name="new-filename" required>
-            <input type="hidden" id="old-filename" name="old-filename">
-            <input type="hidden" id="folder-name" name="folder-name" value="{{ folder_name }}">
-            <button type="submit" class="btn btn-rename-submit">Rename</button>
-            <button type="button" class="btn btn-close-modal" onclick="closeRenameModal()">Cancel</button>
-        </form>
+    <div id="rename-modal" class="modal">
+        <div class="modal-content">
+            <h3>Rename File</h3>
+            <form action="{{ url_for('setting.rename_file') }}" method="POST">
+                <input type="text" id="new-filename" name="new-filename" required>
+                <input type="hidden" id="old-filename" name="old-filename">
+                <input type="hidden" id="folder-name" name="folder-name" value="{{ folder_name }}">
+                <button type="submit" class="btn btn-rename-submit">Rename</button>
+                <button type="button" class="btn btn-close-modal" onclick="closeRenameModal()">Cancel</button>
+            </form>
+        </div>
     </div>
-</div>
-
 
     <!-- Dropzone container -->
-<div class="dropzone-container">
-    <form action="{{ url_for('setting.upload_file', folder_name=folder_name) }}" 
-          method="POST" 
-          enctype="multipart/form-data" 
-          class="dropzone" 
-          id="my-dropzone">
-    </form>
-</div>
+    <div class="dropzone-container">
+        <form action="{{ url_for('setting.upload_file', folder_name=folder_name) }}" 
+              method="POST" 
+              enctype="multipart/form-data" 
+              class="dropzone" 
+              id="my-dropzone">
+        </form>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/dropzone@5.9.3/dist/min/dropzone.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/dropzone@5.9.3/dist/min/dropzone.min.css" rel="stylesheet">
@@ -93,32 +92,31 @@
             document.getElementById('rename-modal').style.display = 'none';
         }
 
-// Function to copy the file link to clipboard
-function copyLink(link, file) {
-    let markdownLink;
-    
-    // Check if the file is an audio file
-    if (file.endsWith('.mp3') || file.endsWith('.wav') || file.endsWith('.ogg') || file.endsWith('.m4a')) {
-        //markdownLink = `[audio](${link})`;  // Format the link as Markdown for audio files
-        markdownLink = `<audio controls src="${link}" title="${'[audio](${link})'}"></audio>`;
-    } else {
-        markdownLink = `![](${link})`;  // Format the link as Markdown for images (default)
-    }
-    
-    // Create a temporary textarea to copy the link
-    const textarea = document.createElement('textarea');
-    textarea.value = markdownLink;  // Set the Markdown formatted link
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-    
-    alert('Markdown link copied to clipboard!');
-}
-</script>
+        // Function to copy the file link to clipboard
+        function copyLink(link, file) {
+            let markdownLink;
+            
+            // Check if the file is an audio file
+            if (file.endsWith('.mp3') || file.endsWith('.wav') || file.endsWith('.ogg') || file.endsWith('.m4a')) {
+                markdownLink = `<audio controls src="${link}" title="${file}"></audio>`;
+            } else {
+                markdownLink = `![](${link})`;  // Format the link as Markdown for images (default)
+            }
+            
+            // Create a temporary textarea to copy the link
+            const textarea = document.createElement('textarea');
+            textarea.value = markdownLink;  // Set the Markdown formatted link
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            
+            alert('Markdown link copied to clipboard!');
+        }
+    </script>
 </div>
 
-
+<!-- 局部CSS样式 -->
 <style>
     .container {
         padding: 20px;
@@ -137,12 +135,12 @@ function copyLink(link, file) {
         border-radius: 5px;
         text-decoration: none;
         color: white;
-        background-color: #007bff;
+        background-color: var(--btn-bg-color); /* 使用全局按钮背景色 */
         border: none;
     }
 
     .btn:hover {
-        background-color: #0056b3;
+        background-color: var(--btn-hover-bg-color); /* 使用全局按钮悬停背景色 */
     }
 
     .btn-back {
@@ -189,6 +187,7 @@ function copyLink(link, file) {
     .upload-form input[type="file"] {
         margin-bottom: 15px;
     }
+
     /* Modal Styling */
     .modal {
         display: none;
@@ -202,6 +201,7 @@ function copyLink(link, file) {
         background-color: rgba(0,0,0,0.4);
         padding-top: 60px;
     }
+
     .modal-content {
         background-color: #fefefe;
         margin: 5% auto;
@@ -210,41 +210,27 @@ function copyLink(link, file) {
         width: 80%;
         max-width: 300px;
     }
-    .btn {
-        display: inline-block;
-        padding: 10px 15px;
-        margin: 5px;
-        text-align: center;
-        border-radius: 5px;
-        text-decoration: none;
-        color: white;
-        background-color: #007bff;
-        border: none;
-    }
-    .btn:hover {
-        background-color: #0056b3;
-    }
+
     .btn-rename {
         background-color: #ffc107;
     }
+
     .btn-rename:hover {
         background-color: #e0a800;
     }
+
     .btn-copy {
         background-color: #28a745;
     }
+
     .btn-copy:hover {
         background-color: #218838;
     }
-    .btn-delete {
-        background-color: #dc3545;
-    }
-    .btn-delete:hover {
-        background-color: #c82333;
-    }
+
     .btn-rename-submit {
-        background-color: #007bff;
+        background-color: var(--btn-bg-color); /* 使用全局按钮背景色 */
     }
+
     .btn-close-modal {
         background-color: #dc3545;
     }

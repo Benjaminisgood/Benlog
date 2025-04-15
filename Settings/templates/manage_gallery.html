@@ -1,13 +1,71 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Gallery Management</h1>
-<p>Choose a folder to manage:</p>
-<ul>
+<h1 class="gallery-heading">Gallery Management</h1>
+<p class="choose-folder">Choose a folder to manage:</p>
+<ul class="folder-list">
   {% for folder in folders %}
-    <li>
-      <a href="{{ url_for('setting.view_folder', folder_name=folder) }}">{{ folder }}</a>
+    <li class="folder-item">
+      <a href="{{ url_for('setting.view_folder', folder_name=folder) }}" class="folder-link">{{ folder }}</a>
     </li>
   {% endfor %}
 </ul>
 
+<!-- 局部CSS样式 -->
+<style>
+  /* 标题样式 */
+  .gallery-heading {
+    font-size: 2rem;
+    text-align: center;
+    color: var(--text-color); /* 使用全局文本颜色 */
+    margin-bottom: 20px;
+  }
+
+  /* 选择文件夹文字样式 */
+  .choose-folder {
+    text-align: center;
+    font-size: 1.2rem;
+    color: var(--meta-text-color); /* 使用全局元数据文本颜色 */
+    margin-bottom: 20px;
+  }
+
+  /* 文件夹列表样式 */
+  .folder-list {
+    list-style: none;
+    padding: 0;
+    text-align: center;
+  }
+
+  .folder-item {
+    margin: 10px 0;
+    background-color: var(--card-bg-color); /* 使用全局卡片背景色 */
+    border: 1px solid var(--card-border-color); /* 使用全局卡片边框色 */
+    border-radius: 8px;
+    padding: 10px;
+    transition: background-color 0.3s ease;
+  }
+
+  .folder-item:hover {
+    background-color: var(--quick-card-hover-bg); /* 使用全局悬停背景色 */
+  }
+
+  .folder-link {
+    color: var(--link-color); /* 使用全局链接颜色 */
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s ease;
+  }
+
+  .folder-link:hover {
+    color: var(--text-color); /* 悬停时使用全局文本颜色 */
+    text-decoration: underline;
+  }
+
+  /* 响应式设计：适配小屏幕 */
+  @media (max-width: 768px) {
+    .folder-item {
+      padding: 15px;
+      font-size: 0.9rem;
+    }
+  }
+</style>
 {% endblock %}

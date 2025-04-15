@@ -2,28 +2,127 @@
 {% block content %}
 <h1>编辑用户信息：{{ user.username }}</h1>
 
-<form method="POST">
-    <label>用户名：</label>
-    <input type="text" name="username" value="{{ user.username }}" required><br>
+<form method="POST" class="user-form">
+    <label for="username">用户名：</label>
+    <input type="text" name="username" id="username" value="{{ user.username }}" required><br>
   
-    <label>邮箱：</label>
-    <input type="email" name="email" value="{{ user.email }}" required><br>
+    <label for="email">邮箱：</label>
+    <input type="email" name="email" id="email" value="{{ user.email }}" required><br>
   
-    <label>是否为管理员：</label>
-    <input type="checkbox" name="is_admin" {% if user.is_admin %}checked{% endif %}><br>
+    <label for="is_admin">是否为管理员：</label>
+    <input type="checkbox" name="is_admin" id="is_admin" {% if user.is_admin %}checked{% endif %}><br>
   
     <hr>
-    <label>修改密码（可选）：</label>
-    <input type="password" name="password"><br>
+    <label for="password">修改密码（可选）：</label>
+    <input type="password" name="password" id="password"><br>
     <small>留空则不修改</small><br><br>
   
-    <button type="submit">保存修改</button>
-  </form>
-  
-  <form action="{{ url_for('setting.delete_user', user_id=user.id) }}" method="POST" onsubmit="return confirm('确认删除此用户吗？');">
-    <button type="submit" style="color:red;">删除用户</button>
-  </form>
+    <button type="submit" class="submit-btn">保存修改</button>
+</form>
 
-  
-<a href="{{ url_for('setting.manage_users') }}">返回用户管理</a>
+<form action="{{ url_for('setting.delete_user', user_id=user.id) }}" method="POST" onsubmit="return confirm('确认删除此用户吗？');">
+    <button type="submit" class="delete-btn">删除用户</button>
+</form>
+
+<a href="{{ url_for('setting.manage_users') }}" class="back-link">返回用户管理</a>
+
+<!-- 局部CSS样式 -->
+<style>
+  /* 用户表单样式 */
+  .user-form {
+    background-color: var(--card-bg-color); /* 使用全局卡片背景色 */
+    border: 1px solid var(--card-border-color); /* 使用全局卡片边框色 */
+    padding: 20px;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    box-sizing: border-box;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+  }
+
+  .user-form label {
+    font-size: 1.2rem;
+    color: var(--text-color); /* 使用全局文本颜色 */
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .user-form input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid var(--input-border-color); /* 使用全局输入框边框色 */
+    border-radius: 4px;
+    background-color: var(--input-bg-color); /* 使用全局输入框背景色 */
+    color: var(--text-color); /* 使用全局文本颜色 */
+    transition: border-color 0.3s ease;
+  }
+
+  .user-form input:focus {
+    border-color: var(--input-focus-border-color); /* 使用全局聚焦边框颜色 */
+    outline: none;
+  }
+
+  .submit-btn {
+    background-color: var(--btn-bg-color); /* 使用全局按钮背景色 */
+    color: var(--btn-text-color); /* 使用全局按钮文本颜色 */
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+  }
+
+  .submit-btn:hover {
+    background-color: var(--btn-hover-bg-color); /* 使用全局按钮悬停背景色 */
+  }
+
+  .delete-btn {
+    background-color: transparent;
+    color: red;
+    border: 1px solid red;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: color 0.3s ease, border-color 0.3s ease;
+  }
+
+  .delete-btn:hover {
+    background-color: red;
+    color: white;
+    border-color: red;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-top: 20px;
+    color: var(--link-color); /* 使用全局链接颜色 */
+    text-decoration: none;
+    font-size: 1rem;
+    transition: color 0.3s ease;
+  }
+
+  .back-link:hover {
+    color: var(--text-color); /* 悬停时使用全局文本颜色 */
+    text-decoration: underline;
+  }
+</style>
+
+<!-- 局部JavaScript代码 -->
+<script>
+  // 如果需要对表单进行额外的验证或交互，可以在此处添加JavaScript代码
+  document.querySelector(".user-form").addEventListener("submit", function(event) {
+    const username = document.getElementById("username").value;
+    const email = document.getElementById("email").value;
+
+    if (!username || !email) {
+      event.preventDefault(); // 阻止表单提交
+      alert("请填写所有必填字段！");
+    }
+  });
+</script>
+
 {% endblock %}

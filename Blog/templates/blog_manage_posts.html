@@ -1,25 +1,136 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>📄 博客管理</h1>
-<p>欢迎您，{{ current_user.username }}！</p>
+<h1 class="page-heading">📄 博客管理</h1>
+<p class="welcome-message">欢迎您，{{ current_user.username }}！</p>
 
-<h2>➕ 新建文章</h2>
-<form method="POST" action="{{ url_for('blog.new_post') }}">
-  <button type="submit">创建</button>
+<h2 class="section-heading">➕ 新建文章</h2>
+<form method="POST" action="{{ url_for('blog.new_post') }}" class="create-post-form">
+  <button type="submit" class="btn btn-create">创建</button>
 </form>
+
 <hr>
 
-
-<ul>
+<ul class="post-list">
   {% for post in posts %}
-    <li>
+    <li class="post-item">
       <strong>{{ post.slug }}</strong> -
       Last Modified: {{ post.last_modified.strftime('%Y-%m-%d %H:%M:%S') }}
-      [<a href="{{ url_for('blog.edit_post', slug=post.slug) }}">编辑</a>]
+      [<a href="{{ url_for('blog.edit_post', slug=post.slug) }}" class="btn btn-edit">编辑</a>]
     </li>
   {% endfor %}
 </ul>
 
-<a href="{{ url_for('index.home') }}">⬅ 返回主页</a>
+<a href="{{ url_for('index.home') }}" class="btn btn-back">⬅ 返回主页</a>
+
+<!-- 局部CSS样式 -->
+<style>
+  /* 页面标题 */
+  .page-heading {
+    text-align: center;
+    color: var(--text-color); /* 使用全局文本颜色 */
+    margin-bottom: 20px;
+    font-size: 2rem;
+  }
+
+  /* 欢迎信息 */
+  .welcome-message {
+    text-align: center;
+    font-size: 1.2rem;
+    color: var(--meta-text-color); /* 使用全局元数据文本颜色 */
+    margin-bottom: 20px;
+  }
+
+  /* 新建文章部分 */
+  .section-heading {
+    color: var(--text-color); /* 使用全局文本颜色 */
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+    text-align: center;
+  }
+
+  /* 创建文章表单 */
+  .create-post-form {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .btn {
+    padding: 10px 15px;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.3s;
+  }
+
+  .btn-create {
+    background-color: var(--btn-bg-color); /* 使用全局按钮背景色 */
+  }
+
+  .btn-create:hover {
+    background-color: var(--btn-hover-bg-color); /* 使用全局按钮悬停背景色 */
+  }
+
+  .btn-edit {
+    background-color: #ffc107;
+  }
+
+  .btn-edit:hover {
+    background-color: #e0a800;
+  }
+
+  .btn-back {
+    background-color: #28a745;
+    display: inline-block;
+    margin-top: 20px;
+  }
+
+  .btn-back:hover {
+    background-color: #218838;
+  }
+
+  /* 博客文章列表 */
+  .post-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .post-item {
+    margin: 15px 0;
+    background-color: var(--card-bg-color); /* 使用全局卡片背景色 */
+    border: 1px solid var(--card-border-color); /* 使用全局边框颜色 */
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .post-item a {
+    text-decoration: none;
+    color: var(--link-color); /* 使用全局链接颜色 */
+    font-weight: bold;
+  }
+
+  .post-item a:hover {
+    color: var(--text-color); /* 悬停时使用全局文本颜色 */
+    text-decoration: underline;
+  }
+
+  /* 响应式设计：适配小屏幕 */
+  @media (max-width: 768px) {
+    .page-heading {
+      font-size: 1.5rem;
+    }
+
+    .section-heading {
+      font-size: 1.3rem;
+    }
+
+    .post-item {
+      font-size: 0.9rem;
+    }
+  }
+</style>
 
 {% endblock %}

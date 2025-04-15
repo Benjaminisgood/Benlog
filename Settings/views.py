@@ -10,6 +10,8 @@ from flask_login import login_required, current_user
 import os
 from werkzeug.utils import secure_filename
 import json
+from flask import session
+
 
 @setting_bp.route('/')
 @login_required
@@ -231,8 +233,10 @@ def login():
     return render_template('setting_index.html')
 
 @setting_bp.route('/logout')
+@login_required
 def logout():
     logout_user()  # 登出用户
+    session.clear()  # 清除会话数据
     return redirect(url_for('setting.login'))
 ###########################################################
 
