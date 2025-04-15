@@ -1,5 +1,5 @@
 include Benlog/static/**/*
-include Benlog/static/gallery/**/*
+include Benlog/static/gallery/*
 include Benlog/templates/*
 include Blog/posts/*
 include Blog/templates/*

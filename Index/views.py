@@ -115,22 +115,22 @@ def photograph():
 @index_bp.route('/darwin_album')
 def darwin_album():
     """展示【达尔文的专属相册】页面，展示全部图片"""
-    return render_gallery_page("达尔文的专属相册", "达尔文的专属相册", "image")
+    return render_gallery_page("达尔文的专属相册", "darwin_album", "image")
 
 @index_bp.route('/paintings')
 def paintings():
     """展示【我的绘画作品】页面，展示全部图片"""
-    return render_gallery_page("我的绘画作品", "我的绘画作品", "image")
+    return render_gallery_page("我的绘画作品", "paintings", "image")
 
 @index_bp.route('/audios')
 def audios():
     """展示【音乐和弹唱作品】页面，展示全部音频文件"""
-    return render_gallery_page("音乐和弹唱作品", "音乐和弹唱作品", "audio")
+    return render_gallery_page("音乐和弹唱作品", "audios", "audio")
 
 @index_bp.route('/ebooks')
 def ebooks():
     """展示【电子书和论文】页面，展示全部电子书及论文"""
-    return render_gallery_page("电子书论文", "电子书和论文", "ebook")
+    return render_gallery_page("电子书论文", "ebooks", "ebook")
 
 ###########################################################################
 logging.basicConfig(level=logging.INFO)
