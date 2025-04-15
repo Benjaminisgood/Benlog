@@ -1,64 +1,180 @@
-/* static/css/style.css 完整版 */
-
+/* 定义全局变量 */
 :root {
-  --bg-color: rgba(255, 255, 255, 0);
-  --text-color: #333;
-  --nav-bg-color: rgba(255, 255, 255, 0.7);
-  --nav-text-color: #444;
-  --canvas-bg: rgba(255, 255, 255, 1);
-  --card-bg-color: #fff;
-  --card-border-color: #e0e0e0;
-  --link-color: #3366cc;
-  --meta-text-color: #666;
-  --footer-bg: #f9f9f9;
-  --quick-card-bg: rgba(255, 255, 255, 0.5);
-  --quick-card-hover-bg: rgba(255, 255, 255, 0.7);
-  --quick-label-color: #222;
+  /* 背景和文本颜色 */
+  --bg-color: rgba(255, 255, 255, 0); /* 默认背景色 */
+  --text-color: #333; /* 默认文本颜色 */
+  --nav-bg-color: rgba(255, 255, 255, 0.7); /* 导航栏背景色 */
+  --nav-text-color: #444; /* 导航栏文本颜色 */
+  --canvas-bg: rgba(255, 255, 255, 1); /* 背景画布颜色 */
+  --card-bg-color: #fff; /* 卡片背景色 */
+  --card-border-color: #e0e0e0; /* 卡片边框颜色 */
+  --link-color: #3366cc; /* 默认链接颜色 */
+  --meta-text-color: #666; /* 元数据文本颜色 */
+  --footer-bg: #f9f9f9; /* 页脚背景色 */
+  --quick-card-bg: rgba(255, 255, 255, 0.5); /* 快捷卡片背景色 */
+  --quick-card-hover-bg: rgba(255, 255, 255, 0.7); /* 快捷卡片悬停背景色 */
+  --quick-label-color: #222; /* 快捷标签颜色 */
+
+  /* 按钮样式 */
+  --btn-bg-color: #3366cc; /* 默认按钮背景色 */
+  --btn-hover-bg-color: #0055cc; /* 按钮悬停时的背景色 */
+  --btn-text-color: #fff; /* 按钮文本颜色 */
+
+  /* 输入框、选择框、文本框样式 */
+  --input-bg-color: #fff; /* 输入框背景色 */
+  --input-border-color: #ccc; /* 输入框边框色 */
+  --input-focus-border-color: #3366cc; /* 输入框聚焦时的边框颜色 */
 }
 
+/* 暗色模式下的变量 */
 [data-theme="dark"] {
-  --bg-color: rgba(18, 18, 18, 0);
-  --text-color: #eee;
-  --nav-bg-color: rgba(20, 20, 20, 0.7);
-  --nav-text-color: #ccc;
-  --canvas-bg: rgba(18, 18, 18, 1);
-  --card-bg-color: #242424;
-  --card-border-color: #333;
-  --link-color: #6699ff;
-  --meta-text-color: #aaa;
-  --footer-bg: #181818;
-  --quick-card-bg: rgba(40, 40, 40, 0.5);
-  --quick-card-hover-bg: rgba(60, 60, 60, 0.7);
-  --quick-label-color: #ddd;
+  --bg-color: rgba(18, 18, 18, 0); /* 暗模式背景色 */
+  --text-color: #eee; /* 暗模式文本颜色 */
+  --nav-bg-color: rgba(20, 20, 20, 0.7); /* 暗模式导航栏背景色 */
+  --nav-text-color: #ccc; /* 暗模式导航栏文本颜色 */
+  --canvas-bg: rgba(18, 18, 18, 1); /* 暗模式主要内容背景色 */
+  --card-bg-color: #242424; /* 暗模式卡片背景色 */
+  --card-border-color: #333; /* 暗模式卡片边框颜色 */
+  --link-color: #6699ff; /* 暗模式链接颜色 */
+  --meta-text-color: #aaa; /* 暗模式元数据文本颜色 */
+  --footer-bg: #181818; /* 暗模式页脚背景色 */
+  --quick-card-bg: rgba(40, 40, 40, 0.5); /* 暗模式快捷卡片背景色 */
+  --quick-card-hover-bg: rgba(60, 60, 60, 0.7); /* 暗模式快捷卡片悬停背景色 */
+  --quick-label-color: #ddd; /* 暗模式快捷标签颜色 */
+
+  /* 按钮样式 */
+  --btn-bg-color: #6699ff; /* 暗模式按钮背景色 */
+  --btn-hover-bg-color: #3366cc; /* 暗模式按钮悬停时的背景色 */
+  --btn-text-color: #fff; /* 暗模式按钮文本颜色 */
+
+  /* 输入框、选择框、文本框样式 */
+  --input-bg-color: #333; /* 暗模式输入框背景色 */
+  --input-border-color: #666; /* 暗模式输入框边框色 */
+  --input-focus-border-color: #6699ff; /* 暗模式输入框聚焦时的边框颜色 */
 }
 
+/* 页面字体和基本布局 */
+body {
+  font-family: Arial, sans-serif; /* 设置字体 */
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+  background: var(--bg-color); /* 使用全局背景颜色 */
+  color: var(--text-color); /* 使用全局文本颜色 */
+}
 
+/* 背景画布 */
+#universe {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1; /* 背景画布位于最底层 */
+  pointer-events: none; /* 禁止背景画布与鼠标交互 */
+  background-color: var(--canvas-bg); /* 使用全局的画布背景色 */
+}
 
-@media (max-width: 768px) {
-  .quick-links {
-    gap: 16px;
-    padding: 20px;
+/* 毛玻璃效果的导航栏 */
+header nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  backdrop-filter: blur(12px); /* 增强模糊效果 */
+  -webkit-backdrop-filter: blur(12px); /* 兼容Safari浏览器 */
+  background: var(--nav-bg-color); /* 使用全局导航背景色 */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3); /* 边框颜色 */
+  padding: 8px 20px;
+  z-index: 1000;
+}
+
+/* Logo 动画效果 */
+header nav .logo {
+  height: 40px;
+  width: auto;
+  margin-right: 20px;
+  transition: transform 0.3s;
+}
+
+header nav .logo:hover {
+  transform: rotate(360deg) scale(1.1); /* 鼠标悬停时旋转 */
+}
+
+/* 导航链接样式 */
+header nav a {
+  position: relative;
+  color: var(--nav-text-color); /* 使用全局的导航文本颜色 */
+  padding: 8px 12px;
+  text-decoration: none;
+  transition: color 0.3s, transform 0.3s;
+}
+
+header nav a:hover {
+  color: var(--text-color); /* 悬停时改变颜色 */
+  transform: scale(1.1); /* 放大效果 */
+}
+
+header nav a::after {
+  content: "";
+  position: absolute;
+  left: 10%;
+  bottom: 0;
+  width: 80%;
+  height: 2px;
+  background: var(--text-color); /* 使用全局文本颜色 */
+  transform: scaleX(0);
+  transition: transform 0.3s;
+  transform-origin: center;
+}
+
+header nav a:hover::after {
+  transform: scaleX(1); /* 悬停时条形动画 */
+}
+
+/* 黑白主题切换按钮 */
+#theme-toggle {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.4rem;
+  transition: transform 0.3s;
+}
+
+#theme-toggle:hover {
+  transform: scale(1.2); /* 鼠标悬停时放大 */
+}
+
+/* 内容区域避免被导航栏遮挡 */
+main.container {
+  padding-top: 80px;
+}
+
+/* 手机及其他窄屏幕适配 */
+@media (max-width: 600px) {
+  header nav {
+    flex-wrap: wrap; /* 导航栏内容换行 */
+    padding: 8px 10px;
   }
-  .quick-card {
-    width: 120px;
+
+  header nav .logo {
+    height: 30px;
+    margin-right: 10px;
   }
-  .quick-icon {
-    width: 48px;
-    height: 48px;
+
+  header nav a {
+    padding: 6px 8px;
+    font-size: 0.9rem;
   }
-  .quick-label {
-    font-size: 1rem;
+
+  #theme-toggle {
+    font-size: 1.2rem;
   }
-  .search-bar {
-    max-width: 90%;
-  }
-  .card {
-    padding: 15px;
-  }
-  .posts-container .card {
-    padding: 10px 15px;
-  }
-  .comment-box {
-    width: 90%;
+
+  main.container {
+    padding-top: 100px;
   }
 }
