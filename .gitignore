@@ -28,4 +28,5 @@ migrations/
 Benlog/static/neibr/*
 Blog/posts/*
 Edu/notes/*
+Benlog/static/gallery/**/*
 Index/dynamic/*
