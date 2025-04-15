@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_data.title }}</title>
+</head>
+<body>
+    <h1>{{ page_data.title }}</h1>
+    <div>{{ page_data.content }}</div>
+
+    <!-- 动态渲染页面元素 -->
+    {% for element in page_data.elements %}
+        {% if element.type == 'text' %}
+            <p>{{ element.content }}</p>
+        {% elif element.type == 'image' %}
+            <img src="{{ element.src }}" alt="{{ element.alt }}">
+        {% elif element.type == 'link' %}
+            <a href="{{ element.href }}">{{ element.text }}</a>
+        {% endif %}
+    {% endfor %}
+</body>
+</html>
+{% endblock %}

@@ -1,5 +1,6 @@
 # Index/views.py
 from flask import render_template, abort, request, jsonify
+from flask import Blueprint, redirect, url_for, flash
 import requests
 import urllib3
 from . import index_bp
@@ -7,6 +8,8 @@ import os
 import openai
 import random  # 引入 random 模块
 import logging
+import json
+from flask_login import login_required, current_user
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -172,27 +175,8 @@ def llm_query():
     return render_template('llm.html', query=query, answer=answer)
 
 ####################################################################
-# 静态页面映射字典（URL标识符 -> (模板文件, 页面标题)）
-STATIC_PAGE_MAPPING = {
-    "lezhi": ("lezhi.html", "乐志"),
-    "resume": ("resume.html", "Resume"),
-    "aboutme": ("aboutme.html", "About Me"),
-    "study": ("study.html", "课题方向"),
-    "interest": ("interest.html", "最近在做的事和兴趣"),
-}
-
-# 占位页面映射字典（URL标识符 -> 功能显示名称）
-PLACEHOLDER_MAPPING = {
-    "message_board": "留言板板",
-    "survey": "问卷调查",
-    "chat": "聊天机器人",
-    # 如果某个页面既存在于静态页面又存在于占位字典
-    # 则建议以静态页面为准，避免冲突
-    "store": "个人商店",  
-    "consultation": "咨询预约",
-    "feedback": "意见反馈", 
-    "pdf_translate": "PDF 翻译",
-}
+# 动态页面存放目录
+DYNAMIC_PAGES_FOLDER = 'Index/dynamic_pages'
 
 @index_bp.route('/<page>')
 def dynamic_page(page):
@@ -200,15 +184,82 @@ def dynamic_page(page):
     统一处理静态页面与占位页面：
     - 若 page 存在于 STATIC_PAGE_MAPPING，则返回对应静态模板
     - 若 page 存在于 PLACEHOLDER_MAPPING，则返回通用占位模板 placeholder.html
+    - 若 page 存在于 dynamic_pages 文件夹的 JSON 文件，则渲染动态页面
     - 否则返回 404
     """
+    # 1. 处理静态页面
+    STATIC_PAGE_MAPPING = {
+        "resume": ("resume.html", "Resume"),
+        "aboutme": ("aboutme.html", "About Me"),
+        "study": ("study.html", "课题方向"),
+        "interest": ("interest.html", "最近在做的事和兴趣"),
+    }
     # 静态页面优先处理
     if page in STATIC_PAGE_MAPPING:
         template, title = STATIC_PAGE_MAPPING[page]
         return render_template(template, title=title)
-    # 处理占位页面
-    elif page in PLACEHOLDER_MAPPING:
+
+    # 2. 处理占位页面
+    PLACEHOLDER_MAPPING = {
+        "message_board": "留言板",
+        "survey": "问卷调查",
+        "chat": "聊天机器人",
+        "store": "个人商店",  
+        "consultation": "咨询预约",
+        "feedback": "意见反馈", 
+        "pdf_translate": "PDF 翻译",
+    }
+    if page in PLACEHOLDER_MAPPING:
         feature_name = PLACEHOLDER_MAPPING[page]
         return render_template('placeholder.html', title=feature_name, feature_name=feature_name)
-    else:
-        abort(404)
+
+    # 3. 处理动态页面：从 JSON 文件读取数据并渲染
+    try:
+        # 尝试从 `dynamic_pages` 目录中加载 JSON 文件
+        json_file_path = os.path.join(DYNAMIC_PAGES_FOLDER, f'{page}.json')
+        with open(json_file_path, 'r', encoding='utf-8') as file:
+            page_data = json.load(file)
+        
+        # 渲染模板并传递 JSON 数据
+        return render_template('dynamic_page.html', page_data=page_data)
+    except FileNotFoundError:
+        return "页面不存在", 404
+    except json.JSONDecodeError:
+        return "页面数据错误", 500
+    
+@index_bp.route('/<page>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_dynamic_page(page):
+    """
+    编辑动态页面：加载页面内容，允许管理员编辑并保存
+    """
+    if not (current_user.is_admin or current_user.id == 1):
+        abort(403)
+    try:
+        # 尝试从 `dynamic_pages` 目录中加载 JSON 文件
+        json_file_path = os.path.join(DYNAMIC_PAGES_FOLDER, f'{page}.json')
+        with open(json_file_path, 'r', encoding='utf-8') as file:
+            page_data = json.load(file)
+    except FileNotFoundError:
+        return "页面不存在", 404
+    except json.JSONDecodeError:
+        return "页面数据错误", 500
+
+    if request.method == 'POST':
+        # 获取编辑后的数据
+        page_data['title'] = request.form['title']
+        page_data['content'] = request.form['content']
+        
+        # 更新元素
+        for idx, element in enumerate(page_data['elements']):
+            element['type'] = request.form.getlist(f'elements[{idx}][type]')[0]
+            element['content'] = request.form.getlist(f'elements[{idx}][content]')[0]
+        
+        # 将更新后的数据保存到 JSON 文件中
+        with open(json_file_path, 'w', encoding='utf-8') as file:
+            json.dump(page_data, file, ensure_ascii=False, indent=4)
+
+        flash(f"{page_data['title']} 页面更新成功!", "success")
+        return redirect(url_for('index.dynamic_page', page=page))
+
+    return render_template('edit_dynamic_page.html', page_data=page_data)

@@ -9,7 +9,7 @@ from Settings.extensions import db
 from flask_login import login_required, current_user
 import os
 from werkzeug.utils import secure_filename
-
+import json
 
 @setting_bp.route('/')
 @login_required
@@ -274,6 +274,7 @@ def login():
 
 
 
+#BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 GALLERY_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'Benlog', 'static', 'gallery')
 # List all folders in the gallery directory
@@ -351,3 +352,112 @@ def rename_file():
         flash('File does not exist!', 'danger')
     
     return redirect(url_for('setting.view_folder', folder_name=folder_name))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+#DYNAMIC_PAGES_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'Index', 'dynamic_pages')
+#DYNAMIC_PAGES_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'Index', 'dynamic_pages')
+DYNAMIC_PAGES_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'Index', 'dynamic_pages')
+DYNAMIC_PAGES_FOLDER = os.path.abspath(DYNAMIC_PAGES_FOLDER)
+if not os.path.exists(DYNAMIC_PAGES_FOLDER):
+    raise FileNotFoundError(f"目录 {DYNAMIC_PAGES_FOLDER} 不存在！")
+
+#print(DYNAMIC_PAGES_FOLDER)
+#DYNAMIC_PAGES_FOLDER = 'Index/dynamic_pages'
+# 管理动态页面的路由
+@setting_bp.route('/manage_dynamic_page', methods=['GET'])
+@login_required
+def manage_dynamic_page():
+    """
+    读取 dynamic_pages 目录中的所有 JSON 文件，并为每个页面生成编辑链接。
+    """
+    editable_pages = []
+
+    # 确保目录存在并打印文件列表
+    print(f"读取目录: {DYNAMIC_PAGES_FOLDER}")
+    for filename in os.listdir(DYNAMIC_PAGES_FOLDER):
+        print(f"检查文件: {filename}")
+        if filename.endswith('.json'):
+            page_name = filename.rsplit('.', 1)[0]
+            page_data = None
+
+            try:
+                # 读取每个 JSON 文件，加载页面数据
+                with open(os.path.join(DYNAMIC_PAGES_FOLDER, filename), 'r', encoding='utf-8') as file:
+                    page_data = json.load(file)
+                print(f"成功加载页面: {page_name}")
+            except Exception as e:
+                print(f"读取 {filename} 时出错: {e}")
+                continue
+
+            if page_data:
+                editable_pages.append({
+                    'page_name': page_name,
+                    'title': page_data.get('title', '无标题'),
+                    'edit_url': url_for('index.edit_dynamic_page', page=page_name)  # 生成编辑页面的链接
+                })
+
+    if not editable_pages:
+        print("没有可编辑的页面。")
+
+    return render_template('manage_dynamic_pages.html', editable_pages=editable_pages)
+
+if not os.path.exists(DYNAMIC_PAGES_FOLDER):
+    os.makedirs(DYNAMIC_PAGES_FOLDER)
+
+@setting_bp.route('/new_dynamic_page', methods=['GET', 'POST'])
+@login_required
+def new_dynamic_page():
+    """
+    创建新的动态网页，并保存为新的 JSON 文件
+    """
+    if request.method == 'POST':
+        page_title = request.form['title']
+        page_content = request.form['content']
+        elements = []
+
+        # 获取页面元素
+        for i in range(int(request.form['elements_count'])):
+            element_type = request.form.get(f'element_{i}_type')
+            element_content = request.form.get(f'element_{i}_content')
+
+            if element_type == 'text':
+                elements.append({'type': 'text', 'content': element_content})
+            elif element_type == 'image':
+                elements.append({'type': 'image', 'src': element_content})
+            elif element_type == 'link':
+                elements.append({'type': 'link', 'href': element_content, 'text': element_content})
+
+        # 新建页面的数据
+        new_page_data = {
+            'title': page_title,
+            'content': page_content,
+            'elements': elements
+        }
+
+        # 保存为 JSON 文件
+        new_page_filename = os.path.join(DYNAMIC_PAGES_FOLDER, f'{page_title}.json')
+        with open(new_page_filename, 'w', encoding='utf-8') as file:
+            json.dump(new_page_data, file, ensure_ascii=False, indent=4)
+
+        flash(f'新建页面 "{page_title}" 成功！', 'success')
+        return redirect(url_for('setting.manage_dynamic_page'))  # 重定向回页面列表
+
+    return render_template('new_dynamic_page.html')  # 显示创建页面的表单

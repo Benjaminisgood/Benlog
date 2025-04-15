@@ -6,5 +6,6 @@ include Blog/templates/*
 include Edu/notes/*
 include Edu/templates/*
 include Index/templates/*
+include Index/dynamic_pages/*
 include Neibr/templates/*
 include Settings/templates/*

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新建动态网页</title>
+</head>
+<body>
+    <h1>新建动态网页</h1>
+    <form method="POST">
+        <label for="title">页面标题：</label>
+        <input type="text" id="title" name="title" required><br><br>
+
+        <label for="content">页面内容：</label>
+        <textarea id="content" name="content" required></textarea><br><br>
+
+        <h3>元素：</h3>
+        <div id="elements-container">
+            <div class="element">
+                <label for="element_0_type">元素类型：</label>
+                <select name="element_0_type" required>
+                    <option value="text">文本</option>
+                    <option value="image">图片</option>
+                    <option value="link">链接</option>
+                </select><br>
+                <label for="element_0_content">内容：</label>
+                <input type="text" name="element_0_content" required><br><br>
+            </div>
+        </div>
+
+        <button type="button" id="add-element-btn">添加元素</button><br><br>
+        <input type="hidden" name="elements_count" id="elements_count" value="1">
+
+        <button type="submit">创建页面</button>
+    </form>
+
+    <script>
+        let elementCount = 1;
+
+        document.getElementById('add-element-btn').addEventListener('click', function() {
+            const container = document.getElementById('elements-container');
+            const newElementDiv = document.createElement('div');
+            newElementDiv.classList.add('element');
+            
+            newElementDiv.innerHTML = `
+                <label for="element_${elementCount}_type">元素类型：</label>
+                <select name="element_${elementCount}_type" required>
+                    <option value="text">文本</option>
+                    <option value="image">图片</option>
+                    <option value="link">链接</option>
+                </select><br>
+                <label for="element_${elementCount}_content">内容：</label>
+                <input type="text" name="element_${elementCount}_content" required><br><br>
+            `;
+            
+            container.appendChild(newElementDiv);
+            elementCount++;
+            document.getElementById('elements_count').value = elementCount;
+        });
+    </script>
+</body>
+</html>
+{% endblock %}

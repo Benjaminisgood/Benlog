@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 新建动态网页按钮 -->
+    <a href="{{ url_for('setting.new_dynamic_page') }}">
+        <button>新建动态网页</button>
+    </a>
+        
+    <title>编辑页面列表</title>
+</head>
+<body>
+    <h1>可编辑的动态页面</h1>
+    <ul>
+        {% for page in editable_pages %}
+            <li>
+                <a href="{{ page.edit_url }}">{{ page.title }}</a> - 编辑
+            </li>
+        {% else %}
+            <li>没有可编辑的页面。</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
+<style>body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  
+  header {
+    background-color: var(--nav-bg-color);
+    color: var(--nav-text-color);
+    padding: 20px;
+    text-align: center;
+  }
+  
+  .main-content {
+    padding: 20px;
+  }
+  
+  .page-list {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .page-item {
+    padding: 10px;
+    border: 1px solid var(--card-border-color);
+    margin: 5px 0;
+    background-color: var(--card-bg-color);
+    transition: background-color 0.3s ease;
+  }
+  
+  .page-item:hover {
+    background-color: var(--quick-card-hover-bg);
+  }
+  
+  .edit-link {
+    color: var(--link-color);
+    text-decoration: none;
+    font-weight: bold;
+  }
+  
+  .no-pages {
+    color: var(--meta-text-color);
+    font-style: italic;
+  }
+  
+  .new-page-button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  
+  .new-page-button:hover {
+    background-color: #45a049;
+  }
+  
+  footer {
+    background-color: var(--footer-bg);
+    text-align: center;
+    padding: 10px;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    color: var(--meta-text-color);
+  }</style>
+{% endblock %}

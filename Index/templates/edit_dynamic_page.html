@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- edit_dynamic_page.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑动态页面 - {{ page_data.title }}</title>
+</head>
+<body>
+    <h1>编辑 {{ page_data.title }} 页面</h1>
+    <form method="POST">
+        <label for="title">页面标题：</label>
+        <input type="text" id="title" name="title" value="{{ page_data.title }}" required><br><br>
+        
+        <label for="content">页面内容：</label>
+        <textarea id="content" name="content" required>{{ page_data.content }}</textarea><br><br>
+
+        <h3>元素：</h3>
+        {% for element in page_data.elements %}
+            <div>
+                <label>元素类型：</label>
+                <select name="elements[{{ loop.index0 }}][type]">
+                    <option value="text" {% if element.type == 'text' %}selected{% endif %}>文本</option>
+                    <option value="image" {% if element.type == 'image' %}selected{% endif %}>图片</option>
+                    <option value="link" {% if element.type == 'link' %}selected{% endif %}>链接</option>
+                </select><br>
+
+                <label>内容：</label>
+                <input type="text" name="elements[{{ loop.index0 }}][content]" value="{{ element.content or element.src or element.href }}"><br><br>
+            </div>
+        {% endfor %}
+
+        <button type="submit">保存更改</button>
+    </form>
+</body>
+</html>
+
+{% endblock %}
