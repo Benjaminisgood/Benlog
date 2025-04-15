@@ -25,7 +25,8 @@ instance/
 migrations/
 
 #开发附件
-Benlog/static/neibr/
-Blog/posts/
-Edu/notes/
-Benlog/static/gallery/
+Benlog/static/neibr/*
+Blog/posts/*
+Edu/notes/*
+Benlog/static/gallery/*
+Index/dynamic/*

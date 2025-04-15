@@ -41,7 +41,7 @@ flask --app "Benlog.app:create_app" run --host=0.0.0.0 --port=80
 git add path/to/modified_file.py
 
 git add .
-git commit -m "更新readme"
+git commit -m "更新"
 git push
 
 git push origin main
