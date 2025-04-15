@@ -1,0 +1,10 @@
+Flask
+markdown
+python-frontmatter
+Flask-SQLAlchemy
+flask-login
+flask-migrate
+gunicorn
+requests
+pymdown-extensions
+openai

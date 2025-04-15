@@ -15,7 +15,7 @@ dist/
 # 日志和临时文件
 *.log
 *.tmp
-*.txt
+#*.txt
 # macOS 系统文件
 .DS_Store
 # instance
