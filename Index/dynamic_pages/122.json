@@ -1,6 +1,6 @@
 {
     "title": "122",
-    "content": "这里输入页面主内容…",
+    "content": "这里输入页面主内容…1122",
     "components": [
         {
             "type": "title",
@@ -8,11 +8,29 @@
         },
         {
             "type": "content",
-            "content": "这里输入页面主内容…"
+            "content": "这里输入页面主内容…1122"
         },
         {
             "type": "text",
-            "content": "121"
+            "content": "122"
+        },
+        {
+            "type": "code",
+            "content": "这里输入页面主内容…"
+        },
+        {
+            "type": "image",
+            "src": "http://127.0.0.1/static/gallery/attachments/Screenshot_2025-04-17_at_23.51.29.png",
+            "alt": ""
+        },
+        {
+            "type": "quote",
+            "content": "ddfadfadf"
+        },
+        {
+            "type": "link",
+            "href": "https://apple.com",
+            "text": "https://apple.com"
         }
     ]
 }

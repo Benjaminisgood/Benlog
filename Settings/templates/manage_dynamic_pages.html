@@ -1,154 +1,182 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% block content %}
-<!DOCTYPE html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- 新建动态网页按钮 -->
-    <form action="{{ url_for('setting.new_dynamic_page') }}" method="POST" id="new_page_form">
-        <button type="submit" class="new-page-button">新建动态网页</button>
+<div class="dynamic-pages-container">
+  <!-- 新建动态页面按钮 -->
+  <div class="header-bar">
+    <h1 class="dp-heading">可编辑的动态页面</h1>
+    <form action="{{ url_for('setting.new_dynamic_page') }}" method="POST" class="new-page-form">
+      <button type="submit" class="btn btn-create">新建动态网页</button>
     </form>
+  </div>
 
-    <title>编辑页面列表</title>
-</head>
-<body>
-    <header>
-        <h1>可编辑的动态页面</h1>
-    </header>
+  <ul class="page-list">
+    {% for page in editable_pages %}
+    <li class="page-card">
+      <div class="page-info">
+        <span class="page-title">{{ page.title }}</span>
+      </div>
+      <div class="action-buttons">
+        <a href="{{ page.edit_url }}" class="btn btn-edit">编辑</a>
+        <a href="{{ page.view_url }}" target="_blank" class="btn btn-view">查看</a>
+        <form action="{{ url_for('setting.delete_dynamic_page', page=page.page_name) }}" method="POST" class="inline-form" onsubmit="return confirm('确认删除页面 {{ page.title }} 吗？');">
+          <button type="submit" class="btn btn-delete">删除</button>
+        </form>
+        <button type="button" class="btn btn-copy" onclick="copyLink('{{ url_for('index.dynamic_page', page=page.page_name, _external=True) }}')">拷贝链接</button>
+      </div>
+    </li>
+    {% else %}
+    <li class="no-pages">没有可编辑的页面。</li>
+    {% endfor %}
+  </ul>
+</div>
 
-    <div class="main-content">
-        <ul class="page-list">
-            {% for page in editable_pages %}
-            <li class="page-item">
-              {{ page.title }}
-              <!-- 编辑 -->
-              <a href="{{ page.edit_url }}" class="edit-link">编辑</a>
-              <a href="{{ page.view_url }}" class="edit-link" target="_blank">查看</a>
+<script>
+function copyLink(url) {
+  navigator.clipboard.writeText(url)
+    .then(() => alert('已复制页面链接：' + url))
+    .catch(err => alert('复制失败：' + err));
+}
+</script>
 
-              <!-- 删除 -->
-              <form action="{{ url_for('setting.delete_dynamic_page', page=page.page_name) }}"
-                    method="POST" style="display:inline;"
-                    onsubmit="return confirm('确认删除页面 {{ page.title }} 吗？');">
-                <button type="submit" class="btn btn-delete-inline">删除</button>
-              </form>
-              <!-- 拷贝查看链接 -->
-              <button type="button" class="btn btn-copy-link"
-                      onclick="copyLink('{{ url_for('index.dynamic_page', page=page.page_name, _external=True) }}')">
-                拷贝链接
-              </button>
-            </li>
-            
-            {% else %}
-                <li class="no-pages">没有可编辑的页面。</li>
-            {% endfor %}
-        </ul>
-    </div>
-
-    <script>
-      function copyLink(url) {
-        navigator.clipboard.writeText(url)
-          .then(() => alert('已复制页面链接：' + url))
-          .catch(err => alert('复制失败：' + err));
-      }
-      </script>
-      
-</body>
-</html>
-
-<!-- 局部CSS样式 -->
 <style>
-  /* 基础样式 */
-  body {
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-  }
+.dynamic-pages-container {
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 1rem;
+  background: var(--canvas-bg);
+  border-radius: 8px;
+}
 
-  header {
-    background-color: var(--nav-bg-color); /* 使用全局导航栏背景色 */
-    color: var(--nav-text-color); /* 使用全局导航栏文本颜色 */
-    padding: 20px;
-    text-align: center;
-  }
+.header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
 
-  .main-content {
-    padding: 20px;
-  }
+.dp-heading {
+  margin: 0;
+  font-size: 2rem;
+  color: var(--text-color);
+}
 
-  .page-list {
-    list-style: none;
-    padding: 0;
-  }
+.new-page-form .btn-create {
+  background: var(--btn-bg-color);
+  color: var(--btn-text-color);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+.new-page-form .btn-create:hover {
+  background: var(--btn-hover-bg-color);
+}
 
-  .page-item {
-    padding: 10px;
-    border: 1px solid var(--card-border-color); /* 使用全局卡片边框颜色 */
-    margin: 5px 0;
-    background-color: var(--card-bg-color); /* 使用全局卡片背景色 */
-    transition: background-color 0.3s ease;
-  }
+.page-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 1rem;
+}
 
-  .page-item:hover {
-    background-color: var(--quick-card-hover-bg); /* 使用全局的悬停背景色 */
-  }
+.page-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--card-bg-color);
+  border: 1px solid var(--card-border-color);
+  border-radius: 6px;
+  padding: 1rem;
+  transition: box-shadow 0.3s ease;
+}
+.page-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
 
-  .edit-link {
-    color: var(--link-color); /* 使用全局链接颜色 */
-    text-decoration: none;
-    font-weight: bold;
-  }
+.page-info .page-title {
+  font-size: 1.1rem;
+  color: var(--text-color);
+  font-weight: 500;
+}
 
-  .edit-link:hover {
-    text-decoration: underline;
-  }
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
 
-  .no-pages {
-    color: var(--meta-text-color); /* 使用全局的元数据文本颜色 */
-    font-style: italic;
-  }
+.btn {
+  font-size: 0.9rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
 
-  /* 新建页面按钮 */
-  .new-page-button {
-    background-color: var(--btn-bg-color); /* 使用全局按钮背景色 */
-    color: var(--btn-text-color); /* 使用全局按钮文本颜色 */
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    text-decoration: none;
-    transition: background-color 0.3s;
-  }
+.btn-edit {
+  background: var(--quick-card-bg);
+  color: var(--quick-label-color);
+  border-color: var(--input-border-color);
+}
+.btn-edit:hover {
+  background: var(--quick-card-hover-bg);
+  color: var(--text-color);
+}
 
-  .new-page-button:hover {
-    background-color: var(--btn-hover-bg-color); /* 使用全局按钮悬停背景色 */
-  }
+.btn-view {
+  background: var(--btn-bg-color);
+  color: var(--btn-text-color);
+}
+.btn-view:hover {
+  background: var(--btn-hover-bg-color);
+}
 
-  footer {
-    background-color: var(--footer-bg); /* 使用全局页脚背景色 */
-    text-align: center;
-    padding: 10px;
-    position: fixed;
-    bottom: 0;
+.btn-delete {
+  background: transparent;
+  color: var(--btn-bg-color);
+  border-color: var(--btn-bg-color);
+}
+.btn-delete:hover {
+  background: var(--btn-bg-color);
+  color: var(--btn-text-color);
+}
+
+.btn-copy {
+  background: transparent;
+  color: var(--link-color);
+  border-color: var(--link-color);
+}
+.btn-copy:hover {
+  background: var(--link-color);
+  color: var(--btn-text-color);
+}
+
+.no-pages {
+  text-align: center;
+  color: var(--meta-text-color);
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .header-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .page-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .action-buttons {
     width: 100%;
-    color: var(--meta-text-color); /* 使用全局元数据文本颜色 */
   }
-
-  /* 响应式设计：适配小屏幕 */
-  @media (max-width: 768px) {
-    .main-content {
-      padding: 15px;
-    }
-
-    .page-item {
-      font-size: 0.9rem; /* 调整字体大小，适配小屏 */
-    }
-
-    .new-page-button {
-      width: 100%; /* 按钮宽度适应屏幕 */
-    }
+  .action-buttons .btn {
+    width: auto;
   }
+}
 </style>
 {% endblock %}

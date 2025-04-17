@@ -1,259 +1,168 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% block content %}
-<div class="container">
-    <h1>Managing Folder: {{ folder_name }}</h1>
-    <a href="{{ url_for('setting.manage_gallery') }}" class="btn btn-back">Back to Gallery List</a>
+<div class="folder-manage-container">
+  <!-- Header -->
+  <div class="fm-header">
+    <h1 class="fm-title">管理文件夹：{{ folder_name }}</h1>
+    <a href="{{ url_for('setting.manage_gallery') }}" class="btn btn-back">返回画廊列表</a>
+  </div>
 
-    <h2>Files in this Folder:</h2>
-    {% if files %}
-        <ul class="file-list">
-        {% for file in files %}
-            <li class="file-item">
-                <span>{{ file }}</span>
-                <div class="file-actions">
-                    <!-- Download Button -->
-                    <a href="{{ url_for('setting.download_file', folder_name=folder_name, filename=file) }}" class="btn btn-download">Download</a>
-                    
-                    <!-- Rename Button -->
-                    <button class="btn btn-rename" data-filename="{{ file }}" data-folder="{{ folder_name }}" onclick="showRenameModal(this)">Rename</button>
-                    
-                    <!-- Copy Link Button -->
-                    <button class="btn btn-copy" onclick="copyLink('{{ url_for('static', filename='gallery/' + folder_name + '/' + file) }}', '{{ file }}')">Copy Link</button>
-                    <!-- Copy Link Button -->
-                    <button class="btn btn-copy" onclick="copyLink('{{ url_for('static', filename='gallery/' + folder_name + '/' + file) }}', '{{ file }}')">Copy Link</button>
-                </div>
-            </li>
-        {% endfor %}
-        </ul>
-    {% else %}
-        <p>No files in this folder.</p>
-    {% endif %}
+  <!-- File Cards Grid -->
+  {% if files %}
+  <div class="file-grid">
+    {% for file in files %}
+    <div class="file-card">
+      <div class="file-info">
+        <span class="file-name">{{ file }}</span>
+      </div>
+      <div class="file-actions">
+        <a href="{{ url_for('setting.download_file', folder_name=folder_name, filename=file) }}" class="btn btn-download">下载</a>
+        <button type="button" class="btn btn-rename" data-filename="{{ file }}" data-folder="{{ folder_name }}" onclick="showRenameModal(this)">重命名</button>
+        <button type="button" class="btn btn-copy-md" onclick="copyMarkdownLink('{{ url_for('static', filename='gallery/' + folder_name + '/' + file) }}', '{{ file }}')">复制 MD 链接</button>
+        <button type="button" class="btn btn-copy-html" onclick="copyHtmlLink('{{ url_for('static', filename='gallery/' + folder_name + '/' + file) }}', '{{ file }}')">复制 HTML 链接</button>
+        <button type="button" class="btn btn-copy-url" onclick="copyUrlLink('{{ url_for('static', filename='gallery/' + folder_name + '/' + file) }}')">复制 相对 URL</button>
+        <button type="button" class="btn btn-copy-web" onclick="copyWebLink('{{ url_for('static', filename='gallery/' + folder_name + '/' + file, _external=True) }}')">复制 Web 链接</button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="no-files">该文件夹中暂无文件。</p>
+  {% endif %}
 
-    <h2>Upload New File</h2>
+  <!-- Upload Section -->
+  <div class="upload-section">
+    <h2>上传新文件</h2>
     <form action="{{ url_for('setting.upload_file', folder_name=folder_name) }}" method="POST" enctype="multipart/form-data" class="upload-form">
-        <input type="file" name="file" required>
-        <button type="submit" class="btn btn-upload">Upload</button>
+      <input type="file" name="file" class="input-file" required>
+      <button type="submit" class="btn btn-upload">上传</button>
     </form>
-
-    <!-- Rename Modal Form -->
-    <div id="rename-modal" class="modal">
-        <div class="modal-content">
-            <h3>Rename File</h3>
-            <form action="{{ url_for('setting.rename_file') }}" method="POST">
-                <input type="text" id="new-filename" name="new-filename" required>
-                <input type="hidden" id="old-filename" name="old-filename">
-                <input type="hidden" id="folder-name" name="folder-name" value="{{ folder_name }}">
-                <button type="submit" class="btn btn-rename-submit">Rename</button>
-                <button type="button" class="btn btn-close-modal" onclick="closeRenameModal()">Cancel</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Dropzone container -->
     <div class="dropzone-container">
-        <form action="{{ url_for('setting.upload_file', folder_name=folder_name) }}" 
-              method="POST" 
-              enctype="multipart/form-data" 
-              class="dropzone" 
-              id="my-dropzone">
-        </form>
+      <form action="{{ url_for('setting.upload_file', folder_name=folder_name) }}" method="POST" enctype="multipart/form-data" class="dropzone" id="my-dropzone"></form>
     </div>
+  </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/dropzone@5.9.3/dist/min/dropzone.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/dropzone@5.9.3/dist/min/dropzone.min.css" rel="stylesheet">
-    <script>
-        Dropzone.options.myDropzone = {
-            paramName: "file",  // The name that will be used to transfer the file
-            maxFilesize: 2,  // Maximum file size in MB
-            dictDefaultMessage: "Drag files here or click to upload",  // Placeholder message
-            addRemoveLinks: true,  // Allow file removal
-            autoProcessQueue: true,  // Automatically submit the files when added
-            parallelUploads: 1,  // Limit to 1 file at a time (optional)
-            acceptedFiles: ".jpg,.jpeg,.png,.gif,.pdf",  // Accepted file types (optional)
-            init: function() {
-                this.on("success", function(file, response) {
-                    // Handle response here (optional)
-                    console.log("File successfully uploaded:", file);
-                });
-            }
-        };
-    </script>
-    <script>
-        // Function to show the rename modal
-        function showRenameModal(button) {
-            const filename = button.getAttribute('data-filename');
-            const folder = button.getAttribute('data-folder');
-            document.getElementById('old-filename').value = filename;
-            document.getElementById('new-filename').value = filename; // pre-fill with current filename
-            document.getElementById('folder-name').value = folder;
-            document.getElementById('rename-modal').style.display = 'block';
-        }
-
-        // Function to close the rename modal
-        function closeRenameModal() {
-            document.getElementById('rename-modal').style.display = 'none';
-        }
-
-        // Function to copy the file link to clipboard
-        function copyLink(link, file) {
-            let markdownLink;
-            
-            // Check if the file is an audio file
-            if (file.endsWith('.mp3') || file.endsWith('.wav') || file.endsWith('.ogg') || file.endsWith('.m4a')) {
-                markdownLink = `<audio controls src="${link}" title="${file}"></audio>`;
-            } 
-            else if (file.endsWith('.mp4') || file.endsWith('.avi') || file.endsWith('.mov') || file.endsWith('.wmv')) {
-                markdownLink = `<video controls src="${link}" title="${file}"></video>`;
-            } 
-            else if (file.endsWith('.jpg') || file.endsWith('.jpeg') || file.endsWith('.png') || file.endsWith('.gif')) {
-                markdownLink = `![${file}](${link})`;  // Format the link as Markdown for images
-            } 
-            else if (file.endsWith('.pdf')) {
-                markdownLink = `[${file}](${link})`;  // Format the link as Markdown for PDFs
-            }
-            else if (file.endsWith('.txt')) {
-                markdownLink = `\`${file}\`: ${link}`;  // Format the link as Markdown for text files
-            } 
-            else if (file.endsWith('.zip') || file.endsWith('.rar')) {
-                markdownLink = `[Download ${file}](${link})`;  // Format the link as Markdown for compressed files
-            } 
-            else if (file.endsWith('.docx') || file.endsWith('.xlsx') || file.endsWith('.pptx')) {
-                markdownLink = `[${file}](${link})`;  // Format the link as Markdown for document files
-            }
-            else {
-                markdownLink = `![](${link})`;  // Format the link as Markdown for images (default)
-            }
-            
-            // Create a temporary textarea to copy the link
-            const textarea = document.createElement('textarea');
-            textarea.value = markdownLink;  // Set the Markdown formatted link
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            
-            alert('Markdown link copied to clipboard!');
-        }
-    </script>
+  <!-- Rename Modal -->
+  <div id="rename-modal" class="modal-overlay hidden">
+    <div class="modal-dialog">
+      <h3>重命名文件</h3>
+      <form action="{{ url_for('setting.rename_file') }}" method="POST" class="rename-form">
+        <div class="form-group">
+          <label for="new-filename">新文件名：</label>
+          <input type="text" id="new-filename" name="new-filename" class="input-field" required>
+          <input type="hidden" id="old-filename" name="old-filename">
+          <input type="hidden" id="folder-name" name="folder-name" value="{{ folder_name }}">
+        </div>
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-save">确认</button>
+          <button type="button" class="btn btn-cancel" onclick="closeRenameModal()">取消</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 
-<!-- 局部CSS样式 -->
+<!-- Scripts -->
+<script>
+// Dropzone initialization
+Dropzone.options.myDropzone = {
+  paramName: 'file', maxFilesize: 2, dictDefaultMessage: '拖拽文件到此处或点击上传',
+  addRemoveLinks: true, autoProcessQueue: true, acceptedFiles: '.jpg,.png,.gif,.pdf',
+  init: function() { this.on('success', file => console.log('上传成功：', file)); }
+};
+
+// Copy Markdown link
+function copyMarkdownLink(url, file) {
+  let md;
+  if (file.match(/\.(jpg|jpeg|png|gif)$/i)) md = `![${file}](${url})`;
+  else if (file.match(/\.(mp3|wav|ogg|m4a)$/i)) md = `<audio controls src="${url}" title="${file}"></audio>`;
+  else if (file.match(/\.(mp4|mov|avi|wmv)$/i)) md = `<video controls src="${url}" title="${file}"></video>`;
+  else md = `[${file}](${url})`;
+  navigator.clipboard.writeText(md).then(()=>alert('已复制 Markdown 链接')).catch(e=>alert('复制失败：'+e));
+}
+
+// Copy HTML link
+function copyHtmlLink(url, file) {
+  let html;
+  if (file.match(/\.(jpg|jpeg|png|gif)$/i)) html = `<img src="${url}" alt="${file}" />`;
+  else if (file.match(/\.(mp3|wav|ogg|m4a)$/i)) html = `<audio controls src="${url}" title="${file}"></audio>`;
+  else if (file.match(/\.(mp4|mov|avi|wmv)$/i)) html = `<video controls src="${url}" title="${file}"></video>`;
+  else html = `<a href="${url}">${file}</a>`;
+  navigator.clipboard.writeText(html).then(()=>alert('已复制 HTML 链接')).catch(e=>alert('复制失败：'+e));
+}
+
+// Copy relative URL link
+function copyUrlLink(url) {
+  navigator.clipboard.writeText(url)
+    .then(()=>alert('已复制 相对 URL：' + url))
+    .catch(e=>alert('复制失败：'+e));
+}
+
+// Copy external Web link
+function copyWebLink(url) {
+  navigator.clipboard.writeText(url)
+    .then(()=>alert('已复制 Web 链接：' + url))
+    .catch(e=>alert('复制失败：'+e));
+}
+
+// Rename modal functions
+function showRenameModal(btn) {
+  const old = btn.dataset.filename;
+  document.getElementById('old-filename').value = old;
+  document.getElementById('new-filename').value = old;
+  document.getElementById('rename-modal').classList.remove('hidden');
+}
+function closeRenameModal() { document.getElementById('rename-modal').classList.add('hidden'); }
+</script>
+
+<!-- Styles -->
 <style>
-    .container {
-        padding: 20px;
-    }
+.hidden { display: none !important; }
+.folder-manage-container { max-width: 960px; margin: 2rem auto; padding: 1rem; background: var(--canvas-bg); border-radius: 8px; }
+.fm-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.fm-title { margin:0; font-size:1.8rem; color:var(--text-color); }
 
-    h1, h2 {
-        font-size: 24px;
-        margin-bottom: 15px;
-    }
+.file-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap:1rem; }
+.file-card { background:var(--card-bg-color); border:1px solid var(--card-border-color); border-radius:6px; padding:1rem; display:flex; flex-direction:column; justify-content:space-between; transition: box-shadow .3s ease; }
+.file-card:hover { box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+.file-info .file-name { font-weight:500; color:var(--text-color); }
+.file-actions { margin-top:0.5rem; display:flex; gap:0.5rem; flex-wrap:wrap; }
 
-    .btn {
-        display: inline-block;
-        padding: 10px 15px;
-        margin: 5px;
-        text-align: center;
-        border-radius: 5px;
-        text-decoration: none;
-        color: white;
-        background-color: var(--btn-bg-color); /* 使用全局按钮背景色 */
-        border: none;
-    }
+.btn { font-size:0.9rem; padding:0.4rem 0.8rem; border-radius:4px; border:1px solid transparent; cursor:pointer; transition:background .3s ease,color .3s ease; }
+.btn-back { background: var(--btn-bg-color); color:var(--btn-text-color); }
+.btn-back:hover { background: var(--btn-hover-bg-color); }
+.btn-download { background:#ffc107; color:#333; }
+.btn-download:hover { background:#e0a800; }
+.btn-upload { background: var(--btn-bg-color); color:var(--btn-text-color); }
+.btn-upload:hover { background: var(--btn-hover-bg-color); }
+.btn-rename { background:#17a2b8; color:#fff; }
+.btn-rename:hover { background:#138496; }
+.btn-copy-md { background:#6c757d; color:#fff; }
+.btn-copy-md:hover { background:#5a6268; }
+.btn-copy-html { background:#007bff; color:#fff; }
+.btn-copy-html:hover { background:#0069d9; }
+.btn-copy-url { background:#343a40; color:#fff; }
+.btn-copy-url:hover { background:#23272b; }
+.btn-copy-web { background:#6610f2; color:#fff; }
+.btn-copy-web:hover { background:#520dc2; }
 
-    .btn:hover {
-        background-color: var(--btn-hover-bg-color); /* 使用全局按钮悬停背景色 */
-    }
+.upload-section { margin-top:2rem; }
+.input-file { margin-bottom:0.5rem; }
+.dropzone-container { margin-top:1rem; }
 
-    .btn-back {
-        background-color: #28a745;
-    }
+.modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:1000; }
+.modal-dialog { background:var(--card-bg-color); padding:1.5rem; border-radius:8px; width:90%; max-width:320px; }
+.modal-dialog h3 { margin-top:0; color:var(--text-color); }
+.rename-form .form-group { margin-bottom:1rem; }
+.modal-actions { display:flex; justify-content:flex-end; gap:0.5rem; }
+.btn-cancel { background:transparent; color:#dc3545; border-color:#dc3545; }
+.btn-cancel:hover { background:#dc3545; color:#fff; }
 
-    .btn-back:hover {
-        background-color: #218838;
-    }
+.no-files { text-align:center; color:var(--meta-text-color); font-style:italic; }
 
-    .btn-delete {
-        background-color: #dc3545;
-    }
-
-    .btn-delete:hover {
-        background-color: #c82333;
-    }
-
-    .btn-download {
-        background-color: #ffc107;
-    }
-
-    .btn-download:hover {
-        background-color: #e0a800;
-    }
-
-    .file-list {
-        list-style: none;
-        padding: 0;
-    }
-
-    .file-item {
-        margin: 10px 0;
-    }
-
-    .file-actions {
-        margin-left: 20px;
-    }
-
-    .dropzone-container {
-        margin-top: 20px;
-    }
-
-    .upload-form input[type="file"] {
-        margin-bottom: 15px;
-    }
-
-    /* Modal Styling */
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0,0,0,0.4);
-        padding-top: 60px;
-    }
-
-    .modal-content {
-        background-color: #fefefe;
-        margin: 5% auto;
-        padding: 20px;
-        border: 1px solid #888;
-        width: 80%;
-        max-width: 300px;
-    }
-
-    .btn-rename {
-        background-color: #ffc107;
-    }
-
-    .btn-rename:hover {
-        background-color: #e0a800;
-    }
-
-    .btn-copy {
-        background-color: #28a745;
-    }
-
-    .btn-copy:hover {
-        background-color: #218838;
-    }
-
-    .btn-rename-submit {
-        background-color: var(--btn-bg-color); /* 使用全局按钮背景色 */
-    }
-
-    .btn-close-modal {
-        background-color: #dc3545;
-    }
+@media (max-width:600px) {
+  .fm-header { flex-direction:column; align-items:flex-start; gap:1rem; }
+  .file-grid { grid-template-columns:1fr; }
+}
 </style>
 {% endblock %}

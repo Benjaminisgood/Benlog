@@ -1,61 +1,66 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% block content %}
-<div class="container">
-  <h1 class="page-heading">编辑 {{ page_data.title }} 页面</h1>
-  <form method="POST" class="edit-page-form">
-    <!-- 页面标题 -->
-    <label for="title">页面标题：</label>
-    <input id="title" name="title" type="text" class="input-field" required
-           value="{{ page_data.title }}"><br><br>
-    <!-- 页面主内容 -->
-    <label for="content">页面内容：</label>
-    <textarea id="content" name="content" class="input-field" required>{{ page_data.content }}</textarea><br><br>
+<div class="editor-container">
+  <!-- Header with page title and save button -->
+  <div class="editor-header">
+    <h1 class="page-heading">编辑 {{ page_data.title }} 页面</h1>
+    <button form="edit-page-form" type="submit" class="btn btn-save-header">保存更改</button>
+  </div>
+
+  <form method="POST" id="edit-page-form" class="edit-page-form">
+    <!-- 页面基本信息 -->
+    <div class="form-group">
+      <label for="title">页面标题：</label>
+      <input id="title" name="title" type="text" class="input-field" required value="{{ page_data.title }}">
+    </div>
+    <div class="form-group">
+      <label for="content">页面内容：</label>
+      <textarea id="content" name="content" class="input-field textarea-field" required>{{ page_data.content }}</textarea>
+    </div>
 
     <!-- 动态组件列表 -->
-    <h3>元素：</h3>
+    <h3 class="section-heading">元素列表</h3>
     <div id="elements-container">
       {% for comp in page_data.components %}
-        {% set idx = loop.index0 %}
-        <div class="element" data-index="{{ idx }}">
-          <label>类型：</label>
-          <select name="elements-{{ idx }}-type" class="select-field"
-                  onchange="toggleExtra({{ idx }})">
-            {% for opt in ['text','image','link','quote','code'] %}
-              <option value="{{ opt }}"
-                      {% if comp.type == opt %}selected{% endif %}>
-                {{ opt }}
-              </option>
-            {% endfor %}
-          </select><br>
-
-          <label>内容：</label>
-          <input name="elements-{{ idx }}-content" type="text" class="input-field"
-                 value="{{ comp.content or comp.src or comp.href or '' }}"><br><br>
-
-          <div id="extra-{{ idx }}">
-            {% if comp.type == 'image' %}
-              <label>图片链接：</label>
-              <input name="elements-{{ idx }}-src" type="text" class="input-field"
-                     value="{{ comp.src }}"><br><br>
-            {% endif %}
+      {% set idx = loop.index0 %}
+      <div class="element-card" data-index="{{ idx }}">
+        <div class="element-controls">
+          <div class="control-group">
+            <label>类型：</label>
+            <select name="elements-{{ idx }}-type" class="select-field" onchange="toggleExtra({{ idx }})">
+              {% for opt in ['text','image','link','quote','code'] %}
+              <option value="{{ opt }}" {% if comp.type == opt %}selected{% endif %}>{{ opt }}</option>
+              {% endfor %}
+            </select>
           </div>
-
-          <!-- 操作按钮 -->
-          <button type="button" class="btn btn-up"
-                  onclick="move({{ idx }}, 'up')">上移</button>
-          <button type="button" class="btn btn-down"
-                  onclick="move({{ idx }}, 'down')">下移</button>
-          <button type="button" class="btn btn-delete"
-                  onclick="remove({{ idx }})">删除</button>
+          <div class="control-group">
+            <label>内容：</label>
+            <input name="elements-{{ idx }}-content" type="text" class="input-field" value="{{ comp.content or comp.src or comp.href or '' }}">
+          </div>
         </div>
+        <div id="extra-{{ idx }}" class="extra-fields">
+          {% if comp.type == 'image' %}
+          <div class="control-group">
+            <label>图片链接：</label>
+            <input name="elements-{{ idx }}-src" type="text" class="input-field" value="{{ comp.src }}">
+          </div>
+          {% endif %}
+        </div>
+        <div class="element-actions">
+          <button type="button" class="btn btn-up" onclick="move({{ idx }}, 'up')">↑ 上移</button>
+          <button type="button" class="btn btn-down" onclick="move({{ idx }}, 'down')">↓ 下移</button>
+          <button type="button" class="btn btn-delete" onclick="remove({{ idx }})">删除</button>
+        </div>
+      </div>
       {% endfor %}
     </div>
 
-    <button type="button" class="btn" onclick="add()">添加元素</button><br><br>
-    <input id="elements_count" name="elements_count" type="hidden"
-           value="{{ page_data.components|length }}">
-
-    <button type="submit" class="btn btn-save">保存更改</button>
+    <!-- 添加与隐藏字段 -->
+    <div class="form-actions">
+      <button type="button" class="btn btn-add" onclick="add()">添加元素</button>
+      <input id="elements_count" name="elements_count" type="hidden" value="{{ page_data.components|length }}">
+      <button type="submit" class="btn btn-save">保存更改</button>
+    </div>
   </form>
 </div>
 
@@ -65,10 +70,10 @@ function toggleExtra(idx) {
   const extra = document.getElementById(`extra-${idx}`);
   extra.innerHTML = '';
   if (type === 'image') {
-    extra.innerHTML = `
+    extra.innerHTML = `<div class="control-group">
       <label>图片链接：</label>
-      <input name="elements-${idx}-src" type="text" class="input-field"><br><br>
-    `;
+      <input name="elements-${idx}-src" type="text" class="input-field"><br>
+    </div>`;
   }
 }
 
@@ -76,29 +81,33 @@ function add() {
   const container = document.getElementById('elements-container');
   const idx = container.children.length;
   const div = document.createElement('div');
-  div.className = 'element'; div.dataset.index = idx;
+  div.className = 'element-card'; div.dataset.index = idx;
   div.innerHTML = `
-    <label>类型：</label>
-    <select name="elements-${idx}-type" class="select-field"
-            onchange="toggleExtra(${idx})">
-      <option value="text">text</option>
-      <option value="image">image</option>
-      <option value="link">link</option>
-      <option value="quote">quote</option>
-      <option value="code">code</option>
-    </select><br>
-    <label>内容：</label>
-    <input name="elements-${idx}-content" type="text" class="input-field"><br><br>
-    <div id="extra-${idx}"></div>
-    <button type="button" class="btn btn-up"
-            onclick="move(${idx}, 'up')">上移</button>
-    <button type="button" class="btn btn-down"
-            onclick="move(${idx}, 'down')">下移</button>
-    <button type="button" class="btn btn-delete"
-            onclick="remove(${idx})">删除</button>
+    <div class="element-controls">
+      <div class="control-group">
+        <label>类型：</label>
+        <select name="elements-${idx}-type" class="select-field" onchange="toggleExtra(${idx})">
+          <option value="text">text</option>
+          <option value="image">image</option>
+          <option value="link">link</option>
+          <option value="quote">quote</option>
+          <option value="code">code</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>内容：</label>
+        <input name="elements-${idx}-content" type="text" class="input-field">
+      </div>
+    </div>
+    <div id="extra-${idx}" class="extra-fields"></div>
+    <div class="element-actions">
+      <button type="button" class="btn btn-up" onclick="move(${idx}, 'up')">↑ 上移</button>
+      <button type="button" class="btn btn-down" onclick="move(${idx}, 'down')">↓ 下移</button>
+      <button type="button" class="btn btn-delete" onclick="remove(${idx})">删除</button>
+    </div>
   `;
   container.appendChild(div);
-  document.getElementById('elements_count').value = idx + 1;
+  updateCount();
 }
 
 function remove(idx) {
@@ -111,7 +120,7 @@ function move(idx, dir) {
   const container = document.getElementById('elements-container');
   const el = document.querySelector(`[data-index='${idx}']`);
   if (!el) return;
-  const sibling = (dir === 'up') ? el.previousElementSibling : el.nextElementSibling;
+  const sibling = dir === 'up' ? el.previousElementSibling : el.nextElementSibling;
   if (sibling) {
     if (dir === 'up') container.insertBefore(el, sibling);
     else container.insertBefore(sibling, el);
@@ -126,15 +135,139 @@ function updateCount() {
 </script>
 
 <style>
-/* 精简局部样式，使用全局 CSS 变量 */
-.container        { padding:20px; max-width:900px; margin:0 auto; }
-.page-heading     { text-align:center; margin-bottom:20px; font-size:2rem; }
-.edit-page-form   { background:var(--card-bg-color); padding:20px; border-radius:10px; }
-.input-field, .select-field {
-  width:100%; padding:10px; margin-bottom:15px; border-radius:8px;
+/* 编辑容器 */
+.editor-container {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 1rem;
+  background: var(--canvas-bg);
+  border-radius: 8px;
 }
-.btn              { padding:8px 12px; margin:2px; border:none; border-radius:6px; cursor:pointer; }
-.btn-save         { display:block; width:100%; margin-top:10px; }
-.element          { background:var(--card-bg-color); padding:10px; margin-bottom:15px; border-radius:8px; }
+
+/* 头部 */
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+.page-heading {
+  font-size: 1.8rem;
+  color: var(--text-color);
+  margin: 0;
+}
+.btn-save-header {
+  background: var(--btn-bg-color);
+  color: var(--btn-text-color);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+}
+.btn-save-header:hover {
+  background: var(--btn-hover-bg-color);
+}
+
+/* 表单分组 */
+.form-group {
+  margin-bottom: 1rem;
+}
+.section-heading {
+  margin: 1.5rem 0 0.5rem;
+  color: var(--text-color);
+  font-size: 1.2rem;
+}
+
+/* 输入与选择 */
+.input-field, .select-field, .textarea-field {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid var(--input-border-color);
+  border-radius: 6px;
+  background: var(--input-bg-color);
+  transition: border-color 0.3s ease;
+}
+.textarea-field { min-height: 120px; resize: vertical; }
+.input-field:focus, .select-field:focus, .textarea-field:focus {
+  outline: none;
+  border-color: var(--input-focus-border-color);
+}
+
+/* 元素卡片 */
+.element-card {
+  background: var(--card-bg-color);
+  border: 1px solid var(--card-border-color);
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  transition: box-shadow 0.3s ease;
+}
+.element-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.element-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+.control-group { flex: 1; min-width: 150px; }
+
+/* 动作按钮 */
+.element-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.btn {
+  font-size: 0.9rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+.btn-up, .btn-down {
+  background: var(--quick-card-bg);
+  color: var(--quick-label-color);
+  border-color: var(--input-border-color);
+}
+.btn-up:hover, .btn-down:hover {
+  background: var(--quick-card-hover-bg);
+  color: var(--text-color);
+}
+.btn-delete {
+  background: transparent;
+  color: var(--btn-bg-color);
+  border-color: var(--btn-bg-color);
+}
+.btn-delete:hover {
+  background: var(--btn-bg-color);
+  color: var(--btn-text-color);
+}
+
+/* 添加与保存按钮 */
+.btn-add {
+  background: var(--btn-bg-color);
+  color: var(--btn-text-color);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  margin-right: 1rem;
+}
+.btn-add:hover { background: var(--btn-hover-bg-color); }
+.btn-save {
+  background: var(--btn-bg-color);
+  color: var(--btn-text-color);
+  border: none;
+  padding: 0.8rem;
+  border-radius: 4px;
+}
+.btn-save:hover { background: var(--btn-hover-bg-color); }
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .editor-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  .element-controls { flex-direction: column; }
+}
 </style>
 {% endblock %}

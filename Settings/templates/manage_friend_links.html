@@ -1,42 +1,173 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% block content %}
-<!DOCTYPE html>
-<html lang="zh">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>友链管理</title>
-</head>
-<body>
-    <h1>友链管理</h1>
+<div class="friend-links-container">
+  <h1 class="fl-heading">友链管理</h1>
 
-    <h2>所有友链</h2>
-    <ul>
-        {% for link in friend_links %}
-            <li>
-                <a href="{{ link.url }}" target="_blank">{{ link.label }}</a>
-                <!-- Delete button -->
-                <form action="{{ url_for('setting.manage_friend_links') }}" method="POST" style="display:inline;">
-                    <input type="hidden" name="index" value="{{ loop.index0 }}">
-                    <input type="hidden" name="action" value="delete">
-                    <button type="submit">删除</button>
-                </form>
-            </li>
-        {% else %}
-            <p>暂无友链</p>
-        {% endfor %}
-    </ul>
+  <!-- 已有友链列表 -->
+  <div class="links-grid">
+    {% for link in friend_links %}
+    <div class="link-card">
+      <a href="{{ link.url }}" target="_blank" class="link-label">🔗 {{ link.label }}</a>
+      <form action="{{ url_for('setting.manage_friend_links') }}" method="POST" class="delete-form">
+        <input type="hidden" name="index" value="{{ loop.index0 }}">
+        <input type="hidden" name="action" value="delete">
+        <button type="submit" class="btn btn-delete" onclick="return confirm('确认删除链接 {{ link.label }}？');">删除</button>
+      </form>
+    </div>
+    {% else %}
+    <p class="no-links">暂无友链，快去添加吧！</p>
+    {% endfor %}
+  </div>
 
+  <!-- 添加新友链表单 -->
+  <div class="add-link-form">
     <h2>添加友链</h2>
     <form action="{{ url_for('setting.manage_friend_links') }}" method="POST">
+      <div class="form-field">
         <label for="url">链接地址：</label>
-        <input type="url" name="url" id="url" required>
-        <br><br>
+        <input type="url" name="url" id="url" class="input-field" placeholder="https://example.com" required>
+      </div>
+      <div class="form-field">
         <label for="label">链接名称：</label>
-        <input type="text" name="label" id="label" required>
-        <br><br>
-        <button type="submit">提交</button>
+        <input type="text" name="label" id="label" class="input-field" placeholder="Friend Name" required>
+      </div>
+      <button type="submit" class="btn btn-create">提交</button>
     </form>
-</body>
-</html>
+  </div>
+</div>
+
+<style>
+.friend-links-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: var(--canvas-bg);
+  border-radius: 8px;
+}
+
+.fl-heading {
+  font-size: 2.2rem;
+  color: var(--text-color);
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.links-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.link-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--card-bg-color);
+  border: 1px solid var(--card-border-color);
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  transition: box-shadow 0.3s ease;
+}
+.link-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.link-label {
+  color: var(--link-color);
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s;
+}
+.link-label:hover {
+  color: var(--text-color);
+}
+
+.delete-form {
+  margin: 0;
+}
+
+.add-link-form {
+  background: var(--card-bg-color);
+  border: 1px solid var(--card-border-color);
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.add-link-form h2 {
+  margin-top: 0;
+  color: var(--text-color);
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--card-border-color);
+  padding-bottom: 0.5rem;
+}
+
+.form-field {
+  margin-bottom: 1rem;
+}
+
+.form-field label {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: var(--text-color);
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--input-border-color);
+  border-radius: 4px;
+  background: var(--input-bg-color);
+  transition: border-color 0.3s ease;
+}
+.input-field:focus {
+  outline: none;
+  border-color: var(--input-focus-border-color);
+}
+
+.btn {
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.btn-create {
+  background: var(--btn-bg-color);
+  color: var(--btn-text-color);
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+}
+.btn-create:hover {
+  background: var(--btn-hover-bg-color);
+}
+
+.btn-delete {
+  background: transparent;
+  border: 1px solid var(--btn-bg-color);
+  color: var(--btn-bg-color);
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+}
+.btn-delete:hover {
+  background: var(--btn-bg-color);
+  color: var(--btn-text-color);
+}
+
+.no-links {
+  text-align: center;
+  color: var(--meta-text-color);
+  font-style: italic;
+}
+
+/* 响应式设计 */
+@media (max-width: 600px) {
+  .links-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
 {% endblock %}
