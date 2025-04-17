@@ -1,165 +1,22 @@
 {% extends "base.html" %}
 {% block content %}
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>新建动态网页</title>
-</head>
-<body>
-    <h1 class="page-heading">新建动态网页</h1>
-    <form method="POST" class="page-form">
-        <label for="title">页面标题：</label>
-        <input type="text" id="title" name="title" class="input-field" required><br><br>
+<div class="container">
+  <h1 class="page-heading">新建动态页面</h1>
+  <form method="POST" class="edit-page-form">
+    <label for="title">页面文件名（title）：</label>
+    <input id="title" name="title" type="text" class="input-field"
+           placeholder="仅限字母、数字、下划线和中划线"
+           required><br><br>
+    <button type="submit" class="btn btn-save">创建并编辑</button>
+    <a href="{{ url_for('setting.manage_dynamic_page') }}" class="btn">取消</a>
+  </form>
+</div>
 
-        <label for="content">页面内容：</label>
-        <textarea id="content" name="content" class="input-field" required></textarea><br><br>
-
-        <h3>元素：</h3>
-        <div id="elements-container">
-            <div class="element">
-                <label for="element_0_type">元素类型：</label>
-                <select name="element_0_type" required class="select-field">
-                    <option value="text">文本</option>
-                    <option value="image">图片</option>
-                    <option value="link">链接</option>
-                </select><br>
-                <label for="element_0_content">内容：</label>
-                <input type="text" name="element_0_content" class="input-field" required><br><br>
-            </div>
-        </div>
-
-        <button type="button" id="add-element-btn" class="btn">添加元素</button><br><br>
-        <input type="hidden" name="elements_count" id="elements_count" value="1">
-
-        <button type="submit" class="submit-btn">创建页面</button>
-    </form>
-
-    <script>
-        let elementCount = 1;
-
-        document.getElementById('add-element-btn').addEventListener('click', function() {
-            const container = document.getElementById('elements-container');
-            const newElementDiv = document.createElement('div');
-            newElementDiv.classList.add('element');
-            
-            newElementDiv.innerHTML = `
-                <label for="element_${elementCount}_type">元素类型：</label>
-                <select name="element_${elementCount}_type" required class="select-field">
-                    <option value="text">文本</option>
-                    <option value="image">图片</option>
-                    <option value="link">链接</option>
-                </select><br>
-                <label for="element_${elementCount}_content">内容：</label>
-                <input type="text" name="element_${elementCount}_content" class="input-field" required><br><br>
-            `;
-            
-            container.appendChild(newElementDiv);
-            elementCount++;
-            document.getElementById('elements_count').value = elementCount;
-        });
-    </script>
-
-    <!-- 局部CSS样式 -->
-    <style>
-      /* 页面标题样式 */
-      .page-heading {
-        text-align: center;
-        color: var(--text-color); /* 使用全局文本颜色 */
-        margin-bottom: 20px;
-        font-size: 2rem;
-      }
-
-      /* 页面表单样式 */
-      .page-form {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 20px;
-        background-color: var(--card-bg-color); /* 使用全局卡片背景色 */
-        border: 1px solid var(--card-border-color); /* 使用全局边框颜色 */
-        border-radius: 10px;
-        box-sizing: border-box;
-      }
-
-      .input-field, .select-field {
-        width: 100%;
-        padding: 10px 15px;
-        margin-bottom: 15px;
-        border: 1px solid var(--input-border-color); /* 使用全局输入框边框色 */
-        border-radius: 8px;
-        background-color: var(--input-bg-color); /* 使用全局输入框背景色 */
-        color: var(--text-color); /* 使用全局文本颜色 */
-        transition: border-color 0.3s ease;
-      }
-
-      .input-field:focus, .select-field:focus {
-        border-color: var(--input-focus-border-color); /* 使用全局聚焦边框颜色 */
-        outline: none;
-      }
-
-      .btn {
-        display: inline-block;
-        padding: 10px 20px;
-        background-color: var(--btn-bg-color); /* 使用全局按钮背景色 */
-        color: var(--btn-text-color); /* 使用全局按钮文本颜色 */
-        border-radius: 5px;
-        font-size: 1rem;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-      }
-
-      .btn:hover {
-        background-color: var(--btn-hover-bg-color); /* 使用全局按钮悬停背景色 */
-      }
-
-      .submit-btn {
-        display: inline-block;
-        width: 100%;
-        padding: 10px;
-        background-color: var(--btn-bg-color); /* 使用全局按钮背景色 */
-        color: var(--btn-text-color); /* 使用全局按钮文本颜色 */
-        border-radius: 8px;
-        font-size: 1rem;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-      }
-
-      .submit-btn:hover {
-        background-color: var(--btn-hover-bg-color); /* 使用全局按钮悬停背景色 */
-      }
-
-      /* 添加元素按钮 */
-      #add-element-btn {
-        display: inline-block;
-        margin-top: 10px;
-        padding: 10px 20px;
-        background-color: var(--btn-bg-color); /* 使用全局按钮背景色 */
-        color: var(--btn-text-color); /* 使用全局按钮文本颜色 */
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 1rem;
-        transition: background-color 0.3s ease;
-      }
-
-      /* 响应式设计：适配小屏幕 */
-      @media (max-width: 768px) {
-        .page-form {
-          padding: 15px;
-        }
-
-        .input-field, .select-field {
-          padding: 8px 12px;
-        }
-
-        .btn, .submit-btn {
-          width: 100%;
-          font-size: 0.9rem;
-        }
-
-        #add-element-btn {
-          width: 100%;
-        }
-      }
-    </style>
+<style>
+.container      { padding:20px; max-width:600px; margin:0 auto; }
+.page-heading   { text-align:center; margin-bottom:20px; font-size:2rem; }
+.edit-page-form { background:var(--card-bg-color); padding:20px; border-radius:8px; }
+.input-field    { width:100%; padding:10px; margin-bottom:15px; border-radius:6px; }
+.btn-save, .btn { padding:8px 12px; margin-right:10px; border:none; border-radius:6px; cursor:pointer; }
+</style>
 {% endblock %}

@@ -32,10 +32,11 @@ flask --app Benlog/app.py db upgrade
 gunicorn -w 4 -b 0.0.0.0:80 "Benlog.app:create_app()"
 
 # 运行、调试等
-#export FLASK_ENV=development
-#export FLASK_DEBUG=1
-#flask --app "Benlog.app:create_app" run --host=0.0.0.0 --port=80
-#打包和安装之后再运行
+export FLASK_ENV=development
+export FLASK_DEBUG=1
+flask --app "Benlog.app:create_app" run --host=0.0.0.0 --port=80
+
+#其他
 #rm -rf build dist *.egg-info
 #pip uninstall Benlog
 #cd myenv/lib/python3.9/site-packages

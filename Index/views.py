@@ -14,8 +14,24 @@ from flask_login import login_required, current_user
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
-###############################################################
-# 预先定义每种媒体对应的扩展名
+#
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+#
+# 
+#预先定义每种媒体对应的扩展名
 MEDIA_EXTENSIONS = {
     "image": ('.png', '.jpg', '.jpeg', '.gif'),
     "audio": ('.mp3', '.wav', '.ogg', '.m4a'),
@@ -60,6 +76,23 @@ def get_media_batch(media_list, offset=0, batch_size=12):
     return media_list[offset:offset+batch_size]
 
 ###############################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def render_gallery_page(title, folder, media_type, batch_size=None, randomize=False):
     """
     通用渲染媒体画廊页面。
@@ -114,6 +147,18 @@ def gallery_load_more():
     next_batch = get_media_batch(media_list, offset=offset, batch_size=batch_size)
     return jsonify({'items': next_batch})
 
+
+
+
+
+
+
+
+
+
+
+
+
 # 各个路由均调用上面统一的渲染函数
 @index_bp.route('/photograph')
 def photograph():
@@ -146,6 +191,31 @@ def ebooks():
     return render_gallery_page("电子书论文", "ebooks", "ebook")
 
 ###########################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 logging.basicConfig(level=logging.INFO)
 
 api_key = os.getenv("OPENAI_API_KEY")
@@ -257,56 +327,21 @@ def dynamic_page(page):
         feature_name = PLACEHOLDER_MAPPING[page]
         return render_template('placeholder.html', title=feature_name, feature_name=feature_name)
 
-    # 3. 处理动态页面：从 JSON 文件读取数据并渲染
+    # 3. 动态页面：拼路径，加载 JSON
+    json_path = os.path.join(DYNAMIC_PAGES_FOLDER, f"{page}.json")
     try:
-        # 尝试从 `dynamic_pages` 目录中加载 JSON 文件
-        json_file_path = os.path.join(DYNAMIC_PAGES_FOLDER, f'{page}.json')
-        with open(json_file_path, 'r', encoding='utf-8') as file:
-            page_data = json.load(file)
-        
-        # 渲染模板并传递 JSON 数据
-        return render_template('dynamic_page.html', page_data=page_data)
+        with open(json_path, 'r', encoding='utf-8') as f:
+            page_data = json.load(f)
     except FileNotFoundError:
-        return "页面不存在", 404
+        # 找不到文件，404
+        abort(404, description="页面不存在")
     except json.JSONDecodeError:
-        return "页面数据错误", 500
+        # JSON 解析错误，500
+        abort(500, description="页面数据错误")
+
+    # 渲染动态页面模板
+    return render_template('dynamic_page.html', page_data=page_data)
     
-@index_bp.route('/<page>/edit', methods=['GET', 'POST'])
-@login_required
-def edit_dynamic_page(page):
-    """
-    编辑动态页面：加载页面内容，允许管理员编辑并保存
-    """
-    if not (current_user.is_admin or current_user.id == 1):
-        abort(403)
-    try:
-        # 尝试从 `dynamic_pages` 目录中加载 JSON 文件
-        json_file_path = os.path.join(DYNAMIC_PAGES_FOLDER, f'{page}.json')
-        with open(json_file_path, 'r', encoding='utf-8') as file:
-            page_data = json.load(file)
-    except FileNotFoundError:
-        return "页面不存在", 404
-    except json.JSONDecodeError:
-        return "页面数据错误", 500
-
-    if request.method == 'POST':
-        # 获取编辑后的数据
-        page_data['title'] = request.form['title']
-        page_data['content'] = request.form['content']
-        
-        # 更新元素
-        for idx, element in enumerate(page_data['elements']):
-            element['type'] = request.form.getlist(f'elements[{idx}][type]')[0]
-            element['content'] = request.form.getlist(f'elements[{idx}][content]')[0]
-        
-        # 将更新后的数据保存到 JSON 文件中
-        with open(json_file_path, 'w', encoding='utf-8') as file:
-            json.dump(page_data, file, ensure_ascii=False, indent=4)
-
-        flash(f"{page_data['title']} 页面更新成功!", "success")
-        return redirect(url_for('index.dynamic_page', page=page))
-
-    return render_template('edit_dynamic_page.html', page_data=page_data)
 
 
 
@@ -346,8 +381,49 @@ def load_friend_links():
         return json.load(file)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @index_bp.route('/')
 def home():
     quick_links = load_quick_links()  # Load quick links from JSON file
     friend_links = load_friend_links()  # Load friend links from JSON file
     return render_template('index.html', quick_links=quick_links, friend_links=friend_links, title="首页")  # Pass quick links to the template 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

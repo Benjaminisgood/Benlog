@@ -11,6 +11,9 @@ import os
 from werkzeug.utils import secure_filename
 import json
 from flask import session
+import time
+import re
+
 
 
 @setting_bp.route('/')
@@ -304,7 +307,7 @@ def view_folder(folder_name):
         files = [f for f in os.listdir(folder_path) if not f.startswith('.')]
     else:
         files = []
-    return render_template('view_folder.html', folder_name=folder_name, files=files)
+    return render_template('manage_folder.html', folder_name=folder_name, files=files)
 
 # File download route
 @setting_bp.route('/download/<folder_name>/<filename>')
@@ -321,7 +324,7 @@ def delete_file(folder_name, filename):
     file_path = os.path.join(GALLERY_PATH, folder_name, filename)
     if os.path.exists(file_path):
         os.remove(file_path)
-    return redirect(url_for('setting.view_folder', folder_name=folder_name))
+    return redirect(url_for('setting.manage_folder', folder_name=folder_name))
 
 @setting_bp.route('/upload/<folder_name>', methods=['POST'])
 @login_required
@@ -338,7 +341,7 @@ def upload_file(folder_name):
         filename = secure_filename(file.filename)
         file.save(os.path.join(folder_path, filename))
 
-    return redirect(url_for('setting.view_folder', folder_name=folder_name))
+    return redirect(url_for('setting.manage_folder', folder_name=folder_name))
 
 
 @setting_bp.route('/rename_file', methods=['POST'])
@@ -361,7 +364,7 @@ def rename_file():
     else:
         flash('File does not exist!', 'danger')
     
-    return redirect(url_for('setting.view_folder', folder_name=folder_name))
+    return redirect(url_for('setting.manage_folder', folder_name=folder_name))
 
 
 
@@ -389,8 +392,6 @@ DYNAMIC_PAGES_FOLDER = os.path.abspath(DYNAMIC_PAGES_FOLDER)
 if not os.path.exists(DYNAMIC_PAGES_FOLDER):
     raise FileNotFoundError(f"目录 {DYNAMIC_PAGES_FOLDER} 不存在！")
 
-#print(DYNAMIC_PAGES_FOLDER)
-#DYNAMIC_PAGES_FOLDER = 'Index/dynamic_pages'
 # 管理动态页面的路由
 @setting_bp.route('/manage_dynamic_page', methods=['GET'])
 @login_required
@@ -412,16 +413,15 @@ def manage_dynamic_page():
                 # 读取每个 JSON 文件，加载页面数据
                 with open(os.path.join(DYNAMIC_PAGES_FOLDER, filename), 'r', encoding='utf-8') as file:
                     page_data = json.load(file)
-                print(f"成功加载页面: {page_name}")
             except Exception as e:
-                print(f"读取 {filename} 时出错: {e}")
                 continue
 
             if page_data:
                 editable_pages.append({
                     'page_name': page_name,
                     'title': page_data.get('title', '无标题'),
-                    'edit_url': url_for('index.edit_dynamic_page', page=page_name)  # 生成编辑页面的链接
+                    'edit_url': url_for('setting.edit_dynamic_page', page=page_name),  
+                    'view_url': url_for('index.dynamic_page',        page=page_name,  _external=True)
                 })
 
     if not editable_pages:
@@ -432,42 +432,273 @@ def manage_dynamic_page():
 if not os.path.exists(DYNAMIC_PAGES_FOLDER):
     os.makedirs(DYNAMIC_PAGES_FOLDER)
 
+
+@setting_bp.route('/<page>/delete', methods=['POST'])
+@login_required
+def delete_dynamic_page(page):
+    # 仅管理员或 user.id==1 可以删除
+    if not (current_user.is_admin or current_user.id == 1):
+        abort(403)
+
+    file_path = os.path.join(DYNAMIC_PAGES_FOLDER, f"{page}.json")
+    if os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+            flash(f'页面 “{page}” 已删除！', 'success')
+        except Exception as e:
+            flash(f'删除失败：{e}', 'danger')
+    else:
+        flash('页面不存在或已被删除', 'warning')
+
+    return redirect(url_for('setting.manage_dynamic_page'))
+
+
+
+@setting_bp.route('/<page>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_dynamic_page(page):
+    # 权限检查：仅管理员或 user.id==1 可编辑
+    if not (current_user.is_admin or current_user.id == 1):
+        abort(403)
+
+    json_path = os.path.join(DYNAMIC_PAGES_FOLDER, f"{page}.json")
+    try:
+        with open(json_path, 'r', encoding='utf-8') as f:
+            page_data = json.load(f)
+    except FileNotFoundError:
+        abort(404, description="页面不存在")
+    except json.JSONDecodeError:
+        abort(500, description="页面数据错误")
+
+    if request.method == 'POST':
+        # 更新 title 和 content
+        title   = request.form.get('title', '').strip()
+        content = request.form.get('content', '').strip()
+
+        # 如果用户改了文件名，就重命名 JSON
+        if title and title != page:
+            # 简单文件名清洗：只保留字母数字下划线和中划线
+            safe = re.sub(r'[^0-9A-Za-z_-]', '_', title)
+            old_path = json_path
+            new_path = os.path.join(DYNAMIC_PAGES_FOLDER, f"{safe}.json")
+            if os.path.exists(new_path):
+                flash("目标文件名已存在，请换一个", "danger")
+                return redirect(url_for('setting.edit_dynamic_page', page=page))
+            os.rename(old_path, new_path)
+            page = safe
+            json_path = new_path
+
+        # 重组 page_data
+        page_data['title']   = title
+        page_data['content'] = content
+
+        new_components = [
+            {'type': 'title',   'content': title},
+            {'type': 'content', 'content': content}
+        ]
+        count = int(request.form.get('elements_count', 0))
+        for idx in range(count):
+            ctype = request.form.get(f'elements-{idx}-type')
+            raw   = request.form.get(f'elements-{idx}-content', '').strip()
+            if not ctype:
+                continue
+            if ctype == 'text':
+                new_components.append({'type': 'text', 'content': raw})
+            elif ctype == 'image':
+                src = request.form.get(f'elements-{idx}-src', '').strip()
+                new_components.append({
+                    'type': 'image', 'src': src,
+                    'alt': page_data.get('alt', '')
+                })
+            elif ctype == 'link':
+                new_components.append({
+                    'type': 'link', 'href': raw, 'text': raw
+                })
+            elif ctype == 'quote':
+                new_components.append({'type': 'quote', 'content': raw})
+            elif ctype == 'code':
+                new_components.append({'type': 'code', 'content': raw})
+        page_data['components'] = new_components
+
+        # 保存回 JSON
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(page_data, f, ensure_ascii=False, indent=4)
+
+        flash(f"页面 “{title}” 更新成功！", 'success')
+        return redirect(url_for('index.dynamic_page', page=page))
+
+    # GET 时渲染编辑表单
+    return render_template('edit_dynamic_page.html',
+                           page=page, page_data=page_data)
+
+
 @setting_bp.route('/new_dynamic_page', methods=['GET', 'POST'])
 @login_required
 def new_dynamic_page():
-    """
-    创建新的动态网页，并保存为新的 JSON 文件
-    """
+    # 权限检查
+    if not (current_user.is_admin or current_user.id == 1):
+        abort(403)
+
+    if request.method == 'GET':
+        # 显示让用户输入“文件名”的表单
+        return render_template('new_dynamic_page.html')
+
+    # POST：从表单读取 title 并创建 JSON
+    title = request.form.get('title', '').strip()
+    if not title:
+        flash("文件名不能为空", 'danger')
+        return redirect(url_for('setting.new_dynamic_page'))
+
+    # 简单清洗，保证文件系统安全
+    safe = re.sub(r'[^0-9A-Za-z_-]', '_', title)
+    filename = f"{safe}.json"
+    fullpath = os.path.join(DYNAMIC_PAGES_FOLDER, filename)
+
+    if os.path.exists(fullpath):
+        flash("该文件名已存在，请换一个", 'danger')
+        return redirect(url_for('setting.new_dynamic_page'))
+
+    # 构造初始内容
+    new_page_data = {
+        'title':   title,
+        'content': '这里输入页面主内容…',
+        'components': []
+    }
+
+    # 确保目录存在
+    os.makedirs(DYNAMIC_PAGES_FOLDER, exist_ok=True)
+
+    try:
+        with open(fullpath, 'w', encoding='utf-8') as f:
+            json.dump(new_page_data, f, ensure_ascii=False, indent=4)
+        flash(f'新建页面 “{title}” 成功！', 'success')
+    except Exception as e:
+        flash(f'新建页面失败：{e}', 'danger')
+        return redirect(url_for('setting.new_dynamic_page'))
+
+    # 创建完毕后，跳转到编辑该页面，以便添加组件
+    return redirect(url_for('setting.edit_dynamic_page', page=safe))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Path to the JSON file
+cards_file_path = os.path.join(os.path.dirname(__file__), '..', 'Index', 'dynamic_links', 'quick-links.json')
+
+# Load the existing quick links from the JSON file
+def load_quick_links():
+    if not os.path.exists(cards_file_path):
+        return []  # Return an empty list if the file doesn't exist
+    with open(cards_file_path, 'r', encoding='utf-8') as file:
+        return json.load(file)
+
+# Save the updated list of quick links to the JSON file
+def save_quick_links(links):
+    with open(cards_file_path, 'w', encoding='utf-8') as file:
+        json.dump(links, file, ensure_ascii=False, indent=4)
+
+# 显示所有快捷链接，并支持删除和添加
+@setting_bp.route('/quick-links', methods=['GET', 'POST'])
+def manage_quick_links():
+    quick_links = load_quick_links()  # Load the quick links
+
+    # Handle form submission for adding or deleting quick links
     if request.method == 'POST':
-        page_title = request.form['title']
-        page_content = request.form['content']
-        elements = []
+        action = request.form.get('action')
+        index = request.form.get('index')
+        url = request.form.get('url')
+        label = request.form.get('label')
+        icon = request.form.get('icon')
 
-        # 获取页面元素
-        for i in range(int(request.form['elements_count'])):
-            element_type = request.form.get(f'element_{i}_type')
-            element_content = request.form.get(f'element_{i}_content')
+        if action == 'delete' and index is not None:  # Handle delete
+            index = int(index)
+            if 0 <= index < len(quick_links):
+                quick_links.pop(index)  # Remove the link at the specified index
+                save_quick_links(quick_links)  # Save the updated list
 
-            if element_type == 'text':
-                elements.append({'type': 'text', 'content': element_content})
-            elif element_type == 'image':
-                elements.append({'type': 'image', 'src': element_content})
-            elif element_type == 'link':
-                elements.append({'type': 'link', 'href': element_content, 'text': element_content})
+        elif url and label:  # Handle add
+            quick_links.append({"url": url, "label": label, "icon": icon})
+            save_quick_links(quick_links)  # Save the updated list
 
-        # 新建页面的数据
-        new_page_data = {
-            'title': page_title,
-            'content': page_content,
-            'elements': elements
-        }
+        return redirect(url_for('setting.manage_quick_links'))  # Redirect to avoid resubmission
 
-        # 保存为 JSON 文件
-        new_page_filename = os.path.join(DYNAMIC_PAGES_FOLDER, f'{page_title}.json')
-        with open(new_page_filename, 'w', encoding='utf-8') as file:
-            json.dump(new_page_data, file, ensure_ascii=False, indent=4)
+    return render_template('manage_quick_links.html', quick_links=quick_links)
 
-        flash(f'新建页面 "{page_title}" 成功！', 'success')
-        return redirect(url_for('setting.manage_dynamic_page'))  # 重定向回页面列表
 
-    return render_template('new_dynamic_page.html')  # 显示创建页面的表单
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Path to the JSON file
+links_file_path = os.path.join(os.path.dirname(__file__), '..', 'Index', 'dynamic_links', 'friend-links.json')
+
+# Load the existing friend links from the JSON file
+def load_friend_links():
+    if not os.path.exists(links_file_path):
+        return []  # Return an empty list if the file doesn't exist
+    with open(links_file_path, 'r', encoding='utf-8') as file:
+        return json.load(file)
+
+# Save the updated list of friend links to the JSON file
+def save_friend_links(links):
+    with open(links_file_path, 'w', encoding='utf-8') as file:
+        json.dump(links, file, ensure_ascii=False, indent=4)
+
+# 显示所有友链，并支持删除和添加
+@setting_bp.route('/friend-links', methods=['GET', 'POST'])
+def manage_friend_links():
+    friend_links = load_friend_links()  # Load the friend links
+
+    # Handle form submission for adding or deleting links
+    if request.method == 'POST':
+        action = request.form.get('action')
+        index = request.form.get('index')
+        url = request.form.get('url')
+        label = request.form.get('label')
+
+        if action == 'delete' and index is not None:  # Handle delete
+            index = int(index)
+            if 0 <= index < len(friend_links):
+                friend_links.pop(index)  # Remove the link at the specified index
+                save_friend_links(friend_links)  # Save the updated list
+
+        elif url and label:  # Handle add (adding a new link)
+            friend_links.append({"url": url, "label": label})
+            save_friend_links(friend_links)  # Save the updated list
+
+        return redirect(url_for('setting.manage_friend_links'))  # Redirect to avoid resubmission
+
+    return render_template('manage_friend_links.html', friend_links=friend_links)

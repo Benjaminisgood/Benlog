@@ -1,33 +1,205 @@
 {% extends "base.html" %}
 {% block content %}
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ page_data.title }}</title>
-</head>
-<body>
-    <div class="container">
-        <h1 class="page-title">{{ page_data.title }}</h1>
-        <div class="page-content">{{ page_data.content }}</div>
-
-        <!-- 动态渲染页面元素 -->
-        <div class="elements-container">
-            {% for element in page_data.elements %}
-                {% if element.type == 'text' %}
-                    <p class="text-element">{{ element.content }}</p>
-                {% elif element.type == 'image' %}
-                    <img class="image-element" src="{{ element.src }}" alt="{{ element.alt }}">
-                {% elif element.type == 'link' %}
-                    <a class="link-element" href="{{ element.href }}">{{ element.text }}</a>
-                {% endif %}
-            {% endfor %}
+<div class="container">
+  <h1 class="page-title">{{ page_data.title }}</h1>
+  <div class="page-content">{{ page_data.content|safe }}</div>
+  <div class="elements-container">
+    {% for elm in page_data.components %}
+      {% if elm.type=='title' %}
+        <h2>{{ elm.content }}</h2>
+      {% elif elm.type=='content' %}
+        <div>{{ elm.content|safe }}</div>
+      {% elif elm.type=='text' %}
+        <p>{{ elm.content }}</p>
+      {% elif elm.type=='image' %}
+        <img src="{{ elm.src }}" alt="" style="max-width:100%%;border-radius:8px;">
+      {% elif elm.type=='link' %}
+        <p><a href="{{ elm.href }}">{{ elm.text }}</a></p>
+      {% elif elm.type=='quote' %}
+        <blockquote>{{ elm.content }}</blockquote>
+      {% elif elm.type=='code' %}
+        <pre><code>{{ elm.content }}</code></pre>
+      {% elif elm.type=='image-frame' %}
+        <div class="image-frame"><img src="{{ elm.src }}" alt=""></div>
+      {% elif elm.type=='flip-card' %}
+        <div class="flip-card"> ... </div>
+      {% elif elm.type=='gallery' %}
+        <div class="gallery-element">
+          {% for img in elm.images %}<img src="{{ img }}" alt="">{% endfor %}
         </div>
-    </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
 
     <!-- 局部CSS样式 -->
     <style>
+        .container {
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .page-title {
+            text-align: center;
+            color: var(--text-color);
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .page-content {
+            color: var(--meta-text-color);
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .elements-container {
+            margin-top: 20px;
+        }
+
+        /* 文本元素 */
+        .text-element {
+            color: var(--text-color);
+            font-size: 1.1rem;
+            margin: 10px 0;
+        }
+
+        /* 图片元素 */
+        .image-element {
+            max-width: 100%;
+            height: auto;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        /* 链接元素 */
+        .link-element {
+            color: var(--link-color);
+            font-weight: bold;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .link-element:hover {
+            color: var(--text-color);
+            text-decoration: underline;
+        }
+
+        /* 引文元素 */
+        .quote-element {
+            font-style: italic;
+            color: var(--quote-color);
+            border-left: 4px solid var(--quote-border-color);
+            padding-left: 10px;
+            margin: 15px 0;
+        }
+
+        /* 代码块元素 */
+        .code-element {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* 图片框元素 */
+        .image-frame {
+            border: 2px solid #ddd;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .image-frame-img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+
+        /* 翻转卡片元素 */
+        .flip-card {
+            width: 300px;
+            height: 200px;
+            perspective: 1000px;
+            margin: 10px;
+        }
+
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+
+        .flip-card:hover .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+        }
+
+        .flip-card-back {
+            transform: rotateY(180deg);
+            background-color: var(--flip-card-back-bg);
+        }
+
+        /* 相册元素 */
+        .gallery-element {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .gallery-image {
+            width: 150px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        /* 响应式设计：适配小屏幕 */
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .page-content {
+                font-size: 0.9rem;
+            }
+
+            .elements-container {
+                padding: 0 15px;
+            }
+
+            .text-element {
+                font-size: 1rem;
+            }
+
+            .link-element {
+                font-size: 1rem;
+            }
+
+            .flip-card {
+                width: 250px;
+                height: 180px;
+            }
+
+            .gallery-image {
+                width: 120px;
+                height: 80px;
+            }
+        }
+
         .container {
             padding: 20px;
             max-width: 900px;

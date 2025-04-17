@@ -1,108 +1,107 @@
 [
     {
-      "url": "{{ url_for('index.dynamic_page', page='resume') }}",
-      "icon": "https://img.icons8.com/color/100/000000/resume.png",
-      "label": "个人求职简历"
+        "url": "{{ url_for('index.dynamic_page', page='resume') }}",
+        "icon": "https://img.icons8.com/color/100/000000/resume.png",
+        "label": "个人求职简历"
     },
     {
-      "url": "http://benjaling.icu:9999/files/",
-      "icon": "https://img.icons8.com/color/100/000000/cloud.png",
-      "label": "我的个人网盘"
+        "url": "http://benjaling.icu:9999/files/",
+        "icon": "https://img.icons8.com/color/100/000000/cloud.png",
+        "label": "我的个人网盘"
     },
     {
-      "url": "https://www.icloud.com/shortcuts/b8273812a958416a98c0f37fce1014f7",
-      "icon": "https://img.icons8.com/color/100/000000/command.png",
-      "label": "我的快捷指令"
+        "url": "https://www.icloud.com/shortcuts/b8273812a958416a98c0f37fce1014f7",
+        "icon": "https://img.icons8.com/color/100/000000/command.png",
+        "label": "我的快捷指令"
     },
     {
-      "url": "{{ url_for('index.photograph') }}",
-      "icon": "https://img.icons8.com/color/100/000000/camera.png",
-      "label": "看我的摄影展"
+        "url": "{{ url_for('index.photograph') }}",
+        "icon": "https://img.icons8.com/color/100/000000/camera.png",
+        "label": "看我的摄影展"
     },
     {
-      "url": "/llm",
-      "icon": "https://img.icons8.com/color/100/000000/artificial-intelligence.png",
-      "label": "用我的AI助理"
+        "url": "/llm",
+        "icon": "https://img.icons8.com/color/100/000000/artificial-intelligence.png",
+        "label": "用我的AI助理"
     },
     {
-      "url": "webcal://p208-caldav.icloud.com.cn/published/2/MjAzNTY4MjU0NDcyMDM1NlID9qEPDRxN3L5lZTj8_4F3LyTrp0GsBk46fuO6aCfeskAyU7kWXmun6O7I_P62yBPt-8B_G9sQMr26zsovY7k",
-      "icon": "https://img.icons8.com/color/100/000000/calendar.png",
-      "label": "订阅我的日历"
+        "url": "webcal://p208-caldav.icloud.com.cn/published/2/MjAzNTY4MjU0NDcyMDM1NlID9qEPDRxN3L5lZTj8_4F3LyTrp0GsBk46fuO6aCfeskAyU7kWXmun6O7I_P62yBPt-8B_G9sQMr26zsovY7k",
+        "icon": "https://img.icons8.com/color/100/000000/calendar.png",
+        "label": "订阅我的日历"
     },
     {
-      "url": "http://benjaling.icu:8096",
-      "icon": "https://img.icons8.com/color/100/000000/video.png",
-      "label": "我的视频网站"
+        "url": "http://benjaling.icu:8096",
+        "icon": "https://img.icons8.com/color/100/000000/video.png",
+        "label": "我的视频网站"
     },
     {
-      "url": "{{ url_for('index.dynamic_page', page='lezhi') }}",
-      "icon": "https://img.icons8.com/color/100/000000/ghost.png",
-      "label": "乐志计划网站"
+        "url": "{{ url_for('index.dynamic_page', page='lezhi') }}",
+        "icon": "https://img.icons8.com/color/100/000000/ghost.png",
+        "label": "乐志计划网站"
     },
     {
-      "url": "/message_board",
-      "icon": "https://img.icons8.com/color/100/000000/comments.png",
-      "label": "我的留言板板"
+        "url": "/message_board",
+        "icon": "https://img.icons8.com/color/100/000000/comments.png",
+        "label": "我的留言板板"
     },
     {
-      "url": "/survey",
-      "icon": "https://img.icons8.com/color/100/000000/survey.png",
-      "label": "一些问卷调查"
+        "url": "/survey",
+        "label": "一些问卷调查",
+        "icon": "https://img.icons8.com/color/100/000000/survey.png"
     },
     {
-      "url": "/darwin_album",
-      "icon": "https://img.icons8.com/color/100/000000/cat.png",
-      "label": "达尔文的专属相册"
+        "url": "/darwin_album",
+        "icon": "https://img.icons8.com/color/100/000000/cat.png",
+        "label": "达尔文的专属相册"
     },
     {
-      "url": "{{ url_for('index.dynamic_page', page='interest') }}",
-      "icon": "https://img.icons8.com/color/100/000000/idea.png",
-      "label": "兴趣爱好预约入口"
+        "url": "{{ url_for('index.dynamic_page', page='interest') }}",
+        "icon": "https://img.icons8.com/color/100/000000/idea.png",
+        "label": "兴趣爱好预约入口"
     },
     {
-      "url": "https://github.com/Benjaminisgood/Benlog",
-      "icon": "https://img.icons8.com/color/100/000000/source-code.png",
-      "label": "我个人网站源代码"
+        "url": "https://github.com/Benjaminisgood/Benlog",
+        "icon": "https://img.icons8.com/color/100/000000/source-code.png",
+        "label": "我个人网站源代码"
     },
     {
-      "url": "{{ url_for('index.dynamic_page', page='study') }}",
-      "icon": "https://img.icons8.com/color/100/000000/share.png",
-      "label": "课题方向长期更新"
+        "url": "{{ url_for('index.dynamic_page', page='study') }}",
+        "icon": "https://img.icons8.com/color/100/000000/share.png",
+        "label": "课题方向长期更新"
     },
     {
-      "url": "/store",
-      "icon": "https://img.icons8.com/color/100/000000/shopping-cart.png",
-      "label": "逛逛我的个人网店"
+        "url": "/store",
+        "icon": "https://img.icons8.com/color/100/000000/shopping-cart.png",
+        "label": "逛逛我的个人网店"
     },
     {
-      "url": "/consultation",
-      "icon": "https://img.icons8.com/color/100/000000/consultation.png",
-      "label": "咨询服务预约入口"
+        "url": "/consultation",
+        "icon": "https://img.icons8.com/color/100/000000/consultation.png",
+        "label": "咨询服务预约入口"
     },
     {
-      "url": "/aboutme",
-      "icon": "https://img.icons8.com/color/100/000000/user.png",
-      "label": "轻松自我介绍"
+        "url": "/aboutme",
+        "icon": "https://img.icons8.com/color/100/000000/user.png",
+        "label": "轻松自我介绍"
     },
     {
-      "url": "/pdf_translate",
-      "icon": "https://img.icons8.com/color/100/000000/pdf.png",
-      "label": "用文档翻译官"
+        "url": "/pdf_translate",
+        "icon": "https://img.icons8.com/color/100/000000/pdf.png",
+        "label": "用文档翻译官"
     },
     {
-      "url": "{{ url_for('index.audios') }}",
-      "icon": "https://img.icons8.com/color/100/000000/guitar.png",
-      "label": "音乐弹唱作品"
+        "url": "{{ url_for('index.audios') }}",
+        "icon": "https://img.icons8.com/color/100/000000/guitar.png",
+        "label": "音乐弹唱作品"
     },
     {
-      "url": "{{ url_for('index.paintings') }}",
-      "icon": "https://img.icons8.com/color/100/000000/paint-palette.png",
-      "label": "艺术绘画作品"
+        "url": "{{ url_for('index.paintings') }}",
+        "icon": "https://img.icons8.com/color/100/000000/paint-palette.png",
+        "label": "艺术绘画作品"
     },
     {
-      "url": "{{ url_for('index.ebooks') }}",
-      "icon": "https://img.icons8.com/color/100/000000/books.png",
-      "label": "电子书籍资源"
+        "url": "{{ url_for('index.ebooks') }}",
+        "icon": "https://img.icons8.com/color/100/000000/books.png",
+        "label": "电子书籍资源"
     }
-  ]
-  
+]

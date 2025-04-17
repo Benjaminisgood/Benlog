@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>友链管理</title>
+</head>
+<body>
+    <h1>友链管理</h1>
+
+    <h2>所有友链</h2>
+    <ul>
+        {% for link in friend_links %}
+            <li>
+                <a href="{{ link.url }}" target="_blank">{{ link.label }}</a>
+                <!-- Delete button -->
+                <form action="{{ url_for('setting.manage_friend_links') }}" method="POST" style="display:inline;">
+                    <input type="hidden" name="index" value="{{ loop.index0 }}">
+                    <input type="hidden" name="action" value="delete">
+                    <button type="submit">删除</button>
+                </form>
+            </li>
+        {% else %}
+            <p>暂无友链</p>
+        {% endfor %}
+    </ul>
+
+    <h2>添加友链</h2>
+    <form action="{{ url_for('setting.manage_friend_links') }}" method="POST">
+        <label for="url">链接地址：</label>
+        <input type="url" name="url" id="url" required>
+        <br><br>
+        <label for="label">链接名称：</label>
+        <input type="text" name="label" id="label" required>
+        <br><br>
+        <button type="submit">提交</button>
+    </form>
+</body>
+</html>
+{% endblock %}

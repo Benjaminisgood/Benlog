@@ -1,5 +1,6 @@
 from flask import Flask
 import os
+import logging  # 确保导入 logging 模块
 
 def create_app():
     # 获取当前文件（app.py）所在的目录的绝对路径
@@ -55,6 +56,9 @@ def create_app():
 
     settings_init_app(app)
     neibr_init_app(app)
+
+    app.logger.setLevel(logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG)
 
     return app
 

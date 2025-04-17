@@ -1,6 +1,6 @@
 {
     "title": "乐志",
-    "content": "这里是乐志的页面内容。",
+    "content": "1",
     "elements": [
         {
             "type": "text",
@@ -8,7 +8,7 @@
         },
         {
             "type": "link",
-            "src": "https://example.com/lezhi.jpg",
+            "src": "http://example.com/lezhi.jpg",
             "alt": "乐志图片",
             "content": "https://www.apple.com.cn/"
         },
@@ -17,6 +17,32 @@
             "href": "https://example.com",
             "text": "访问乐志网站",
             "content": "thanks"
+        }
+    ],
+    "components": [
+        {
+            "type": "title",
+            "content": "乐志"
+        },
+        {
+            "type": "content",
+            "content": "1"
+        },
+        {
+            "type": "text",
+            "content": "dd乐志"
+        },
+        {
+            "type": "text",
+            "content": "dddddddsb是乐志的页面内容。"
+        },
+        {
+            "type": "quote",
+            "content": "889080"
+        },
+        {
+            "type": "quote",
+            "content": "kdnfakldf;"
         }
     ]
 }

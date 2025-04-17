@@ -1,15 +1,6 @@
 [
     {
-      "url": "https://www.pseudoyu.com/posts",
-      "label": "pseudoyu"
-    },
-    {
-      "url": "https://apple.com",
-      "label": "apple"
-    },
-    {
-      "url": "https://github.com/Benjaminisgood/Benlog",
-      "label": "项目源码"
+        "url": "http://benserver.com",
+        "label": "11"
     }
-  ]
-  
+]

@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h1 class="page-heading">编辑 {{ page_data.title }} 页面</h1>
+  <form method="POST" class="edit-page-form">
+    <!-- 页面标题 -->
+    <label for="title">页面标题：</label>
+    <input id="title" name="title" type="text" class="input-field" required
+           value="{{ page_data.title }}"><br><br>
+    <!-- 页面主内容 -->
+    <label for="content">页面内容：</label>
+    <textarea id="content" name="content" class="input-field" required>{{ page_data.content }}</textarea><br><br>
+
+    <!-- 动态组件列表 -->
+    <h3>元素：</h3>
+    <div id="elements-container">
+      {% for comp in page_data.components %}
+        {% set idx = loop.index0 %}
+        <div class="element" data-index="{{ idx }}">
+          <label>类型：</label>
+          <select name="elements-{{ idx }}-type" class="select-field"
+                  onchange="toggleExtra({{ idx }})">
+            {% for opt in ['text','image','link','quote','code'] %}
+              <option value="{{ opt }}"
+                      {% if comp.type == opt %}selected{% endif %}>
+                {{ opt }}
+              </option>
+            {% endfor %}
+          </select><br>
+
+          <label>内容：</label>
+          <input name="elements-{{ idx }}-content" type="text" class="input-field"
+                 value="{{ comp.content or comp.src or comp.href or '' }}"><br><br>
+
+          <div id="extra-{{ idx }}">
+            {% if comp.type == 'image' %}
+              <label>图片链接：</label>
+              <input name="elements-{{ idx }}-src" type="text" class="input-field"
+                     value="{{ comp.src }}"><br><br>
+            {% endif %}
+          </div>
+
+          <!-- 操作按钮 -->
+          <button type="button" class="btn btn-up"
+                  onclick="move({{ idx }}, 'up')">上移</button>
+          <button type="button" class="btn btn-down"
+                  onclick="move({{ idx }}, 'down')">下移</button>
+          <button type="button" class="btn btn-delete"
+                  onclick="remove({{ idx }})">删除</button>
+        </div>
+      {% endfor %}
+    </div>
+
+    <button type="button" class="btn" onclick="add()">添加元素</button><br><br>
+    <input id="elements_count" name="elements_count" type="hidden"
+           value="{{ page_data.components|length }}">
+
+    <button type="submit" class="btn btn-save">保存更改</button>
+  </form>
+</div>
+
+<script>
+function toggleExtra(idx) {
+  const type = document.getElementsByName(`elements-${idx}-type`)[0].value;
+  const extra = document.getElementById(`extra-${idx}`);
+  extra.innerHTML = '';
+  if (type === 'image') {
+    extra.innerHTML = `
+      <label>图片链接：</label>
+      <input name="elements-${idx}-src" type="text" class="input-field"><br><br>
+    `;
+  }
+}
+
+function add() {
+  const container = document.getElementById('elements-container');
+  const idx = container.children.length;
+  const div = document.createElement('div');
+  div.className = 'element'; div.dataset.index = idx;
+  div.innerHTML = `
+    <label>类型：</label>
+    <select name="elements-${idx}-type" class="select-field"
+            onchange="toggleExtra(${idx})">
+      <option value="text">text</option>
+      <option value="image">image</option>
+      <option value="link">link</option>
+      <option value="quote">quote</option>
+      <option value="code">code</option>
+    </select><br>
+    <label>内容：</label>
+    <input name="elements-${idx}-content" type="text" class="input-field"><br><br>
+    <div id="extra-${idx}"></div>
+    <button type="button" class="btn btn-up"
+            onclick="move(${idx}, 'up')">上移</button>
+    <button type="button" class="btn btn-down"
+            onclick="move(${idx}, 'down')">下移</button>
+    <button type="button" class="btn btn-delete"
+            onclick="remove(${idx})">删除</button>
+  `;
+  container.appendChild(div);
+  document.getElementById('elements_count').value = idx + 1;
+}
+
+function remove(idx) {
+  const el = document.querySelector(`[data-index='${idx}']`);
+  if (el) el.remove();
+  updateCount();
+}
+
+function move(idx, dir) {
+  const container = document.getElementById('elements-container');
+  const el = document.querySelector(`[data-index='${idx}']`);
+  if (!el) return;
+  const sibling = (dir === 'up') ? el.previousElementSibling : el.nextElementSibling;
+  if (sibling) {
+    if (dir === 'up') container.insertBefore(el, sibling);
+    else container.insertBefore(sibling, el);
+  }
+  updateCount();
+}
+
+function updateCount() {
+  document.getElementById('elements_count').value =
+    document.getElementById('elements-container').children.length;
+}
+</script>
+
+<style>
+/* 精简局部样式，使用全局 CSS 变量 */
+.container        { padding:20px; max-width:900px; margin:0 auto; }
+.page-heading     { text-align:center; margin-bottom:20px; font-size:2rem; }
+.edit-page-form   { background:var(--card-bg-color); padding:20px; border-radius:10px; }
+.input-field, .select-field {
+  width:100%; padding:10px; margin-bottom:15px; border-radius:8px;
+}
+.btn              { padding:8px 12px; margin:2px; border:none; border-radius:6px; cursor:pointer; }
+.btn-save         { display:block; width:100%; margin-top:10px; }
+.element          { background:var(--card-bg-color); padding:10px; margin-bottom:15px; border-radius:8px; }
+</style>
+{% endblock %}

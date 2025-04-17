@@ -2,14 +2,14 @@
 {% block content %}
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- 新建动态网页按钮 -->
-    <a href="{{ url_for('setting.new_dynamic_page') }}">
-        <button class="new-page-button">新建动态网页</button>
-    </a>
-        
+    <form action="{{ url_for('setting.new_dynamic_page') }}" method="POST" id="new_page_form">
+        <button type="submit" class="new-page-button">新建动态网页</button>
+    </form>
+
     <title>编辑页面列表</title>
 </head>
 <body>
@@ -20,18 +20,39 @@
     <div class="main-content">
         <ul class="page-list">
             {% for page in editable_pages %}
-                <li class="page-item">
-                    <a href="{{ page.edit_url }}" class="edit-link">{{ page.title }}</a> - 编辑
-                </li>
+            <li class="page-item">
+              {{ page.title }}
+              <!-- 编辑 -->
+              <a href="{{ page.edit_url }}" class="edit-link">编辑</a>
+              <a href="{{ page.view_url }}" class="edit-link" target="_blank">查看</a>
+
+              <!-- 删除 -->
+              <form action="{{ url_for('setting.delete_dynamic_page', page=page.page_name) }}"
+                    method="POST" style="display:inline;"
+                    onsubmit="return confirm('确认删除页面 {{ page.title }} 吗？');">
+                <button type="submit" class="btn btn-delete-inline">删除</button>
+              </form>
+              <!-- 拷贝查看链接 -->
+              <button type="button" class="btn btn-copy-link"
+                      onclick="copyLink('{{ url_for('index.dynamic_page', page=page.page_name, _external=True) }}')">
+                拷贝链接
+              </button>
+            </li>
+            
             {% else %}
                 <li class="no-pages">没有可编辑的页面。</li>
             {% endfor %}
         </ul>
     </div>
 
-    <footer>
-        <p>© 2025 编辑页面列表</p>
-    </footer>
+    <script>
+      function copyLink(url) {
+        navigator.clipboard.writeText(url)
+          .then(() => alert('已复制页面链接：' + url))
+          .catch(err => alert('复制失败：' + err));
+      }
+      </script>
+      
 </body>
 </html>
 
