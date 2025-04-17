@@ -109,18 +109,29 @@ def render_gallery_page(title, folder, media_type, batch_size=None, randomize=Fa
 # 1. 配置映射：key → (页面标题, 文件夹名, 媒体类型, 批量加载数量, 是否随机)
 GALLERY_CONFIG = {
     "photograph":    ("摄影",          "photograph",   "image", 12,   True),
-    "darwin_album":  ("达尔文的专属相册","darwin_album", "image", None, False),
-    "paintings":     ("我的绘画作品",   "paintings",    "image", None, False),
-    "audios":        ("音乐和弹唱作品",  "audios",       "audio", None, False),
-    "ebooks":        ("电子书籍资源",   "ebooks",       "ebook", None, False),
+    "darwin_album":  ("达尔文的专属相册","darwin_album", "image", 12, True),
+    "paintings":     ("我的绘画作品",   "paintings",    "image", 12, True),
+    "audios":        ("音乐和弹唱作品",  "audios",       "audio", 6, False),
+    "ebooks":        ("电子书籍资源",   "ebooks",       "ebook", 6, False),
+    "attachments":    ("附件资源",       "attachments",   "ebook", None, False),
 }
+
 # 2. 动态画廊路由
 @index_bp.route('/gallery/<page_key>')
 def gallery_page(page_key):
+    # 1) 尝试从配置加载
     config = GALLERY_CONFIG.get(page_key)
-    if not config:
-        abort(404, description="gallery页面不存在")
-    title, folder, media_type, batch_size, randomize = config
+
+    # 2) 如果有配置就解包，否则使用默认值
+    if config:
+        title, folder, media_type, batch_size, randomize = config
+    else:
+        title      = page_key        # 默认标题就用 page_key
+        folder     = page_key        # 默认媒体目录名也是 page_key
+        media_type = 'image'         # 默认只展示图片
+        batch_size = 10              # 默认每页 10 个
+        randomize  = False           # 默认不打乱顺序
+
     ensure_directory_exists(folder)
     return render_gallery_page(
         title=title,
