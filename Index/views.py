@@ -27,7 +27,7 @@ MEDIA_EXTENSIONS = {
 }
 # 用于确保目录存在，如果没有则创建目录
 def ensure_directory_exists(folder):
-    folder_path = os.path.join('path_to_your_media_root', folder)  # 假设路径在 'path_to_your_media_root' 目录下
+    folder_path = os.path.join('Benlog/static/gallery', folder)
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
         print(f"Created directory: {folder_path}")
