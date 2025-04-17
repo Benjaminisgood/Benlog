@@ -2,13 +2,24 @@
 {% block content %}
 <h1 class="gallery-heading">Gallery Management</h1>
 <p class="choose-folder">Choose a folder to manage:</p>
-<ul class="folder-list">
-  {% for folder in folders %}
-    <li class="folder-item">
-      <a href="{{ url_for('setting.view_folder', folder_name=folder) }}" class="folder-link">{{ folder }}</a>
-    </li>
-  {% endfor %}
-</ul>
+<!-- 在 <ul class="folder-list"> 之前，插入新建文件夹表单 -->
+  <form action="{{ url_for('setting.create_folder') }}" method="POST" class="new-folder-form">
+    <input type="text" name="folder_name" placeholder="输入新文件夹名称" required>
+    <button type="submit">创建文件夹</button>
+  </form>
+  
+  <ul class="folder-list">
+    {% for folder in folders %}
+      <li class="folder-item">
+        <a href="{{ url_for('setting.view_folder', folder_name=folder) }}" class="folder-link">{{ folder }}</a>
+        <!-- 在同一行插入删除表单 -->
+        <form action="{{ url_for('setting.delete_folder', folder_name=folder) }}" method="POST" style="display:inline;">
+          <button type="submit" onclick="return confirm('确认删除文件夹 {{ folder }}？');">删除</button>
+        </form>
+      </li>
+    {% endfor %}
+  </ul>
+  
 
 <!-- 局部CSS样式 -->
 <style>

@@ -8,6 +8,7 @@ from Settings.models import User
 from Settings.extensions import db
 from flask_login import login_required, current_user
 import os
+import shutil
 from werkzeug.utils import secure_filename
 import json
 from flask import session
@@ -296,6 +297,45 @@ def manage_gallery():
     # Get a list of all folders in the gallery directory
     folders = [f for f in os.listdir(GALLERY_PATH) if os.path.isdir(os.path.join(GALLERY_PATH, f))]
     return render_template('manage_gallery.html', folders=folders)
+
+@setting_bp.route('/manage_gallery/create', methods=['POST'])
+@login_required
+def create_folder():
+    # 1. 获取并清理用户输入
+    folder_name = request.form.get('folder_name', '').strip()
+    
+    # 2. 安全校验：禁止路径穿越
+    if not folder_name or '..' in folder_name or '/' in folder_name:
+        flash('非法的文件夹名称', 'error')
+        return redirect(url_for('setting.manage_gallery'))
+    
+    # 3. 创建目录
+    folder_path = os.path.join(GALLERY_PATH, folder_name)
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)  # 会自动创建多层目录 Google: [Python os.makedirs](https://www.google.com/search?q=Python+os.makedirs)
+        flash(f'文件夹 "{folder_name}" 创建成功', 'success')
+    else:
+        flash(f'文件夹 "{folder_name}" 已存在', 'warning')
+    
+    return redirect(url_for('setting.manage_gallery'))
+
+@setting_bp.route('/manage_gallery/delete/<folder_name>', methods=['POST'])
+@login_required
+def delete_folder(folder_name):
+    # 1. 安全校验同上
+    if '..' in folder_name or '/' in folder_name:
+        flash('非法的文件夹名称', 'error')
+        return redirect(url_for('setting.manage_gallery'))
+
+    # 2. 删除目录及其所有内容
+    folder_path = os.path.join(GALLERY_PATH, folder_name)
+    if os.path.isdir(folder_path):
+        shutil.rmtree(folder_path)  # 递归删除目录 Google: [Python shutil.rmtree](https://www.google.com/search?q=Python+shutil.rmtree)
+        flash(f'文件夹 "{folder_name}" 已删除', 'success')
+    else:
+        flash(f'文件夹 "{folder_name}" 不存在', 'error')
+    
+    return redirect(url_for('setting.manage_gallery'))
 
 # List files in a folder and allow operations
 @setting_bp.route('/gallery/<folder_name>')

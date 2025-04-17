@@ -75,23 +75,6 @@ def get_media_batch(media_list, offset=0, batch_size=12):
     """
     return media_list[offset:offset+batch_size]
 
-###############################################################################
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 def render_gallery_page(title, folder, media_type, batch_size=None, randomize=False):
     """
@@ -147,6 +130,7 @@ def gallery_load_more():
     next_batch = get_media_batch(media_list, offset=offset, batch_size=batch_size)
     return jsonify({'items': next_batch})
 
+#
 
 
 
@@ -159,38 +143,37 @@ def gallery_load_more():
 
 
 
-# 各个路由均调用上面统一的渲染函数
-@index_bp.route('/photograph')
-def photograph():
-    """展示【摄影】页面，仅初始加载 12 张图片，支持懒加载"""
-    ensure_directory_exists("photograph")  # 确保目录存在
-    return render_gallery_page("摄影", "photograph", "image", batch_size=12, randomize=True)
 
-@index_bp.route('/darwin_album')
-def darwin_album():
-    """展示【达尔文的专属相册】页面，展示全部图片"""
-    ensure_directory_exists("darwin_album")  # 确保目录存在
-    return render_gallery_page("达尔文的专属相册", "darwin_album", "image")
 
-@index_bp.route('/paintings')
-def paintings():
-    """展示【我的绘画作品】页面，展示全部图片"""
-    ensure_directory_exists("paintings")  # 确保目录存在
-    return render_gallery_page("我的绘画作品", "paintings", "image")
 
-@index_bp.route('/audios')
-def audios():
-    """展示【音乐和弹唱作品】页面，展示全部音频文件"""
-    ensure_directory_exists("audios")  # 确保目录存在
-    return render_gallery_page("音乐和弹唱作品", "audios", "audio")
 
-@index_bp.route('/ebooks')
-def ebooks():
-    """展示【电子书和论文】页面，展示全部电子书及论文"""
-    ensure_directory_exists("ebooks")  # 确保目录存在
-    return render_gallery_page("电子书论文", "ebooks", "ebook")
 
-###########################################################################
+
+
+# 1. 配置映射
+GALLERY_CONFIG = {
+    "photograph": ("摄影", "photograph", "image", 12, True),
+    "darwin_album": ("达尔文的专属相册", "darwin_album", "image", None, False),
+    "paintings": ("我的绘画作品", "paintings", "image", None, False),
+    "audios": ("音乐和弹唱作品", "audios", "audio", None, False),
+    "ebooks": ("电子书论文", "ebooks", "ebook", None, False),
+}
+
+# 2. 通用路由
+@index_bp.route('/gallery/<page_key>')
+def gallery_page(page_key):
+    config = GALLERY_CONFIG.get(page_key)
+    if not config:
+        abort(404, description="页面不存在")
+    title, folder, media_type, batch_size, randomize = config
+    ensure_directory_exists(folder)
+    return render_gallery_page(
+        title=title,
+        folder=folder,
+        media_type=media_type,
+        batch_size=batch_size,
+        randomize=randomize
+    )
 
 
 
