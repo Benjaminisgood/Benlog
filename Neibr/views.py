@@ -8,6 +8,7 @@ import os
 from werkzeug.utils import secure_filename # type: ignore
 import yaml
 from datetime import datetime
+from flask import send_from_directory, abort # type: ignore
 
 
 # 项目根目录下的 static/neibr 路径
@@ -202,3 +203,23 @@ def edit_post(post_id):
     media_files = [f for f in os.listdir(folder_path) if f != 'post.txt']
 
     return render_template('edit_post.html', post=post, post_text=post_text, media_files=media_files)
+
+
+
+@neibr_bp.route('/media/<user_id>/<post_id>/<path:filename>')
+def media_file(user_id, post_id, filename):
+    # 1) 校验后缀
+    if not allowed_file(filename):
+        abort(403)  # Forbidden，不在白名单里的类型一律拒绝
+
+    # 2) 计算真实路径
+    base = os.path.join(BASE_DIR, 'Neibr', 'neibr')
+    folder = os.path.join(base, user_id, post_id)
+    full_path = os.path.join(folder, filename)
+
+    # 3) 文件存在性检查
+    if not os.path.isfile(full_path):
+        abort(404)
+
+    # 4) 安全地发送文件
+    return send_from_directory(folder, filename)

@@ -15,20 +15,38 @@
   <h3 class="media-title">多媒体文件</h3>
   <div class="media-container">
     {% for file in media_files %}
-      {% if file.endswith(('.jpg', '.png', '.gif', '.NEF', '.jpeg', 'gif')) %}
+      {# 小写后缀匹配，避免大小写问题 #}
+      {% set ext = file.lower().rsplit('.', 1)[-1] %}
+  
+      {% if ext in ['jpg','png','gif','nef','jpeg'] %}
         <div class="thumbnail-box">
           <img 
-            src="{{ url_for('static', filename='neibr/' + post.user_id|string + '/' + post.id|string + '/' + file) }}" 
+            src="{{ url_for('media_file',
+                             user_id=post.user_id,
+                             post_id=post.id,
+                             filename=file) }}"
             onclick="showFullImage(this.src)"
             alt="image">
         </div>
-      {% elif file.endswith(('.mp4', '.webm', '.MOV', '.mov')) %}
+  
+      {% elif ext in ['mp4','webm','mov'] %}
         <video controls>
-          <source src="{{ url_for('static', filename='neibr/' + post.user_id|string + '/' + post.id|string + '/' + file) }}" type="video/mp4">
+          <source 
+            src="{{ url_for('media_file',
+                             user_id=post.user_id,
+                             post_id=post.id,
+                             filename=file) }}"
+            type="video/mp4">
         </video>
-      {% elif file.endswith(('.mp3', '.wav')) %}
+  
+      {% elif ext in ['mp3','wav'] %}
         <audio controls>
-          <source src="{{ url_for('static', filename='neibr/' + post.user_id|string + '/' + post.id|string + '/' + file) }}" type="audio/mpeg">
+          <source 
+            src="{{ url_for('media_file',
+                             user_id=post.user_id,
+                             post_id=post.id,
+                             filename=file) }}"
+            type="audio/mpeg">
         </audio>
       {% endif %}
     {% endfor %}
