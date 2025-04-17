@@ -33,6 +33,10 @@ def index():
     # 渲染模板，传递是否显示额外内容的标志
     return render_template(
         'setting_index.html',
+                       notes_count=10,
+                       posts_count=25,
+                       users_count=5,
+                       media_files_count=50,
         extra_for_admin=extra_for_admin,
         extra_for_user1=extra_for_user1
     )

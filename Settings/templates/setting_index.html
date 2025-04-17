@@ -1,221 +1,207 @@
 {% extends "base.html" %}
 {% block content %}
 <div class='dashboard-container'>
+
   <!-- 欢迎卡片 -->
   <div class='card welcome-card'>
-    <h1>后台管理首页</h1>
-    <p>欢迎您，{{ current_user.username }}!</p>
-    <a href="{{ url_for('setting.logout') }}" class='btn btn-logout'>登出</a>
+    <h1>🎉 后台管理首页</h1>
+    <p>欢迎您，<strong>{{ current_user.username }}</strong>！</p>
+    <a href="{{ url_for('setting.logout') }}" class='btn btn-logout'>🔒 登出</a>
+  </div>
+
+  <!-- 数据统计概览 -->
+  <div class='stats-grid'>
+    <div class='stats-card'>
+      <div class='stats-icon'>📚</div>
+      <div class='stats-info'>
+        <div class='stats-number'>{{ notes_count or '0' }}</div>
+        <div class='stats-label'>教育笔记</div>
+      </div>
+    </div>
+    <div class='stats-card'>
+      <div class='stats-icon'>📝</div>
+      <div class='stats-info'>
+        <div class='stats-number'>{{ posts_count or '0' }}</div>
+        <div class='stats-label'>博客文章</div>
+      </div>
+    </div>
+    <div class='stats-card'>
+      <div class='stats-icon'>👥</div>
+      <div class='stats-info'>
+        <div class='stats-number'>{{ users_count or '0' }}</div>
+        <div class='stats-label'>注册用户</div>
+      </div>
+    </div>
+    <div class='stats-card'>
+      <div class='stats-icon'>📷</div>
+      <div class='stats-info'>
+        <div class='stats-number'>{{ media_files_count or '0' }}</div>
+        <div class='stats-label'>媒体文件</div>
+      </div>
+    </div>
   </div>
 
   {% if extra_for_admin %}
   <!-- 管理员功能卡片 -->
   <div class='card section-card'>
-    <h2>管理功能</h2>
+    <h2>⚙️ 管理功能</h2>
     <div class='quick-cards'>
       <a href="{{ url_for('edu.manage_notes') }}" class='quick-card'>📄 管理教育笔记</a>
-      <a href="{{ url_for('blog.manage_posts') }}" class='quick-card'>📄 管理博客文章</a>
+      <a href="{{ url_for('blog.manage_posts') }}" class='quick-card'>📝 管理博客文章</a>
     </div>
   </div>
   {% endif %}
 
   {% if extra_for_user1 %}
   <!-- 超级管理员功能卡片 -->
-  <div class='card section-card'>
-    <h2>超级管理员功能</h2>
-    <ul class='admin-list'>
-      <li><a href="{{ url_for('setting.manage_users') }}">账号权限管理</a></li>
-      <li><a href="{{ url_for('setting.manage_gallery') }}">媒体文件管理</a></li>
-      <li><a href="{{ url_for('setting.manage_dynamic_page') }}">动态页面编写</a></li>
-      <li><a href="{{ url_for('setting.manage_friend_links') }}">管理友情链接</a></li>
-      <li><a href="{{ url_for('setting.manage_quick_links') }}">管理快捷链接</a></li>     
-      <!-- <li><a href='#'>Instance 定义（待实现）</a></li> -->
-    </ul>
+  <div class='card section-card admin-feature'>
+    <h2>🔧 超级管理员功能</h2>
+    <div class='admin-cards-grid'>
+      <a href="{{ url_for('setting.manage_users') }}" class='admin-card'>👤 账号权限管理</a>
+      <a href="{{ url_for('setting.manage_gallery') }}" class='admin-card'>🖼️ 媒体文件管理</a>
+      <a href="{{ url_for('setting.manage_dynamic_page') }}" class='admin-card'>📑 动态页面编写</a>
+      <a href="{{ url_for('setting.manage_friend_links') }}" class='admin-card'>🔗 管理友情链接</a>
+      <a href="{{ url_for('setting.manage_quick_links') }}" class='admin-card'>⚡ 管理快捷链接</a>     
+    </div>
     <p class='hint'>👑 您是 ID 为 1 的超级管理员，拥有全站权限。</p>
   </div>
   {% endif %}
+
 </div>
-<!-- 局部CSS样式 -->
 
+<!-- CSS增强 -->
 <style>
-  /* 容器布局 */
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  display: grid;
+  gap: 1.5rem;
+}
+
+/* 通用卡片 */
+.card {
+  background: var(--card-bg-color);
+  border: 1px solid var(--card-border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: box-shadow 0.3s, transform 0.3s;
+}
+.card:hover {
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  transform: translateY(-5px);
+}
+
+/* 欢迎卡片 */
+.welcome-card h1 {
+  font-size: 2.2rem;
+  color: var(--text-color);
+}
+
+/* 按钮样式 */
+.btn {
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
+  background-color: var(--btn-bg-color);
+  color: var(--btn-text-color);
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+.btn:hover {
+  background-color: var(--btn-hover-bg-color);
+}
+
+/* 统计卡片 */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+.stats-card {
+  background: var(--quick-card-bg);
+  padding: 1rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: transform 0.3s ease;
+}
+.stats-card:hover {
+  transform: translateY(-5px);
+}
+.stats-icon {
+  font-size: 2rem;
+}
+.stats-info {
+  display: flex;
+  flex-direction: column;
+}
+.stats-number {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+.stats-label {
+  color: var(--meta-text-color);
+}
+
+/* 管理功能快捷卡片 */
+.quick-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+}
+.quick-card {
+  background: var(--quick-card-bg);
+  padding: 1rem;
+  text-align: center;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--quick-label-color);
+  transition: background-color 0.3s;
+}
+.quick-card:hover {
+  background: var(--quick-card-hover-bg);
+}
+
+/* 超级管理员卡片区 */
+.admin-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+.admin-card {
+  display: block;
+  background-color: var(--quick-card-bg);
+  padding: 1rem;
+  border-radius: 8px;
+  color: var(--link-color);
+  text-decoration: none;
+  text-align: center;
+  transition: background-color 0.3s ease, transform 0.2s;
+}
+.admin-card:hover {
+  background-color: var(--quick-card-hover-bg);
+  transform: translateY(-5px);
+}
+
+/* 提示信息 */
+.hint {
+  color: var(--meta-text-color);
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
   .dashboard-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-    display: grid;
-    gap: 1.5rem;
-  }
-  
-  /* 卡片通用样式 */
-  .card {
-    background: var(--card-bg-color);
-    border: 1px solid var(--card-border-color);
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  }
-  
-  /* 欢迎卡片 */
-  .welcome-card h1 {
-    margin-top: 0;
-    font-size: 2rem;
-    color: var(--text-color);
-  }
-  
-  /* 按钮样式 */
-  .btn {
-    display: inline-block;
-    margin-top: 1rem;
-    padding: 0.6rem 1.2rem;
-    background-color: var(--btn-bg-color);
-    color: var(--btn-text-color);
-    text-decoration: none;
-    border-radius: 4px;
-    transition: background-color 0.3s ease;
-  }
-  .btn:hover {
-    background-color: var(--btn-hover-bg-color);
-  }
-  
-  /* 区块标题 */
-  .section-card h2 {
-    margin-top: 0;
-    font-size: 1.5rem;
-    color: var(--text-color);
-    border-bottom: 1px solid var(--card-border-color);
-    padding-bottom: 0.5rem;
-    margin-bottom: 1rem;
-  }
-  
-  /* 快捷卡片网格 */
-  .quick-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 1rem;
-  }
-  
-  .quick-card {
-    background: var(--quick-card-bg);
     padding: 1rem;
-    text-align: center;
-    font-weight: bold;
-    border-radius: 8px;
-    text-decoration: none;
-    color: var(--quick-label-color);
-    transition: background-color 0.3s ease;
   }
-  .quick-card:hover {
-    background: var(--quick-card-hover-bg);
+  .quick-cards, .admin-cards-grid {
+    grid-template-columns: 1fr;
   }
-  
-  /* 管理员列表 */
-  .admin-list {
-    list-style: none;
-    padding-left: 0;
-  }
-  .admin-list li {
-    margin: 0.5rem 0;
-  }
-  .admin-list a {
-    color: var(--link-color);
-    text-decoration: none;
-    transition: color 0.3s;
-  }
-  .admin-list a:hover {
-    color: var(--text-color);
-    text-decoration: underline;
-  }
-  
-  /* 提示信息 */
-  .hint {
-    color: var(--meta-text-color);
-    font-size: 0.9rem;
-    margin-top: 0.5rem;
-  }
-  
-  /* 响应式设计 */
-  @media (max-width: 768px) {
-    .dashboard-container {
-      padding: 1rem;
-    }
-    .quick-cards {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  /* 页面标题样式 */
-  .page-heading {
-    text-align: center;
-    color: var(--text-color); /* 使用全局文本颜色 */
-    margin-bottom: 20px;
-    font-size: 2rem;
-  }
-
-  /* 管理链接列表样式 */
-  .management-links {
-    list-style: none;
-    padding: 0;
-    text-align: center;
-  }
-
-  .management-links li {
-    margin: 10px 0;
-  }
-
-  .management-links a {
-    text-decoration: none;
-    color: var(--link-color); /* 使用全局链接颜色 */
-    font-weight: bold;
-    transition: color 0.3s ease;
-  }
-
-  .management-links a:hover {
-    color: var(--text-color); /* 悬停时使用全局文本颜色 */
-    text-decoration: underline;
-  }
-
-  /* 超级管理员功能区域 */
-  .admin-feature {
-    border: 1px solid var(--card-border-color); /* 使用全局边框颜色 */
-    background: var(--card-bg-color); /* 使用全局卡片背景色 */
-    padding: 1rem;
-    margin-top: 2rem;
-    border-radius: 8px;
-  }
-
-  .admin-feature h2 {
-    color: var(--text-color); /* 使用全局文本颜色 */
-    border-bottom: 1px solid var(--card-border-color); /* 使用全局边框颜色 */
-    padding-bottom: 0.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .admin-feature ul {
-    list-style: none;
-    padding-left: 1rem;
-  }
-
-  .admin-feature ul li {
-    margin: 0.5rem 0;
-  }
-
-  /* 提示信息样式 */
-  .hint {
-    color: var(--meta-text-color); /* 使用全局元数据文本颜色 */
-    font-size: 0.9rem;
-  }
-
-  /* 响应式设计：适配小屏幕 */
-  @media (max-width: 768px) {
-    .admin-feature {
-      padding: 1rem;
-    }
-
-    .management-links a {
-      font-size: 0.9rem; /* 在小屏幕上调整字体大小 */
-    }
-  }
+}
 </style>
 
 {% endblock %}
