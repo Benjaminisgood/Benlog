@@ -21,7 +21,7 @@
       {% if ext in ['jpg','png','gif','nef','jpeg'] %}
         <div class="thumbnail-box">
           <img 
-            src="{{ url_for('media_file',
+            src="{{ url_for('neibr.media_file',
                              user_id=post.user_id,
                              post_id=post.id,
                              filename=file) }}"
@@ -32,7 +32,7 @@
       {% elif ext in ['mp4','webm','mov'] %}
         <video controls>
           <source 
-            src="{{ url_for('media_file',
+            src="{{ url_for('neibr.media_file',
                              user_id=post.user_id,
                              post_id=post.id,
                              filename=file) }}"
@@ -42,7 +42,7 @@
       {% elif ext in ['mp3','wav'] %}
         <audio controls>
           <source 
-            src="{{ url_for('media_file',
+            src="{{ url_for('neibr.media_file',
                              user_id=post.user_id,
                              post_id=post.id,
                              filename=file) }}"
