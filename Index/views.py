@@ -14,10 +14,6 @@ from flask_login import login_required, current_user
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
-@index_bp.route('/')
-def home():
-    """Site homepage - shows welcome message and navigation."""
-    return render_template('index.html', title="Home")
 ###############################################################
 # 预先定义每种媒体对应的扩展名
 MEDIA_EXTENSIONS = {
@@ -191,6 +187,37 @@ def llm_query():
     
     return render_template('llm.html', query=query, answer=answer)
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ####################################################################
 # 动态页面存放目录
 DYNAMIC_PAGES_FOLDER = 'Index/dynamic_pages'
@@ -280,3 +307,47 @@ def edit_dynamic_page(page):
         return redirect(url_for('index.dynamic_page', page=page))
 
     return render_template('edit_dynamic_page.html', page_data=page_data)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Load the quick-links.json file from /Index/dynamic_links directory
+def load_quick_links():
+    links_file_path = os.path.join(os.path.dirname(__file__), 'dynamic_links', 'quick-links.json')
+    with open(links_file_path, 'r', encoding='utf-8') as file:
+        return json.load(file)
+def load_friend_links():
+    links_file_path = os.path.join(os.path.dirname(__file__), 'dynamic_links', 'friend-links.json')
+    with open(links_file_path, 'r', encoding='utf-8') as file:
+        return json.load(file)
+
+
+@index_bp.route('/')
+def home():
+    quick_links = load_quick_links()  # Load quick links from JSON file
+    friend_links = load_friend_links()  # Load friend links from JSON file
+    return render_template('index.html', quick_links=quick_links, friend_links=friend_links, title="首页")  # Pass quick links to the template 
