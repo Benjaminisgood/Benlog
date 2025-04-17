@@ -119,7 +119,7 @@ GALLERY_CONFIG = {
 def gallery_page(page_key):
     config = GALLERY_CONFIG.get(page_key)
     if not config:
-        abort(404, description="页面不存在")
+        abort(404, description="gallery页面不存在")
     title, folder, media_type, batch_size, randomize = config
     ensure_directory_exists(folder)
     return render_gallery_page(

@@ -364,7 +364,7 @@ def delete_file(folder_name, filename):
     file_path = os.path.join(GALLERY_PATH, folder_name, filename)
     if os.path.exists(file_path):
         os.remove(file_path)
-    return redirect(url_for('setting.manage_folder', folder_name=folder_name))
+    return redirect(url_for('setting.view_folder', folder_name=folder_name))
 
 @setting_bp.route('/upload/<folder_name>', methods=['POST'])
 @login_required
@@ -381,7 +381,7 @@ def upload_file(folder_name):
         filename = secure_filename(file.filename)
         file.save(os.path.join(folder_path, filename))
 
-    return redirect(url_for('setting.manage_folder', folder_name=folder_name))
+    return redirect(url_for('setting.view_folder', folder_name=folder_name))
 
 
 @setting_bp.route('/rename_file', methods=['POST'])
@@ -404,7 +404,7 @@ def rename_file():
     else:
         flash('File does not exist!', 'danger')
     
-    return redirect(url_for('setting.manage_folder', folder_name=folder_name))
+    return redirect(url_for('setting.view_folder', folder_name=folder_name))
 
 
 
@@ -506,7 +506,7 @@ def edit_dynamic_page(page):
         with open(json_path, 'r', encoding='utf-8') as f:
             page_data = json.load(f)
     except FileNotFoundError:
-        abort(404, description="页面不存在")
+        abort(404, description="dynamic页面不存在")
     except json.JSONDecodeError:
         abort(500, description="页面数据错误")
 
