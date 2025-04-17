@@ -10,7 +10,7 @@
         "label": "我的快捷指令"
     },
     {
-        "url": "/llm",
+        "url": "https://chatgpt.com/",
         "icon": "https://img.icons8.com/color/100/000000/artificial-intelligence.png",
         "label": "用我的AI助理"
     },
@@ -59,70 +59,24 @@
         "icon": "https://img.icons8.com/color/100/000000/pdf.png",
         "label": "用文档翻译官"
     },
-
-
-
-
-
-
-
-
     {
-        "url": "{{ url_for('index.dynamic_page', page='resume') }}",
+        "url": "/resume",
         "icon": "https://img.icons8.com/color/100/000000/resume.png",
         "label": "个人求职简历"
     },
     {
-        "url": "{{ url_for('index.dynamic_page', page='lezhi') }}",
+        "url": "http://127.0.0.1/122",
         "icon": "https://img.icons8.com/color/100/000000/ghost.png",
         "label": "乐志计划网站"
     },
     {
-        "url": "{{ url_for('index.dynamic_page', page='interest') }}",
+        "url": "/interest",
         "icon": "https://img.icons8.com/color/100/000000/idea.png",
         "label": "兴趣爱好预约入口"
     },
     {
-        "url": "{{ url_for('index.dynamic_page', page='study') }}",
+        "url": "/study",
         "icon": "https://img.icons8.com/color/100/000000/share.png",
         "label": "课题方向长期更新"
-    },
-
-
-
-
-
-
-
-
-
-
-
-
-
-    {
-        "url": "{{ url_for('index.gallery_page', page_key='audios') }}",
-        "icon": "https://img.icons8.com/color/100/000000/guitar.png",
-        "label": "音乐弹唱作品"
-      },
-      {
-        "url": "{{ url_for('index.gallery_page', page_key='darwin_album') }}",
-        "icon": "https://img.icons8.com/color/100/000000/cat.png",
-        "label": "达尔文的专属相册"
-      },
-      {
-        "url": "{{ url_for('index.gallery_page', page_key='photograph') }}",
-        "icon": "https://img.icons8.com/color/100/000000/camera.png",
-        "label": "看我的摄影展"
-      },
-      {
-        "url": "{{ url_for('index.gallery_page', page_key='paintings') }}",
-        "icon": "https://img.icons8.com/color/100/000000/paint-palette.png",
-        "label": "艺术绘画作品"
-      },
-      {
-        "url": "{{ url_for('index.gallery_page', page_key='ebooks') }}",
-        "icon": "https://img.icons8.com/color/100/000000/books.png",
-        "label": "电子书籍资源"
-      }
-    ]
+    }
+]

@@ -60,15 +60,17 @@
   </p>
 
   <h1>所有画廊</h1>
-  <ul>
-    {% for f in folders %}
-      <li>
-        <a href="{{ url_for('index.gallery_page', page_key=f) }}">
+  <ul class="gallery-list">
+    {% for f in galleries %}
+      <li class="gallery-item">
+        <a class="gallery-link"
+           href="{{ url_for('index.gallery_page', page_key=f) }}">
           {{ f.replace('_', ' ').title() }}
         </a>
       </li>
     {% endfor %}
   </ul>
+  
   
 
 
@@ -180,6 +182,48 @@
   font-size: 16px;
   line-height: 1.5;
 }
+/* 所有画廊 链接样式 */
+.gallery-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  padding: 20px 0;
+  list-style: none;
+  margin: 0;
+}
+
+.gallery-item {
+  /* 保证每个链接块大小一致，可根据需要调整 */
+  flex: 0 1 auto;
+}
+
+.gallery-link {
+  display: inline-block;
+  padding: 10px 16px;
+  background: var(--card-bg-color);
+  border: 1px solid var(--card-border-color);
+  border-radius: 8px;
+  color: var(--link-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: 
+    background 0.3s ease, 
+    transform 0.2s ease, 
+    box-shadow 0.2s ease;
+}
+
+.gallery-link:hover {
+  background: var(--quick-card-hover-bg);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+[data-theme="dark"] .gallery-link {
+  border-color: var(--card-border-color);
+  color: var(--link-color);
+}
+
 </style>
 
 

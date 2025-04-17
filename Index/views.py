@@ -154,9 +154,10 @@ def gallery_load_more():
     return jsonify({'items': next_batch})
 
 # 4. 可选：自动列出所有画廊
+
 @index_bp.route('/galleries')
 def galleries_index():
-    base = os.path.join(BASE_DIR, 'static', 'gallery')
+    base = os.path.join(BASE_DIR, 'Benlog', 'static', 'gallery')
     if not os.path.isdir(base):
         abort(404, description="画廊目录不存在")
     folders = [
@@ -181,6 +182,65 @@ def galleries_index():
 
 
 
+
+
+
+####################################################################
+# 动态页面存放目录
+DYNAMIC_PAGES_FOLDER = 'Index/dynamic_pages'
+
+@index_bp.route('/<page>')
+def dynamic_page(page):
+    """
+    统一处理静态页面与占位页面：
+    - 若 page 存在于 STATIC_PAGE_MAPPING，则返回对应静态模板
+    - 若 page 存在于 PLACEHOLDER_MAPPING，则返回通用占位模板 placeholder.html
+    - 若 page 存在于 dynamic_pages 文件夹的 JSON 文件，则渲染动态页面
+    - 否则返回 404
+    """
+    # 1. 处理静态页面
+    STATIC_PAGE_MAPPING = {
+        "resume": ("resume.html", "Resume"),
+        "aboutme": ("aboutme.html", "About Me"),
+        "study": ("study.html", "课题方向"),
+        "interest": ("interest.html", "最近在做的事和兴趣"),
+    }
+    # 静态页面优先处理
+    if page in STATIC_PAGE_MAPPING:
+        template, title = STATIC_PAGE_MAPPING[page]
+        return render_template(template, title=title)
+
+    # 2. 处理占位页面
+    PLACEHOLDER_MAPPING = {
+        "message_board": "留言板",
+        "survey": "问卷调查",
+        "chat": "聊天机器人",
+        "store": "个人商店",  
+        "consultation": "咨询预约",
+        "feedback": "意见反馈", 
+        "pdf_translate": "PDF 翻译",
+    }
+    if page in PLACEHOLDER_MAPPING:
+        feature_name = PLACEHOLDER_MAPPING[page]
+        return render_template('placeholder.html', title=feature_name, feature_name=feature_name)
+
+    # 3. 动态页面：拼路径，加载 JSON
+    json_path = os.path.join(DYNAMIC_PAGES_FOLDER, f"{page}.json")
+    try:
+        with open(json_path, 'r', encoding='utf-8') as f:
+            page_data = json.load(f)
+    except FileNotFoundError:
+        # 找不到文件，404
+        print(page)
+        print(f"动态页面文件 {json_path} 不存在")
+        abort(404, description="dynamic页面不存在")
+    except json.JSONDecodeError:
+        # JSON 解析错误，500
+        abort(500, description="页面数据错误")
+
+    # 渲染动态页面模板
+    return render_template('dynamic_page.html', page_data=page_data)
+    
 
 
 
@@ -249,118 +309,6 @@ def llm_query():
     return render_template('llm.html', query=query, answer=answer)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-####################################################################
-# 动态页面存放目录
-DYNAMIC_PAGES_FOLDER = 'Index/dynamic_pages'
-
-@index_bp.route('/<page>')
-def dynamic_page(page):
-    """
-    统一处理静态页面与占位页面：
-    - 若 page 存在于 STATIC_PAGE_MAPPING，则返回对应静态模板
-    - 若 page 存在于 PLACEHOLDER_MAPPING，则返回通用占位模板 placeholder.html
-    - 若 page 存在于 dynamic_pages 文件夹的 JSON 文件，则渲染动态页面
-    - 否则返回 404
-    """
-    # 1. 处理静态页面
-    STATIC_PAGE_MAPPING = {
-        "resume": ("resume.html", "Resume"),
-        "aboutme": ("aboutme.html", "About Me"),
-        "study": ("study.html", "课题方向"),
-        "interest": ("interest.html", "最近在做的事和兴趣"),
-    }
-    # 静态页面优先处理
-    if page in STATIC_PAGE_MAPPING:
-        template, title = STATIC_PAGE_MAPPING[page]
-        return render_template(template, title=title)
-
-    # 2. 处理占位页面
-    PLACEHOLDER_MAPPING = {
-        "message_board": "留言板",
-        "survey": "问卷调查",
-        "chat": "聊天机器人",
-        "store": "个人商店",  
-        "consultation": "咨询预约",
-        "feedback": "意见反馈", 
-        "pdf_translate": "PDF 翻译",
-    }
-    if page in PLACEHOLDER_MAPPING:
-        feature_name = PLACEHOLDER_MAPPING[page]
-        return render_template('placeholder.html', title=feature_name, feature_name=feature_name)
-
-    # 3. 动态页面：拼路径，加载 JSON
-    json_path = os.path.join(DYNAMIC_PAGES_FOLDER, f"{page}.json")
-    try:
-        with open(json_path, 'r', encoding='utf-8') as f:
-            page_data = json.load(f)
-    except FileNotFoundError:
-        # 找不到文件，404
-        abort(404, description="页面不存在")
-    except json.JSONDecodeError:
-        # JSON 解析错误，500
-        abort(500, description="页面数据错误")
-
-    # 渲染动态页面模板
-    return render_template('dynamic_page.html', page_data=page_data)
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Load the quick-links.json file from /Index/dynamic_links directory
 def load_quick_links():
     links_file_path = os.path.join(os.path.dirname(__file__), 'dynamic_links', 'quick-links.json')
@@ -372,27 +320,28 @@ def load_friend_links():
         return json.load(file)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 @index_bp.route('/')
 def home():
-    quick_links = load_quick_links()  # Load quick links from JSON file
-    friend_links = load_friend_links()  # Load friend links from JSON file
-    return render_template('index.html', quick_links=quick_links, friend_links=friend_links, title="首页")  # Pass quick links to the template 
+    quick_links = load_quick_links()
+    friend_links = load_friend_links()
+    # —— 新增：扫描所有 gallery 子文件夹 —— 
+    galleries_dir = os.path.join(BASE_DIR,'Benlog', 'static', 'gallery')
+    # 确保目录存在
+    if not os.path.isdir(galleries_dir):
+        os.makedirs(galleries_dir)  # Google: [Python os.makedirs](https://www.google.com/search?q=Python+os.makedirs)
+    # 列出所有子文件夹
+    galleries = [
+        d for d in os.listdir(galleries_dir)
+        if os.path.isdir(os.path.join(galleries_dir, d))
+    ]  # Google: [Python os.listdir](https://www.google.com/search?q=Python+os.listdir)
+
+    return render_template(
+        'index.html',
+        quick_links=quick_links,
+        friend_links=friend_links,
+        galleries=galleries,       # 把扫描结果传给模板
+        title="首页"
+    )
 
 
 
