@@ -43,14 +43,23 @@
         {% if not file.endswith(('.tex', '.yaml')) %}
           <div class="media-item">
             {% if file.endswith(('.jpg', '.png', '.gif', 'NEF', '.jpeg')) %}
-              <img src="{{ url_for('static', filename='neibr/' + post.user_id|string + '/' + post.id|string + '/' + file) }}" alt="{{ file }}">
+              <img src="{{ url_for('neibr.media_file',
+                           user_id=post.user_id,
+                           post_id=post.id,
+                           filename=file) }}" alt="{{ file }}">
             {% elif file.endswith(('.mp4', '.webm')) %}
               <video controls>
-                <source src="{{ url_for('static', filename='neibr/' + post.user_id|string + '/' + post.id|string + '/' + file) }}" type="video/mp4">
+                <source src="{{ url_for('neibr.media_file',
+                           user_id=post.user_id,
+                           post_id=post.id,
+                           filename=file) }}" type="video/mp4">
               </video>
             {% elif file.endswith(('.mp3', '.wav')) %}
               <audio controls>
-                <source src="{{ url_for('static', filename='neibr/' + post.user_id|string + '/' + post.id|string + '/' + file) }}" type="audio/mpeg">
+                <source src="{{ url_for('neibr.media_file',
+                           user_id=post.user_id,
+                           post_id=post.id,
+                           filename=file) }}" type="audio/mpeg">
               </audio>
             {% endif %}
             <!-- 删除选项：采用浮层显示 -->
