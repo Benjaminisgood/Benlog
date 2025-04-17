@@ -216,7 +216,9 @@
       entries.forEach(entry => {
         if (entry.isIntersecting && !loading) {
           loading = true;
-          fetch(`/gallery/load_more?folder=${encodeURIComponent(folder)}&media_type=${encodeURIComponent(mediaType)}&offset=${offset}`)
+          const loadMoreUrl = "{{ url_for('index.gallery_load_more') }}";
+          fetch(`${loadMoreUrl}?folder=${encodeURIComponent(folder)}&media_type=${encodeURIComponent(mediaType)}&offset=${offset}`)
+
             .then(response => response.json())
             .then(data => {
               if (data.items && data.items.length > 0) {

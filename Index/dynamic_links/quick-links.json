@@ -101,28 +101,28 @@
 
 
     {
-        "url": "{{ url_for('index.audios') }}",
+        "url": "{{ url_for('index.gallery_page', page_key='audios') }}",
         "icon": "https://img.icons8.com/color/100/000000/guitar.png",
         "label": "音乐弹唱作品"
-    },
-    {
-        "url": "/darwin_album",
+      },
+      {
+        "url": "{{ url_for('index.gallery_page', page_key='darwin_album') }}",
         "icon": "https://img.icons8.com/color/100/000000/cat.png",
         "label": "达尔文的专属相册"
-    },
-    {
-        "url": "{{ url_for('index.photograph') }}",
+      },
+      {
+        "url": "{{ url_for('index.gallery_page', page_key='photograph') }}",
         "icon": "https://img.icons8.com/color/100/000000/camera.png",
         "label": "看我的摄影展"
-    },    
-    {
-        "url": "{{ url_for('index.paintings') }}",
+      },
+      {
+        "url": "{{ url_for('index.gallery_page', page_key='paintings') }}",
         "icon": "https://img.icons8.com/color/100/000000/paint-palette.png",
         "label": "艺术绘画作品"
-    },
-    {
-        "url": "{{ url_for('index.ebooks') }}",
+      },
+      {
+        "url": "{{ url_for('index.gallery_page', page_key='ebooks') }}",
         "icon": "https://img.icons8.com/color/100/000000/books.png",
         "label": "电子书籍资源"
-    }
-]
+      }
+    ]

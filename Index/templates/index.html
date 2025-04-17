@@ -42,7 +42,6 @@
 
 
 
-
   <div class="quick-links">
     {% for link in quick_links %}
       <a href="{{ link.url }}" class="quick-card">
@@ -60,6 +59,17 @@
     {% endfor %}
   </p>
 
+  <h1>所有画廊</h1>
+  <ul>
+    {% for f in folders %}
+      <li>
+        <a href="{{ url_for('index.gallery_page', page_key=f) }}">
+          {{ f.replace('_', ' ').title() }}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+  
 
 
 
