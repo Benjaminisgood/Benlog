@@ -33,9 +33,9 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 # 
 #预先定义每种媒体对应的扩展名
 MEDIA_EXTENSIONS = {
-    "image": ('.png', '.jpg', '.jpeg', '.gif'),
-    "audio": ('.mp3', '.wav', '.ogg', '.m4a'),
-    "ebook": ('.pdf', '.epub', '.txt', '.docx')
+    "image": ('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.svg', '.tiff', 'nef', '.cr2', '.raw', '.dng', '.heic', '.heif', '.indd', '.ai', '.eps', '.NEF', '.CR2', '.RAW', '.DNG', '.HEIC', '.HEIF', '.INDD', '.AI', '.EPS'),
+    "audio": ('.mp3', '.wav', '.ogg', '.m4a', '.flac', '.aac', '.wma', '.opus', '.aiff', '.alac', '.dsd', '.dff', '.dsf', '.midi', '.mid'),
+    "ebook": ('.pdf', '.epub', '.txt', '.docx', '.pptx', '.xlsx', '.doc', '.ppt', '.xls', '.mobi', '.azw3', '.fb2', '.djvu', '.lit', '.ibooks', '.prc', '.rtf'),
 }
 # 用于确保目录存在，如果没有则创建目录
 def ensure_directory_exists(folder):
@@ -240,9 +240,6 @@ def dynamic_page(page):
         with open(json_path, 'r', encoding='utf-8') as f:
             page_data = json.load(f)
     except FileNotFoundError:
-        # 找不到文件，404
-        print(page)
-        print(f"动态页面文件 {json_path} 不存在")
         abort(404, description="dynamic页面不存在")
     except json.JSONDecodeError:
         # JSON 解析错误，500

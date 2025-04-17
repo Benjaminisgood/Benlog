@@ -442,9 +442,7 @@ def manage_dynamic_page():
     editable_pages = []
 
     # 确保目录存在并打印文件列表
-    print(f"读取目录: {DYNAMIC_PAGES_FOLDER}")
     for filename in os.listdir(DYNAMIC_PAGES_FOLDER):
-        print(f"检查文件: {filename}")
         if filename.endswith('.json'):
             page_name = filename.rsplit('.', 1)[0]
             page_data = None
