@@ -19,6 +19,8 @@
                     
                     <!-- Copy Link Button -->
                     <button class="btn btn-copy" onclick="copyLink('{{ url_for('static', filename='gallery/' + folder_name + '/' + file) }}', '{{ file }}')">Copy Link</button>
+                    <!-- Copy Link Button -->
+                    <button class="btn btn-copy" onclick="copyLink('{{ url_for('static', filename='gallery/' + folder_name + '/' + file) }}', '{{ file }}')">Copy Link</button>
                 </div>
             </li>
         {% endfor %}
@@ -99,7 +101,26 @@
             // Check if the file is an audio file
             if (file.endsWith('.mp3') || file.endsWith('.wav') || file.endsWith('.ogg') || file.endsWith('.m4a')) {
                 markdownLink = `<audio controls src="${link}" title="${file}"></audio>`;
-            } else {
+            } 
+            else if (file.endsWith('.mp4') || file.endsWith('.avi') || file.endsWith('.mov') || file.endsWith('.wmv')) {
+                markdownLink = `<video controls src="${link}" title="${file}"></video>`;
+            } 
+            else if (file.endsWith('.jpg') || file.endsWith('.jpeg') || file.endsWith('.png') || file.endsWith('.gif')) {
+                markdownLink = `![${file}](${link})`;  // Format the link as Markdown for images
+            } 
+            else if (file.endsWith('.pdf')) {
+                markdownLink = `[${file}](${link})`;  // Format the link as Markdown for PDFs
+            }
+            else if (file.endsWith('.txt')) {
+                markdownLink = `\`${file}\`: ${link}`;  // Format the link as Markdown for text files
+            } 
+            else if (file.endsWith('.zip') || file.endsWith('.rar')) {
+                markdownLink = `[Download ${file}](${link})`;  // Format the link as Markdown for compressed files
+            } 
+            else if (file.endsWith('.docx') || file.endsWith('.xlsx') || file.endsWith('.pptx')) {
+                markdownLink = `[${file}](${link})`;  // Format the link as Markdown for document files
+            }
+            else {
                 markdownLink = `![](${link})`;  // Format the link as Markdown for images (default)
             }
             
