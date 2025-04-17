@@ -214,7 +214,6 @@ def dynamic_page(page):
     PLACEHOLDER_MAPPING = {
         "message_board": "留言板",
         "survey": "问卷调查",
-        "chat": "聊天机器人",
         "store": "个人商店",  
         "consultation": "咨询预约",
         "feedback": "意见反馈", 

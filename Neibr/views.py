@@ -12,7 +12,7 @@ from datetime import datetime
 
 # 项目根目录下的 static/neibr 路径
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-UPLOAD_BASE_PATH = os.path.join(BASE_DIR, 'Benlog', 'static', 'neibr')  # static/neibr
+UPLOAD_BASE_PATH = os.path.join(BASE_DIR, 'Neibr', 'neibr')
 def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'webm', 'mp3', 'wav', 'nef','mov','MOV'}
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
