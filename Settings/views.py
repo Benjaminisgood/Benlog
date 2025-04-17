@@ -500,6 +500,7 @@ def edit_dynamic_page(page):
         abort(403)
 
     json_path = os.path.join(DYNAMIC_PAGES_FOLDER, f"{page}.json")
+    # 读取现有 JSON
     try:
         with open(json_path, 'r', encoding='utf-8') as f:
             page_data = json.load(f)
@@ -510,65 +511,86 @@ def edit_dynamic_page(page):
 
     if request.method == 'POST':
         # 更新 title 和 content
-        title   = request.form.get('title', '').strip()
+        title = request.form.get('title', '').strip()
         content = request.form.get('content', '').strip()
 
-        # 如果用户改了文件名，就重命名 JSON
+        # 处理文件名变更
         if title and title != page:
-            # 简单文件名清洗：只保留字母数字下划线和中划线
             safe = re.sub(r'[^0-9A-Za-z_-]', '_', title)
-            old_path = json_path
             new_path = os.path.join(DYNAMIC_PAGES_FOLDER, f"{safe}.json")
             if os.path.exists(new_path):
                 flash("目标文件名已存在，请换一个", "danger")
                 return redirect(url_for('setting.edit_dynamic_page', page=page))
-            os.rename(old_path, new_path)
+            os.rename(json_path, new_path)
             page = safe
             json_path = new_path
 
         # 重组 page_data
-        page_data['title']   = title
+        page_data['title'] = title
         page_data['content'] = content
 
+        # 重建组件列表
         new_components = [
-            {'type': 'title',   'content': title},
+            {'type': 'title', 'content': title},
             {'type': 'content', 'content': content}
         ]
         count = int(request.form.get('elements_count', 0))
         for idx in range(count):
             ctype = request.form.get(f'elements-{idx}-type')
-            raw   = request.form.get(f'elements-{idx}-content', '').strip()
             if not ctype:
                 continue
+            # 不同模块字段收集
             if ctype == 'text':
-                new_components.append({'type': 'text', 'content': raw})
+                text = request.form.get(f'elements-{idx}-content', '').strip()
+                new_components.append({'type': 'text', 'content': text})
             elif ctype == 'image':
                 src = request.form.get(f'elements-{idx}-src', '').strip()
-                new_components.append({
-                    'type': 'image', 'src': src,
-                    'alt': page_data.get('alt', '')
-                })
+                caption = request.form.get(f'elements-{idx}-content', '').strip()
+                new_components.append({'type': 'image', 'src': src, 'content': caption})
             elif ctype == 'link':
-                new_components.append({
-                    'type': 'link', 'href': raw, 'text': raw
-                })
+                href = request.form.get(f'elements-{idx}-href', '').strip()
+                text = request.form.get(f'elements-{idx}-content', '').strip() or href
+                new_components.append({'type': 'link', 'href': href, 'text': text})
             elif ctype == 'quote':
-                new_components.append({'type': 'quote', 'content': raw})
+                quote = request.form.get(f'elements-{idx}-content', '').strip()
+                new_components.append({'type': 'quote', 'content': quote})
             elif ctype == 'code':
-                new_components.append({'type': 'code', 'content': raw})
+                code = request.form.get(f'elements-{idx}-code', '').strip()
+                new_components.append({'type': 'code', 'content': code})
+            elif ctype == 'html':
+                html = request.form.get(f'elements-{idx}-html', '').strip()
+                new_components.append({'type': 'html', 'content': html})
+            elif ctype == 'gallery':
+                imgs = request.form.get(f'elements-{idx}-images', '')
+                images = [u.strip() for u in imgs.split(',') if u.strip()]
+                new_components.append({'type': 'gallery', 'images': images})
+            elif ctype == 'flipcard':
+                front = request.form.get(f'elements-{idx}-front', '').strip()
+                back = request.form.get(f'elements-{idx}-back', '').strip()
+                new_components.append({'type': 'flipcard', 'front': front, 'back': back})
+            elif ctype == 'faq':
+                question = request.form.get(f'elements-{idx}-question', '').strip()
+                answer = request.form.get(f'elements-{idx}-answer', '').strip()
+                new_components.append({'type': 'faq', 'question': question, 'answer': answer})
+            else:
+                # fallback
+                val = request.form.get(f'elements-{idx}-content', '').strip()
+                new_components.append({'type': ctype, 'content': val})
+
         page_data['components'] = new_components
 
         # 保存回 JSON
-        with open(json_path, 'w', encoding='utf-8') as f:
-            json.dump(page_data, f, ensure_ascii=False, indent=4)
+        try:
+            with open(json_path, 'w', encoding='utf-8') as f:
+                json.dump(page_data, f, ensure_ascii=False, indent=4)
+            flash(f"页面 “{title}” 更新成功！", 'success')
+        except Exception as e:
+            flash(f"保存失败：{e}", 'danger')
 
-        flash(f"页面 “{title}” 更新成功！", 'success')
         return redirect(url_for('index.dynamic_page', page=page))
 
-    # GET 时渲染编辑表单
-    return render_template('edit_dynamic_page.html',
-                           page=page, page_data=page_data)
-
+    # GET 渲染
+    return render_template('edit_dynamic_page.html', page=page, page_data=page_data)
 
 @setting_bp.route('/new_dynamic_page', methods=['GET', 'POST'])
 @login_required
