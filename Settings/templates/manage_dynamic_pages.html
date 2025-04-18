@@ -29,12 +29,29 @@
     {% endfor %}
   </ul>
 </div>
-
+<!-- 
 <script>
 function copyLink(url) {
   navigator.clipboard.writeText(url)
     .then(() => alert('已复制页面链接：' + url))
     .catch(err => alert('复制失败：' + err));
+}
+    http不可用，更现代的剪贴板API。
+</script>
+-->
+<script>
+function copyLink(url) {
+  const tempInput = document.createElement("input");
+  tempInput.value = url;
+  document.body.appendChild(tempInput);
+  tempInput.select();
+  try {
+    document.execCommand("copy");
+    alert('已复制页面链接：' + url);
+  } catch (err) {
+    alert('复制失败：' + err);
+  }
+  document.body.removeChild(tempInput);
 }
 </script>
 
