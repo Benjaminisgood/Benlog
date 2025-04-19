@@ -1,6 +1,7 @@
 from flask import Flask
 import os
 import logging  # 确保导入 logging 模块
+from datetime import timedelta
 
 def create_app():
     # 获取当前文件（app.py）所在的目录的绝对路径
@@ -23,7 +24,9 @@ def create_app():
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         # 其他默认配置项，如调试开关、文档创建密码等
         DEBUG=False,
-        DOC_CREATION_PASSWORD='0715'
+        DOC_CREATION_PASSWORD='0715',
+        REMEMBER_COOKIE_DURATION=timedelta(days=30)
+
     )
     
     # 尝试加载用户在 instance/config.py 中提供的配置，

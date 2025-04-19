@@ -32,6 +32,10 @@
     {% for post in latest_posts %}
       <div class="card">
         <h3>{{ post.title }}</h3>
+        <div class="post-meta">
+          <span class="author">作者：{{ user_map[post.user_id] }}</span>
+          <span class="date">发表于：{{ post.creation_time.strftime('%Y-%m-%d %H:%M') }}</span>
+        </div>
         <div class="tags">
           {% for tag in post.tags.split(',') %}
             <span>{{ tag.strip() }}</span>
@@ -46,6 +50,10 @@
     {% for post in random_posts %}
       <div class="card">
         <h3>{{ post.title }}</h3>
+        <div class="post-meta">
+          <span class="author">作者：{{ user_map[post.user_id] }}</span>
+          <span class="date">发表于：{{ post.creation_time.strftime('%Y-%m-%d %H:%M') }}</span>
+        </div>
         <div class="tags">
           {% for tag in post.tags.split(',') %}
             <span>{{ tag.strip() }}</span>
@@ -60,6 +68,7 @@
     {% for post in my_posts %}
     <div class="card">
         <h3>{{ post.title }}</h3>
+        <span class="date">发表于：{{ post.creation_time.strftime('%Y-%m-%d %H:%M') }}</span>
         <div class="tags">
             {% for tag in post.tags.split(',') %}
             <span>{{ tag.strip() }}</span>
@@ -127,7 +136,15 @@
   background-color: #5a6268;
   transform: scale(1.05); /* 悬停时缩放 */
 }
-
+.post-meta {
+    font-size: 0.9rem;
+    color: var(--text-secondary-color, #666);
+    margin: 8px 0;
+    display: flex;
+    gap: 12px;
+  }
+  .post-meta .author::before { content: "👤 "; }
+  .post-meta .date::before   { content: "📅 "; }
 .media-container img,
 .media-container video,
 .media-container audio {

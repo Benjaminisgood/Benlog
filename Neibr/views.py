@@ -37,7 +37,13 @@ def index():
     ). order_by(db.func.random()).limit(10).all()
 
     my_posts = Post.query.filter_by(user_id=current_user.id).order_by(Post.creation_time.desc()).all()
-    return render_template('neibr_index.html', latest_posts=latest_posts, random_posts=random_posts, my_posts=my_posts)
+
+    all_posts = latest_posts + random_posts + my_posts
+    user_ids = {p.user_id for p in all_posts}
+    users = User.query.filter(User.id.in_(user_ids)).all()
+    user_map = {u.id: u.username for u in users}
+
+    return render_template('neibr_index.html', latest_posts=latest_posts, random_posts=random_posts, my_posts=my_posts, user_map=user_map)
 
 @neibr_bp.route('/create_post', methods=['GET', 'POST'])
 @login_required

@@ -1,5 +1,5 @@
 from . import setting_bp
-from flask import request, send_from_directory
+from flask import app, request, send_from_directory
 from Settings.models import User
 from flask import Blueprint, request, render_template, redirect, url_for, flash
 from flask_login import login_user, logout_user
@@ -14,6 +14,7 @@ import json
 from flask import session
 import time
 import re
+from datetime import timedelta
 
 
 
@@ -182,6 +183,8 @@ def delete_user(user_id):
 
 
 #########################################################################################
+#app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=30)
+
 @setting_bp.route('/register', methods=['GET', 'POST'])
 def register():
     """
@@ -235,7 +238,11 @@ def login():
         user = User.query.filter_by(email=email).first()
         
         if user and check_password_hash(user.password, password):
-            login_user(user)
+            remember = request.form.get('remember') == 'on'
+
+            login_user(user, remember=remember)
+            session.permanent = True
+
             next_page = request.args.get('next')  # 获取 next 参数
             return redirect(next_page or url_for('setting.index'))  # 如果 next 存在就重定向到 next 页面，否则跳转到后台首页
         flash('邮箱或密码错误。', 'error')
