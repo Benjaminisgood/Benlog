@@ -57,9 +57,17 @@ git push
 git push origin main
 
 # 网站介绍
-Benlog/static 中储存媒体文件以及帖子
+Index/dynamic_pages 中存储动态页面
+Index/dynamic_links 中存储动态链接
 Blog/posts 中储存文章
 Edu/notes 中储存笔记
-index/templates 中的一些html文件需要编辑以实现个性化
-neibr模块每个人都能发言，只要注册了不必是管理员。
-setting模块用来管理应用
+Neibr/neibr 中存储帖子
+
+
+Benlog/ 用来整合启动应用
+setting/ 用来设置管理应用
+
+网站有三种编辑形式：
+1 利用json生成前端，功能需要代码支持，加工程度高，静态文件依赖图床，灵活定制度高。
+2 利用md转换为前端，依赖几个md库，图片可以通过flask静态文件路径进行匹配，md实用。
+3 利用最基础的文本与媒体文件拼接，完全独立无任何依赖，性能和功能有限，但数据稳定。

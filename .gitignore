@@ -13,6 +13,7 @@ dist/
 .vscode/
 
 # 日志和临时文件
+updatelog.txt
 *.log
 *.tmp
 #*.txt
