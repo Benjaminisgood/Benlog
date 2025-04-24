@@ -62,6 +62,8 @@
   </div>
 </div>
 
+<a href="{{ url_for('setting.manage_gallery') }}" class="back-link">返回媒体文件管理页</a>
+
 <!-- Scripts -->
 <script>
 // Dropzone initialization
@@ -159,6 +161,20 @@ function closeRenameModal() { document.getElementById('rename-modal').classList.
 .btn-cancel:hover { background:#dc3545; color:#fff; }
 
 .no-files { text-align:center; color:var(--meta-text-color); font-style:italic; }
+
+.back-link {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    color: var(--link-color); /* 使用全局链接颜色 */
+    text-decoration: none;
+    font-size: 1rem;
+    transition: color 0.3s ease;
+  }
+.back-link:hover {
+    color: var(--text-color); /* 悬停时使用全局文本颜色 */
+    text-decoration: underline;
+  }
 
 @media (max-width:600px) {
   .fm-header { flex-direction:column; align-items:flex-start; gap:1rem; }

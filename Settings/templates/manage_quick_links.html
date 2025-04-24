@@ -55,6 +55,8 @@
   </div>
 </div>
 
+<a href="{{ url_for('setting.index') }}" class="back-link">返回管理首页</a>
+
 <script>
 function togglePopup() {
   document.getElementById('add-link-popup').classList.toggle('hidden');
@@ -232,6 +234,20 @@ document.querySelector('.new-link-form .btn-create').addEventListener('click', f
   color: var(--meta-text-color);
   font-style: italic;
 }
+
+.back-link {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    color: var(--link-color); /* 使用全局链接颜色 */
+    text-decoration: none;
+    font-size: 1rem;
+    transition: color 0.3s ease;
+  }
+.back-link:hover {
+    color: var(--text-color); /* 悬停时使用全局文本颜色 */
+    text-decoration: underline;
+  }
 
 @media (max-width: 600px) {
   .links-grid { grid-template-columns: 1fr; }

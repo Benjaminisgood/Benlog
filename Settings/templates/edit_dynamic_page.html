@@ -84,6 +84,8 @@
   </form>
 </div>
 
+<a href="{{ url_for('setting.manage_dynamic_page') }}" class="back-link">返回动态管理页</a>
+
 <script>
 function toggleExtra(idx) {
   const type = document.getElementsByName(`elements-${idx}-type`)[0].value;
@@ -194,6 +196,21 @@ label { display:block; margin-bottom:0.3rem; color:var(--text-color); }
 .btn-add:hover { background:var(--btn-hover-bg-color); }
 .btn-save { background:var(--btn-bg-color); color:var(--btn-text-color); border:none; padding:0.8rem; border-radius:4px; }
 .btn-save:hover { background:var(--btn-hover-bg-color); }
+
+.back-link {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    color: var(--link-color); /* 使用全局链接颜色 */
+    text-decoration: none;
+    font-size: 1rem;
+    transition: color 0.3s ease;
+  }
+.back-link:hover {
+    color: var(--text-color); /* 悬停时使用全局文本颜色 */
+    text-decoration: underline;
+  }
+
 @media(max-width:768px) { .editor-header { flex-direction:column; align-items:flex-start; gap:1rem; } .element-controls { flex-direction:column; } }
 </style>
 {% endblock %}
