@@ -30,6 +30,7 @@ flask --app Benlog/app.py db init
 flask --app Benlog/app.py db migrate -m "Initial migration"
 flask --app Benlog/app.py db upgrade
 gunicorn -w 4 -b 0.0.0.0:80 "Benlog.app:create_app()"
+gunicorn -w 3 --threads 6 -b 0.0.0.0:80 "Benlog.app:create_app()"
 
 # 运行、调试等
 export FLASK_ENV=development
