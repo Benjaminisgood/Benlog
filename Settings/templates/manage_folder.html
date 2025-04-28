@@ -94,12 +94,24 @@ function copyHtmlLink(url, file) {
 }
 
 // Copy relative URL link
+//function copyUrlLink(url) {
+//  navigator.clipboard.writeText(url)
+//    .then(()=>alert('已复制 相对 URL：' + url))
+//    .catch(e=>alert('复制失败：'+e));
+//}
 function copyUrlLink(url) {
-  navigator.clipboard.writeText(url)
-    .then(()=>alert('已复制 相对 URL：' + url))
-    .catch(e=>alert('复制失败：'+e));
+  const tempInput = document.createElement("input");
+  tempInput.value = url;
+  document.body.appendChild(tempInput);
+  tempInput.select();
+  try {
+    document.execCommand("copy");
+    alert('已复制页面链接：' + url);
+  } catch (err) {
+    alert('复制失败：' + err);
+  }
+  document.body.removeChild(tempInput);
 }
-
 // Copy external Web link
 function copyWebLink(url) {
   navigator.clipboard.writeText(url)
