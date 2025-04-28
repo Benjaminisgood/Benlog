@@ -29,5 +29,5 @@ migrations/
 Neibr/neibr/*
 Blog/posts/*
 Edu/notes/*
-Gallery/galleries/**/*
+#Gallery/galleries/**/*
 Index/dynamic_pages/*
