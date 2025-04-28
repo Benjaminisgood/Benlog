@@ -37,7 +37,7 @@ def create_app():
     from Neibr import init_app as neibr_init_app
     from Settings import init_app as settings_init_app
     from Settings import setting_bp
-#    from Gallery import gallery_bp
+    from Gallery import gallery_bp
 #    from Gallery import init_app as gallery_init_app
 
     app.register_blueprint(index_bp)
@@ -45,7 +45,7 @@ def create_app():
     app.register_blueprint(edu_bp, url_prefix='/edu')
     app.register_blueprint(neibr_bp, url_prefix='/neibr')
     app.register_blueprint(setting_bp, url_prefix='/setting')
-#    app.register_blueprint(gallery_bp, url_prefix='/gallery')
+    app.register_blueprint(gallery_bp, url_prefix='/gallery')
 
 
     settings_init_app(app)

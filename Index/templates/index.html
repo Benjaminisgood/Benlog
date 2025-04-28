@@ -59,18 +59,7 @@
     {% endfor %}
   </p>
 
-  <h1>所有画廊</h1>
-  <ul class="gallery-list">
-    {% for f in galleries %}
-      <li class="gallery-item">
-        <a class="gallery-link"
-           href="{{ url_for('index.gallery_page', page_key=f) }}">
-          {{ f.replace('_', ' ').title() }}
-        </a>
-      </li>
-    {% endfor %}
-  </ul>
-  
+
   
 
 

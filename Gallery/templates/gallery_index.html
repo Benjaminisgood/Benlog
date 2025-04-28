@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>所有画廊</h1>
+  <ul class="gallery-list">
+    {# 将下面的 folders 改成 galleries #}
+    {% for folder in galleries %}
+      <li class="gallery-list-item">
+        <a class="gallery-link"
+           href="{{ url_for('gallery.gallery_page', page_key=folder) }}">
+          查看{{ folder.replace('_', ' ').title() }}
+        </a>
+        <a class="gallery-link"
+        href="{{ url_for('gallery.view_folder', folder_name=folder) }}" class="folder-link">编辑{{ folder }}
+      </a>
+      </li>
+    {% endfor %}
+  </ul>
+
+<style>
+  .gallery-list { list-style: none; padding: 0; }
+  .gallery-list-item { margin: 0.5em 0; }
+  .gallery-link {
+    text-decoration: none; color: var(--link-color);
+    font-size: 1.2rem;
+  }
+  .gallery-link:hover { text-decoration: underline; }
+</style>
+{% endblock %}

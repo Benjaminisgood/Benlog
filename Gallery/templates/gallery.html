@@ -9,7 +9,7 @@
         {% for item in items %}
           <div class="gallery-item">
             <div class="img-container">
-              <img src="{{ url_for('static', filename='gallery/' ~ folder ~ '/' ~ item) }}" 
+              <img src="{{ url_for('gallery.static', filename=folder ~ '/' ~ item) }}" 
                    alt="{{ item }}" loading="lazy" 
                    onclick="openModal(this.src, '{{ item }}')">
               <div class="caption-overlay">{{ item }}</div>
@@ -30,7 +30,7 @@
               <div class="caption-overlay">{{ item }}</div>
             </div>
             <audio controls>
-              <source src="{{ url_for('static', filename='gallery/' ~ folder ~ '/' ~ item) }}">
+              <source src="{{ url_for('gallery.static', filename=folder ~ '/' ~ item) }}">
               您的浏览器不支持 audio 元素。
             </audio>
           </div>
@@ -43,9 +43,9 @@
         {% for item in items %}
           <div class="gallery-item">
             <div class="img-container">
-              <a href="{{ url_for('static', filename='gallery/' ~ folder ~ '/' ~ item) }}" 
+              <a href="{{ url_for('gallery.static', filename=folder ~ '/' ~ item) }}" 
                  target="_blank" rel="noopener noreferrer" download="{{ item }}">
-                <img src="{{ url_for('static', filename='gallery/' ~ folder ~ '/' ~ item) }}"
+                <img src="{{ url_for('gallery.static', filename=folder ~ '/' ~ item) }}"
                      alt="{{ item }}" loading="lazy">
               </a>
               <div class="caption-overlay">{{ item }}</div>
@@ -216,7 +216,7 @@
       entries.forEach(entry => {
         if (entry.isIntersecting && !loading) {
           loading = true;
-          const loadMoreUrl = "{{ url_for('index.gallery_load_more') }}";
+          const loadMoreUrl = "{{ url_for('gallery.gallery_load_more') }}";
           fetch(`${loadMoreUrl}?folder=${encodeURIComponent(folder)}&media_type=${encodeURIComponent(mediaType)}&offset=${offset}`)
 
             .then(response => response.json())

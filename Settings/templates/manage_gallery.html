@@ -17,7 +17,7 @@
   <div class="folder-grid">
     {% for folder in folders %}
     <div class="folder-card">
-      <a href="{{ url_for('setting.view_folder', folder_name=folder) }}" class="folder-link">📁 {{ folder }}</a>
+      <a href="{{ url_for('gallery.view_folder', folder_name=folder) }}" class="folder-link">📁 {{ folder }}</a>
       <form action="{{ url_for('setting.delete_folder', folder_name=folder) }}" method="POST" class="delete-form">
         <button type="submit" class="btn btn-delete" onclick="return confirm('确认删除文件夹 {{ folder }}？');">删除</button>
       </form>

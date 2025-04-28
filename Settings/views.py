@@ -297,10 +297,10 @@ def logout():
 
 
 
-
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 #BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-
-GALLERY_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'Benlog', 'static', 'gallery')
+GALLERY_PATH = os.path.join(BASE_DIR, 'Gallery', 'galleries')
+#GALLERY_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'Benlog', 'static', 'gallery')
 # List all folders in the gallery directory
 @setting_bp.route('/manage_gallery')
 @login_required
@@ -348,74 +348,7 @@ def delete_folder(folder_name):
     
     return redirect(url_for('setting.manage_gallery'))
 
-# List files in a folder and allow operations
-@setting_bp.route('/gallery/<folder_name>')
-@login_required
-def view_folder(folder_name):
-    folder_path = os.path.join(GALLERY_PATH, folder_name)
-    # List all files in the folder
-    if os.path.exists(folder_path):
-        files = [f for f in os.listdir(folder_path) if not f.startswith('.')]
-    else:
-        files = []
-    return render_template('manage_folder.html', folder_name=folder_name, files=files)
 
-# File download route
-@setting_bp.route('/download/<folder_name>/<filename>')
-@login_required
-def download_file(folder_name, filename):
-    folder_path = os.path.join(GALLERY_PATH, folder_name)
-    return send_from_directory(folder_path, filename, as_attachment=True)
-
-
-# File deletion route
-@setting_bp.route('/delete_file/<folder_name>/<filename>', methods=['POST'])
-@login_required
-def delete_file(folder_name, filename):
-    file_path = os.path.join(GALLERY_PATH, folder_name, filename)
-    if os.path.exists(file_path):
-        os.remove(file_path)
-    return redirect(url_for('setting.view_folder', folder_name=folder_name))
-
-@setting_bp.route('/upload/<folder_name>', methods=['POST'])
-@login_required
-def upload_file(folder_name):
-    folder_path = os.path.join(GALLERY_PATH, folder_name)
-    
-    # Ensure the folder exists
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-
-    # Handle single file upload (standard form or Dropzone)
-    file = request.files.get('file')  # Dropzone sends files with the "file" name
-    if file:
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(folder_path, filename))
-
-    return redirect(url_for('setting.view_folder', folder_name=folder_name))
-
-
-@setting_bp.route('/rename_file', methods=['POST'])
-@login_required
-def rename_file():
-    folder_name = request.form['folder-name']
-    old_filename = request.form['old-filename']
-    new_filename = request.form['new-filename']
-    
-    folder_path = os.path.join(GALLERY_PATH, folder_name)
-    old_file_path = os.path.join(folder_path, old_filename)
-    new_file_path = os.path.join(folder_path, new_filename)
-
-    # Ensure the new filename is secure
-    new_filename = secure_filename(new_filename)
-
-    if os.path.exists(old_file_path):
-        os.rename(old_file_path, new_file_path)  # Rename the file
-        flash('File renamed successfully!', 'success')
-    else:
-        flash('File does not exist!', 'danger')
-    
-    return redirect(url_for('setting.view_folder', folder_name=folder_name))
 
 
 

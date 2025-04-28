@@ -4,7 +4,9 @@
   <!-- Header -->
   <div class="fm-header">
     <h1 class="fm-title">管理文件夹：{{ folder_name }}</h1>
+    <!--
     <a href="{{ url_for('setting.manage_gallery') }}" class="btn btn-back">返回画廊列表</a>
+    -->
   </div>
 
   <!-- File Cards Grid -->
@@ -16,7 +18,7 @@
         <span class="file-name">{{ file }}</span>
       </div>
       <div class="file-actions">
-        <a href="{{ url_for('setting.download_file', folder_name=folder_name, filename=file) }}" class="btn btn-download">下载</a>
+        <a href="{{ url_for('gallery.download_file', folder_name=folder_name, filename=file) }}" class="btn btn-download">下载</a>
         <button type="button" class="btn btn-rename" data-filename="{{ file }}" data-folder="{{ folder_name }}" onclick="showRenameModal(this)">重命名</button>
         <button type="button" class="btn btn-copy-md" onclick="copyMarkdownLink('{{ url_for('static', filename='gallery/' + folder_name + '/' + file) }}', '{{ file }}')">复制 MD 链接</button>
         <button type="button" class="btn btn-copy-html" onclick="copyHtmlLink('{{ url_for('static', filename='gallery/' + folder_name + '/' + file) }}', '{{ file }}')">复制 HTML 链接</button>
@@ -33,12 +35,12 @@
   <!-- Upload Section -->
   <div class="upload-section">
     <h2>上传新文件</h2>
-    <form action="{{ url_for('setting.upload_file', folder_name=folder_name) }}" method="POST" enctype="multipart/form-data" class="upload-form">
+    <form action="{{ url_for('gallery.upload_file', folder_name=folder_name) }}" method="POST" enctype="multipart/form-data" class="upload-form">
       <input type="file" name="file" class="input-file" required>
       <button type="submit" class="btn btn-upload">上传</button>
     </form>
     <div class="dropzone-container">
-      <form action="{{ url_for('setting.upload_file', folder_name=folder_name) }}" method="POST" enctype="multipart/form-data" class="dropzone" id="my-dropzone"></form>
+      <form action="{{ url_for('gallery.upload_file', folder_name=folder_name) }}" method="POST" enctype="multipart/form-data" class="dropzone" id="my-dropzone"></form>
     </div>
   </div>
 
@@ -46,7 +48,7 @@
   <div id="rename-modal" class="modal-overlay hidden">
     <div class="modal-dialog">
       <h3>重命名文件</h3>
-      <form action="{{ url_for('setting.rename_file') }}" method="POST" class="rename-form">
+      <form action="{{ url_for('gallery.rename_file', folder_name=folder_name) }}" method="POST" class="rename-form">
         <div class="form-group">
           <label for="new-filename">新文件名：</label>
           <input type="text" id="new-filename" name="new-filename" class="input-field" required>
@@ -61,8 +63,6 @@
     </div>
   </div>
 </div>
-
-<a href="{{ url_for('setting.manage_gallery') }}" class="back-link">返回媒体文件管理页</a>
 
 <!-- Scripts -->
 <script>

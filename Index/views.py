@@ -14,168 +14,6 @@ from flask_login import login_required, current_user
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
-#
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-#
-# 
-#预先定义每种媒体对应的扩展名
-MEDIA_EXTENSIONS = {
-    "image": ('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.svg', '.tiff', 'nef', '.cr2', '.raw', '.dng', '.heic', '.heif', '.indd', '.ai', '.eps', '.NEF', '.CR2', '.RAW', '.DNG', '.HEIC', '.HEIF', '.INDD', '.AI', '.EPS'),
-    "audio": ('.mp3', '.wav', '.ogg', '.m4a', '.flac', '.aac', '.wma', '.opus', '.aiff', '.alac', '.dsd', '.dff', '.dsf', '.midi', '.mid'),
-    "ebook": ('.pdf', '.epub', '.txt', '.docx', '.pptx', '.xlsx', '.doc', '.ppt', '.xls', '.mobi', '.azw3', '.fb2', '.djvu', '.lit', '.ibooks', '.prc', '.rtf'),
-}
-# 用于确保目录存在，如果没有则创建目录
-def ensure_directory_exists(folder):
-    folder_path = os.path.join('Benlog/static/gallery', folder)
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-        print(f"Created directory: {folder_path}")
-
-def get_media_from_folder(folder_name, media_type):
-    """
-    通用从指定文件夹获取媒体文件列表的函数。
-    
-    参数:
-      folder_name: 媒体文件夹名称（如 '摄影展'、'音乐和弹唱作品' 等）
-      media_type: 媒体类型，支持 "image", "audio", "ebook"
-      
-    返回:
-      符合扩展名条件的文件名列表
-    """
-    extensions = MEDIA_EXTENSIONS.get(media_type)
-    if not extensions:
-        return []
-    
-    ensure_directory_exists(folder_name)
-
-    media = []
-    folder_path = os.path.join(BASE_DIR, 'Benlog', 'static', 'gallery', folder_name)
-    if os.path.exists(folder_path):
-        for file in os.listdir(folder_path):
-            if file.lower().endswith(extensions):
-                media.append(file)
-    return media
-
-def get_media_batch(media_list, offset=0, batch_size=12):
-    """
-    从媒体列表中获取指定偏移量和批次数量的媒体项，便于懒加载。
-    """
-    return media_list[offset:offset+batch_size]
-
-
-def render_gallery_page(title, folder, media_type, batch_size=None, randomize=False):
-    """
-    通用渲染媒体画廊页面。
-    
-    参数:
-      title: 页面标题
-      folder: 文件夹名称
-      media_type: 媒体类型："image", "audio", "ebook"
-      batch_size: 若传入则仅加载指定数量，适用于初始批量显示
-      randomize: 是否进行随机排序（例如图片展示）
-      
-    返回:
-      渲染后的模板页面，统一传递媒体列表给模板变量 items
-    """
-    ensure_directory_exists(folder)
-
-    media_list = get_media_from_folder(folder, media_type)
-    if randomize and media_type == "image":
-        random.seed(folder)
-        random.shuffle(media_list)
-    if batch_size:
-        media_list = get_media_batch(media_list, offset=0, batch_size=batch_size)
-    return render_template(
-        'gallery.html',
-        title=title,
-        folder=folder,
-        media_type=media_type,
-        items=media_list  # 模板统一用 items 接收数据
-    )
-
-# 1. 配置映射：key → (页面标题, 文件夹名, 媒体类型, 批量加载数量, 是否随机)
-GALLERY_CONFIG = {
-    "photograph":    ("摄影",          "photograph",   "image", 12,   True),
-    "darwin_album":  ("达尔文的专属相册","darwin_album", "image", 12, True),
-    "paintings":     ("我的绘画作品",   "paintings",    "image", 12, True),
-    "audios":        ("音乐和弹唱作品",  "audios",       "audio", 6, False),
-    "ebooks":        ("电子书籍资源",   "ebooks",       "ebook", 6, False),
-    "attachments":    ("附件资源",       "attachments",   "ebook", None, False),
-}
-
-# 2. 动态画廊路由
-@index_bp.route('/gallery/<page_key>')
-def gallery_page(page_key):
-    # 1) 尝试从配置加载
-    config = GALLERY_CONFIG.get(page_key)
-
-    # 2) 如果有配置就解包，否则使用默认值
-    if config:
-        title, folder, media_type, batch_size, randomize = config
-    else:
-        title      = page_key        # 默认标题就用 page_key
-        folder     = page_key        # 默认媒体目录名也是 page_key
-        media_type = 'image'         # 默认只展示图片
-        batch_size = 10              # 默认每页 10 个
-        randomize  = False           # 默认不打乱顺序
-
-    ensure_directory_exists(folder)
-    return render_gallery_page(
-        title=title,
-        folder=folder,
-        media_type=media_type,
-        batch_size=batch_size,
-        randomize=randomize
-    )
-# 统一的加载更多接口，支持所有媒体类型
-@index_bp.route('/gallery/load_more')
-def gallery_load_more():
-    """
-    根据前端传入 offset、folder、media_type 加载下一批数据，每批默认 12 项。
-    接口返回 JSON 格式数据，格式为 {'items': [...] }。
-    """
-    folder = request.args.get('folder')
-    if not folder:
-        abort(400, description="Missing folder parameter")
-    
-    media_type = request.args.get('media_type', 'image')
-    try:
-        offset = int(request.args.get('offset', 0))
-    except ValueError:
-        offset = 0
-    batch_size = 12
-    media_list = get_media_from_folder(folder, media_type)
-    if media_type == "image":
-        random.seed(folder)
-        random.shuffle(media_list)
-    next_batch = get_media_batch(media_list, offset=offset, batch_size=batch_size)
-    return jsonify({'items': next_batch})
-
-# 4. 可选：自动列出所有画廊
-
-@index_bp.route('/galleries')
-def galleries_index():
-    base = os.path.join(BASE_DIR, 'Benlog', 'static', 'gallery')
-    if not os.path.isdir(base):
-        abort(404, description="画廊目录不存在")
-    folders = [
-        d for d in os.listdir(base)
-        if os.path.isdir(os.path.join(base, d))
-    ]
-    return render_template('galleries_index.html', folders=folders)
 
 
 
@@ -195,8 +33,6 @@ def galleries_index():
 
 
 
-
-####################################################################
 # 动态页面存放目录
 DYNAMIC_PAGES_FOLDER = 'Index/dynamic_pages'
 
@@ -331,22 +167,11 @@ def load_friend_links():
 def home():
     quick_links = load_quick_links()
     friend_links = load_friend_links()
-    # —— 新增：扫描所有 gallery 子文件夹 —— 
-    galleries_dir = os.path.join(BASE_DIR,'Benlog', 'static', 'gallery')
-    # 确保目录存在
-    if not os.path.isdir(galleries_dir):
-        os.makedirs(galleries_dir)  # Google: [Python os.makedirs](https://www.google.com/search?q=Python+os.makedirs)
-    # 列出所有子文件夹
-    galleries = [
-        d for d in os.listdir(galleries_dir)
-        if os.path.isdir(os.path.join(galleries_dir, d))
-    ]  # Google: [Python os.listdir](https://www.google.com/search?q=Python+os.listdir)
 
     return render_template(
         'index.html',
         quick_links=quick_links,
         friend_links=friend_links,
-        galleries=galleries,       # 把扫描结果传给模板
         title="首页"
     )
 
