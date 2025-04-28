@@ -12,7 +12,7 @@ from flask import (
     current_app, url_for, jsonify
 )
 from flask_login import login_required, current_user
-
+from werkzeug.utils import secure_filename
 from . import gallery_bp
 
 # 当前模块目录（Gallery 目录）
