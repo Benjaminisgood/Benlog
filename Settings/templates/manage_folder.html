@@ -20,10 +20,10 @@
       <div class="file-actions">
         <a href="{{ url_for('gallery.download_file', folder_name=folder_name, filename=file) }}" class="btn btn-download">下载</a>
         <button type="button" class="btn btn-rename" data-filename="{{ file }}" data-folder="{{ folder_name }}" onclick="showRenameModal(this)">重命名</button>
-        <button type="button" class="btn btn-copy-md" onclick="copyMarkdownLink('{{ url_for('static', filename='gallery/' + folder_name + '/' + file) }}', '{{ file }}')">复制 MD 链接</button>
-        <button type="button" class="btn btn-copy-html" onclick="copyHtmlLink('{{ url_for('static', filename='gallery/' + folder_name + '/' + file) }}', '{{ file }}')">复制 HTML 链接</button>
-        <button type="button" class="btn btn-copy-url" onclick="copyUrlLink('{{ url_for('static', filename='gallery/' + folder_name + '/' + file) }}')">复制 相对 URL</button>
-        <button type="button" class="btn btn-copy-web" onclick="copyWebLink('{{ url_for('static', filename='gallery/' + folder_name + '/' + file, _external=True) }}')">复制 Web 链接</button>
+        <button type="button" class="btn btn-copy-md" onclick="copyMarkdownLink('{{ url_for('gallery.static', filename=folder_name ~ '/' ~ file) }}', '{{ file }}')">复制 MD 链接</button>
+        <button type="button" class="btn btn-copy-html" onclick="copyHtmlLink('{{ url_for('gallery.static', filename=folder_name ~ '/' ~ file) }}', '{{ file }}')">复制 HTML 链接</button>
+        <button type="button" class="btn btn-copy-url" onclick="copyUrlLink('{{ url_for('gallery.static', filename=folder_name ~ '/' ~ file) }}')">复制 相对 URL</button>
+        <button type="button" class="btn btn-copy-web" onclick="copyWebLink('{{ url_for('gallery.static', filename=folder_name ~ '/' ~ file, _external=True) }}')">复制 Web 链接</button>
       </div>
     </div>
     {% endfor %}
