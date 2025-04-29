@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="viewer-container">
+  <h1 class="page-title">{{ filename }}</h1>
+
+  <div class="elements-container">
+    {% for elm in page_components %}
+      {% include 'partials/viewer/_' ~ elm.type ~ '.html' %}
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

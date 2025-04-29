@@ -1,0 +1,17 @@
+<style>
+.link-element {
+  margin-bottom: 1.5rem;
+}
+.link-element a {
+  color: var(--link-color);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+.link-element a:hover {
+  color: var(--text-color);
+}
+</style>
+<div class="link-element">
+  <a href="{{ elm.href }}" target="_blank">{{ elm.text or elm.href }}</a>
+</div>

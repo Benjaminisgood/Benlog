@@ -1,0 +1,340 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="editor-container">
+  <div class="editor-header">
+    <h1 class="page-heading">编辑页面：{{ page }}</h1>
+  </div>
+
+  <form method="POST" id="edit-page-form" class="edit-page-form">
+    <!-- 文件名输入 -->
+    <div class="form-group">
+      <label for="filename">文件名：</label>
+      <input id="filename"
+             name="filename"
+             type="text"
+             class="input-field"
+             required
+             value="{{ page }}">
+    </div>
+
+    <h3 class="section-heading">元素列表</h3>
+    <div id="elements-container">
+      {% for comp in page_components %}
+        {% set idx = loop.index %}
+        {% include 'partials/editor/_element_card.html' %}
+      {% endfor %}
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-add" onclick="add()">添加元素</button>
+      <input id="elements_count"
+             name="elements_count"
+             type="hidden"
+             value="{{ page_components|length }}">
+      <button type="submit" class="btn btn-save">保存更改</button>
+    </div>
+  </form>
+</div>
+
+<!-- 全局组件模板定义，仅需一次 -->
+<template id="tmpl-title">
+  <div class="control-group">
+    <label>标题内容：</label>
+    <input name="elements-__IDX__-content" type="text" class="input-field" placeholder="输入标题">
+  </div>
+</template>
+<template id="tmpl-text">
+  <div class="control-group">
+    <label>文本内容：</label>
+    <textarea name="elements-__IDX__-content" class="textarea-field" placeholder="输入文本"></textarea>
+  </div>
+</template>
+<template id="tmpl-link">
+  <div class="control-group">
+    <label>链接地址：</label>
+    <input name="elements-__IDX__-href" type="url" class="input-field" placeholder="https://...">
+  </div>
+  <div class="control-group">
+    <label>链接文本：</label>
+    <input name="elements-__IDX__-text" type="text" class="input-field" placeholder="显示文字">
+  </div>
+</template>
+<template id="tmpl-quote">
+  <div class="control-group">
+    <label>引用内容：</label>
+    <textarea name="elements-__IDX__-content" class="textarea-field" placeholder="输入引用"></textarea>
+  </div>
+</template>
+<template id="tmpl-code">
+  <div class="control-group">
+    <label>代码内容：</label>
+    <textarea name="elements-__IDX__-content" class="textarea-field" placeholder="输入代码"></textarea>
+  </div>
+  <div class="control-group">
+    <label>代码语言：</label>
+    <input name="elements-__IDX__-language" type="text" class="input-field" placeholder="例如 python">
+  </div>
+</template>
+<template id="tmpl-image">
+  <div class="control-group">
+    <label>图片URL：</label>
+    <input name="elements-__IDX__-src" type="text" class="input-field" placeholder="图片链接">
+  </div>
+  <div class="control-group">
+    <label>图片描述：</label>
+    <input name="elements-__IDX__-alt" type="text" class="input-field" placeholder="alt 文本">
+  </div>
+</template>
+<template id="tmpl-gallery">
+  <div class="control-group">
+    <label>图片列表 (逗号分隔)：</label>
+    <input name="elements-__IDX__-images" type="text" class="input-field" placeholder="url1,url2,...">
+  </div>
+</template>
+<template id="tmpl-flipcard">
+  <div class="control-group">
+    <label>正面：</label>
+    <input name="elements-__IDX__-front" type="text" class="input-field" placeholder="front">
+  </div>
+  <div class="control-group">
+    <label>背面：</label>
+    <input name="elements-__IDX__-back" type="text" class="input-field" placeholder="back">
+  </div>
+</template>
+<template id="tmpl-faq">
+  <div class="control-group">
+    <label>问题：</label>
+    <input name="elements-__IDX__-question" type="text" class="input-field" placeholder="问">
+  </div>
+  <div class="control-group">
+    <label>回答：</label>
+    <textarea name="elements-__IDX__-answer" class="textarea-field" placeholder="答"></textarea>
+  </div>
+</template>
+<template id="tmpl-html">
+  <div class="control-group">
+    <label>HTML 代码：</label>
+    <textarea name="elements-__IDX__-content" class="textarea-field" placeholder="原生 HTML"></textarea>
+  </div>
+</template>
+
+<script>
+function getTemplate(type, idx) {
+  const tpl = document.getElementById(`tmpl-${type}`);
+  return tpl ? tpl.innerHTML.replace(/__IDX__/g, idx) : '';
+}
+
+function toggleExtra(idx) {
+  const sel   = document.getElementsByName(`elements-${idx}-type`)[0];
+  const main  = document.getElementById(`main-${idx}`);
+  main.innerHTML = getTemplate(sel.value, idx);
+}
+
+function add() {
+  const container = document.getElementById('elements-container');
+  const idx = container.children.length + 1;
+  const card = document.createElement('div');
+  card.className = 'element-card';
+  card.dataset.index = idx;
+  card.innerHTML = `
+    <div class="control-group">
+      <label>类型：</label>
+      <select name="elements-${idx}-type" class="select-field" onchange="toggleExtra(${idx})">
+        <option value="title">title</option>
+        <option value="text">text</option>
+        <option value="link">link</option>
+        <option value="quote">quote</option>
+        <option value="code">code</option>
+        <option value="image">image</option>
+        <option value="gallery">gallery</option>
+        <option value="flipcard">flipcard</option>
+        <option value="faq">faq</option>
+        <option value="html">html</option>
+      </select>
+    </div>
+    <div class="control-group" id="main-${idx}"></div>
+    <div class="element-actions">
+      <button type="button" onclick="move(${idx}, 'up')">↑</button>
+      <button type="button" onclick="move(${idx}, 'down')">↓</button>
+      <button type="button" onclick="remove(${idx})">删除</button>
+    </div>`;
+  container.appendChild(card);
+  toggleExtra(idx);
+  updateCount();
+}
+
+function remove(idx) {
+  document.querySelector(`[data-index='${idx}']`).remove();
+  updateCount();
+}
+
+function move(idx, dir) {
+  const c = document.getElementById('elements-container');
+  const el = document.querySelector(`[data-index='${idx}']`);
+  const sib = dir==='up'? el.previousElementSibling: el.nextElementSibling;
+  if(sib) c.insertBefore(dir==='up'? el: sib, dir==='up'? sib: el);
+  updateCount();
+}
+
+function updateCount() {
+  document.getElementById('elements_count').value =
+    document.getElementById('elements-container').children.length;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.element-card').forEach((card, i) => toggleExtra(i+1));
+});
+</script>
+<style>
+.editor-container { 
+  max-width: 900px; 
+  margin: 2rem auto; 
+  padding: 1rem; 
+  background: var(--canvas-bg); 
+  border-radius: 8px; 
+}
+.editor-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 1.5rem; 
+}
+.page-heading { 
+  font-size: 1.8rem; 
+  color: var(--text-color); 
+  margin: 0; 
+}
+.btn-save-header { 
+  background: var(--btn-bg-color); 
+  color: var(--btn-text-color); 
+  border: none; 
+  padding: 0.5rem 1rem; 
+  border-radius: 4px; 
+}
+.btn-save-header:hover { 
+  background: var(--btn-hover-bg-color); 
+}
+.form-group, .control-group { 
+  margin-bottom: 1rem; 
+}
+label { 
+  display: block; 
+  margin-bottom: 0.3rem; 
+  color: var(--text-color); 
+}
+.input-field, .select-field, .textarea-field { 
+  width: 100%; 
+  padding: 0.6rem; 
+  border: 1px solid var(--input-border-color); 
+  border-radius: 6px; 
+  background: var(--input-bg-color); 
+  transition: border-color 0.3s; 
+}
+.input-field:focus, .select-field:focus, .textarea-field:focus { 
+  outline: none; 
+  border-color: var(--input-focus-border-color); 
+}
+.textarea-field { 
+  min-height: 100px; 
+  resize: vertical; 
+}
+.section-heading { 
+  margin: 1.5rem 0 0.5rem; 
+  font-size: 1.2rem; 
+  color: var(--text-color); 
+}
+.element-card { 
+  background: var(--card-bg-color); 
+  border: 1px solid var(--card-border-color); 
+  border-radius: 6px; 
+  padding: 1rem; 
+  margin-bottom: 1rem; 
+  transition: box-shadow 0.3s; 
+}
+.element-card:hover { 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+}
+.element-controls { 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 1rem; 
+}
+.element-actions { 
+  display: flex; 
+  gap: 0.5rem; 
+  flex-wrap: wrap; 
+}
+.btn { 
+  font-size: 0.9rem; 
+  padding: 0.4rem 0.8rem; 
+  border-radius: 4px; 
+  border: 1px solid transparent; 
+  cursor: pointer; 
+  transition: background-color 0.3s, color 0.3s; 
+}
+.btn-up, .btn-down { 
+  background: var(--quick-card-bg); 
+  color: var(--quick-label-color); 
+  border-color: var(--input-border-color); 
+}
+.btn-up:hover, .btn-down:hover { 
+  background: var(--quick-card-hover-bg); 
+  color: var(--text-color); 
+}
+.btn-delete { 
+  background: transparent; 
+  color: var(--btn-bg-color); 
+  border-color: var(--btn-bg-color); 
+}
+.btn-delete:hover { 
+  background: var(--btn-bg-color); 
+  color: var(--btn-text-color); 
+}
+.btn-add { 
+  background: var(--btn-bg-color); 
+  color: var(--btn-text-color); 
+  border: none; 
+  padding: 0.5rem 1rem; 
+  border-radius: 4px; 
+  margin-right: 1rem; 
+}
+.btn-add:hover { 
+  background: var(--btn-hover-bg-color); 
+}
+.btn-save { 
+  background: var(--btn-bg-color); 
+  color: var(--btn-text-color); 
+  border: none; 
+  padding: 0.8rem; 
+  border-radius: 4px; 
+}
+.btn-save:hover { 
+  background: var(--btn-hover-bg-color); 
+}
+
+.back-link {
+  display: block;
+  text-align: center;
+  margin-top: 20px;
+  color: var(--link-color);
+  text-decoration: none;
+  font-size: 1rem;
+  transition: color 0.3s ease;
+}
+.back-link:hover {
+  color: var(--text-color);
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .editor-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .element-controls {
+    flex-direction: column;
+  }
+}
+</style>
+{% endblock %}

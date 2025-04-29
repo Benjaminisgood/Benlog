@@ -33,58 +33,94 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 
 
-# 动态页面存放目录
-DYNAMIC_PAGES_FOLDER = 'Index/dynamic_pages'
 
-@index_bp.route('/<page>')
+DYNAMIC_PAGES_FOLDER = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), 'dynamic_pages')
+)
+if not os.path.exists(DYNAMIC_PAGES_FOLDER):
+    raise FileNotFoundError(f"目录 {DYNAMIC_PAGES_FOLDER} 不存在！")
+
+@index_bp.route('/<page>', methods=['GET'])
 def dynamic_page(page):
     """
-    统一处理静态页面与占位页面：
-    - 若 page 存在于 STATIC_PAGE_MAPPING，则返回对应静态模板
-    - 若 page 存在于 PLACEHOLDER_MAPPING，则返回通用占位模板 placeholder.html
-    - 若 page 存在于 dynamic_pages 文件夹的 JSON 文件，则渲染动态页面
-    - 否则返回 404
+    公共预览：读取 JSON，按数字键排序组装组件列表，
+    filename 退化为 URL 中的 page 参数
     """
-    # 1. 处理静态页面
-    STATIC_PAGE_MAPPING = {
-        "resume": ("resume.html", "Resume"),
-        "aboutme": ("aboutme.html", "About Me"),
-        "study": ("study.html", "课题方向"),
-        "interest": ("interest.html", "最近在做的事和兴趣"),
-    }
-    # 静态页面优先处理
-    if page in STATIC_PAGE_MAPPING:
-        template, title = STATIC_PAGE_MAPPING[page]
-        return render_template(template, title=title)
-
-    # 2. 处理占位页面
-    PLACEHOLDER_MAPPING = {
-        "message_board": "留言板",
-        "survey": "问卷调查",
-        "store": "个人商店",  
-        "consultation": "咨询预约",
-        "feedback": "意见反馈", 
-        "pdf_translate": "PDF 翻译",
-    }
-    if page in PLACEHOLDER_MAPPING:
-        feature_name = PLACEHOLDER_MAPPING[page]
-        return render_template('placeholder.html', title=feature_name, feature_name=feature_name)
-
-    # 3. 动态页面：拼路径，加载 JSON
     json_path = os.path.join(DYNAMIC_PAGES_FOLDER, f"{page}.json")
-    try:
-        with open(json_path, 'r', encoding='utf-8') as f:
-            page_data = json.load(f)
-    except FileNotFoundError:
-        abort(404, description="dynamic页面不存在")
-    except json.JSONDecodeError:
-        # JSON 解析错误，500
-        abort(500, description="页面数据错误")
+    if not os.path.exists(json_path):
+        abort(404, "页面未找到")
 
-    # 渲染动态页面模板
-    return render_template('dynamic_page.html', page_data=page_data)
-    
+    data = json.load(open(json_path, 'r', encoding='utf-8'))
+    # 取 filename，若无则用 URL 参数
+    filename = data.get('filename', page)
 
+    # 按数字键排序，构建页面组件列表
+    page_components = [
+        data[key] for key in sorted(
+            [k for k in data if k.isdigit()], key=lambda x: int(x)
+        )
+    ]
+
+    return render_template(
+        'dynamic_viewer.html',
+        filename=filename,
+        page_components=page_components
+    )
+
+@index_bp.route('/<page>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_dynamic_page(page):
+    """
+    管理员编辑：
+      GET  渲染编辑表单
+      POST 保存 JSON 并重定向（文件名可改）
+    """
+    json_path = os.path.join(DYNAMIC_PAGES_FOLDER, f"{page}.json")
+    if not os.path.exists(json_path):
+        abort(404, "页面不存在")
+
+    data = json.load(open(json_path, 'r', encoding='utf-8'))
+    # 组装组件列表
+    page_components = [
+        data[key] for key in sorted(
+            [k for k in data if k.isdigit()], key=lambda x: int(x)
+        )
+    ]
+    # 取 filename，若无则用 URL 参数
+    filename = data.get('filename', page)
+
+    if request.method == 'POST':
+        # 从表单读取新的文件名（可为空则保持不变）
+        new_filename = request.form['filename'].strip() or filename
+        data['filename'] = new_filename
+
+        # 重构 JSON，只保留 filename + 数字键组件
+        new_data = {'filename': new_filename}
+        count = int(request.form.get('elements_count', 0))
+        for i in range(1, count + 1):
+            prefix = f"elements-{i}-"
+            ctype = request.form.get(prefix + 'type')
+            if not ctype:
+                continue
+            comp = {'type': ctype}
+            for k, v in request.form.items():
+                if k.startswith(prefix) and k != prefix + 'type':
+                    field = k[len(prefix):]
+                    comp[field] = v.strip()
+            new_data[str(i)] = comp
+
+        # 写回 JSON
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(new_data, f, ensure_ascii=False, indent=4)
+        flash("页面已保存！", "success")
+        return redirect(url_for('index.dynamic_page', page=new_filename))
+
+    # GET 渲染编辑模板
+    return render_template(
+        'dynamic_editor.html',
+        page=filename,
+        page_components=page_components
+    )
 
 
 

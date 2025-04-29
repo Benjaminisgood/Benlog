@@ -1,3 +1,4 @@
+{# templates/manage_dynamic_pages.html #}
 {% extends 'base.html' %}
 {% block content %}
 <div class="dynamic-pages-container">
@@ -13,15 +14,23 @@
     {% for page in editable_pages %}
     <li class="page-card">
       <div class="page-info">
-        <span class="page-title">{{ page.title }}</span>
+        {# 显示文件名，而不是不存在的 title #}
+        <span class="page-title">{{ page.page_name }}</span>
       </div>
       <div class="action-buttons">
         <a href="{{ page.edit_url }}" class="btn btn-edit">编辑</a>
         <a href="{{ page.view_url }}" target="_blank" class="btn btn-view">查看</a>
-        <form action="{{ url_for('setting.delete_dynamic_page', page=page.page_name) }}" method="POST" class="inline-form" onsubmit="return confirm('确认删除页面 {{ page.title }} 吗？');">
+        <form action="{{ url_for('setting.delete_dynamic_page', page=page.page_name) }}"
+              method="POST"
+              class="inline-form"
+              onsubmit="return confirm('确认删除页面 {{ page.page_name }} 吗？');">
           <button type="submit" class="btn btn-delete">删除</button>
         </form>
-        <button type="button" class="btn btn-copy" onclick="copyLink('{{ url_for('index.dynamic_page', page=page.page_name, _external=True) }}')">拷贝链接</button>
+        <button type="button"
+                class="btn btn-copy"
+                onclick="copyLink('{{ page.view_url }}')">
+          拷贝链接
+        </button>
       </div>
     </li>
     {% else %}
@@ -29,16 +38,7 @@
     {% endfor %}
   </ul>
 </div>
-<!-- 
-<script>
-function copyLink(url) {
-  navigator.clipboard.writeText(url)
-    .then(() => alert('已复制页面链接：' + url))
-    .catch(err => alert('复制失败：' + err));
-}
-    http不可用，更现代的剪贴板API。
-</script>
--->
+
 <script>
 function copyLink(url) {
   const tempInput = document.createElement("input");
@@ -182,13 +182,13 @@ function copyLink(url) {
     display: block;
     text-align: center;
     margin-top: 20px;
-    color: var(--link-color); /* 使用全局链接颜色 */
+    color: var(--link-color);
     text-decoration: none;
     font-size: 1rem;
     transition: color 0.3s ease;
   }
 .back-link:hover {
-    color: var(--text-color); /* 悬停时使用全局文本颜色 */
+    color: var(--text-color);
     text-decoration: underline;
   }
 

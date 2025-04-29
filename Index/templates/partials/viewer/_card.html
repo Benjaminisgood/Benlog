@@ -1,0 +1,34 @@
+<style>
+    .card {
+      background: var(--card-bg-color);
+      border: 1px solid var(--card-border-color);
+      border-radius: 6px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .card-title {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .card-excerpt {
+      font-size: 1rem;
+      color: var(--meta-text-color);
+    }
+    .card-link {
+      display: inline-block;
+      margin-top: 0.5rem;
+      color: var(--link-color);
+      text-decoration: none;
+    }
+    .card-link:hover {
+      color: var(--text-color);
+    }
+    </style>
+    <div class="card">
+      <h2 class="card-title">{{ title }}</h2>
+      {% if image %}
+        <img src="{{ image }}" alt="{{ title }}" class="card-img">
+      {% endif %}
+      <p class="card-excerpt">{{ excerpt }}</p>
+      <a href="{{ url }}" class="card-link">Read more</a>
+    </div>

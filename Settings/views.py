@@ -371,218 +371,111 @@ def delete_folder(folder_name):
 #BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 #DYNAMIC_PAGES_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'Index', 'dynamic_pages')
 #DYNAMIC_PAGES_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'Index', 'dynamic_pages')
-DYNAMIC_PAGES_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'Index', 'dynamic_pages')
-DYNAMIC_PAGES_FOLDER = os.path.abspath(DYNAMIC_PAGES_FOLDER)
+# 动态页面 JSON 文件所在目录
+DYNAMIC_PAGES_FOLDER = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '..', 'Index', 'dynamic_pages')
+)
 if not os.path.exists(DYNAMIC_PAGES_FOLDER):
     raise FileNotFoundError(f"目录 {DYNAMIC_PAGES_FOLDER} 不存在！")
 
-# 管理动态页面的路由
+DYNAMIC_PAGES_FOLDER = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '..', 'Index', 'dynamic_pages')
+)
+if not os.path.exists(DYNAMIC_PAGES_FOLDER):
+    raise FileNotFoundError(f"目录 {DYNAMIC_PAGES_FOLDER} 不存在！")
+
 @setting_bp.route('/manage_dynamic_page', methods=['GET'])
 @login_required
 def manage_dynamic_page():
     """
-    读取 dynamic_pages 目录中的所有 JSON 文件，并为每个页面生成编辑链接。
+    列出 dynamic_pages 目录下的所有 JSON 页面，
+    并生成：
+      - edit_url: 跳转至 index 蓝图的编辑界面
+      - view_url: 跳转至 index 蓝图的预览界面
     """
     editable_pages = []
-
-    # 确保目录存在并打印文件列表
     for filename in os.listdir(DYNAMIC_PAGES_FOLDER):
-        if filename.endswith('.json'):
-            page_name = filename.rsplit('.', 1)[0]
-            page_data = None
-
-            try:
-                # 读取每个 JSON 文件，加载页面数据
-                with open(os.path.join(DYNAMIC_PAGES_FOLDER, filename), 'r', encoding='utf-8') as file:
-                    page_data = json.load(file)
-            except Exception as e:
-                continue
-
-            if page_data:
-                editable_pages.append({
-                    'page_name': page_name,
-                    'title': page_data.get('title', '无标题'),
-                    'edit_url': url_for('setting.edit_dynamic_page', page=page_name),  
-                    'view_url': url_for('index.dynamic_page',        page=page_name,  _external=True)
-                })
-
-    if not editable_pages:
-        print("没有可编辑的页面。")
-
+        if not filename.endswith('.json'):
+            continue
+        page = filename[:-5]
+        path = os.path.join(DYNAMIC_PAGES_FOLDER, filename)
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        except Exception:
+            continue
+        editable_pages.append({
+            'page_name': page,
+            'edit_url': url_for('index.edit_dynamic_page', page=page),
+            'view_url': url_for('index.dynamic_page',    page=page, _external=True)
+        })
     return render_template('manage_dynamic_pages.html', editable_pages=editable_pages)
-
-if not os.path.exists(DYNAMIC_PAGES_FOLDER):
-    os.makedirs(DYNAMIC_PAGES_FOLDER)
-
 
 @setting_bp.route('/<page>/delete', methods=['POST'])
 @login_required
 def delete_dynamic_page(page):
-    # 仅管理员或 user.id==1 可以删除
+    """
+    删除 JSON 页面文件，仅管理员或 id==1 用户可操作
+    """
     if not (current_user.is_admin or current_user.id == 1):
         abort(403)
-
     file_path = os.path.join(DYNAMIC_PAGES_FOLDER, f"{page}.json")
     if os.path.exists(file_path):
         try:
             os.remove(file_path)
-            flash(f'页面 “{page}” 已删除！', 'success')
+            flash(f'页面 "{page}" 已删除！', 'success')
         except Exception as e:
             flash(f'删除失败：{e}', 'danger')
     else:
         flash('页面不存在或已被删除', 'warning')
-
     return redirect(url_for('setting.manage_dynamic_page'))
-
-
-
-@setting_bp.route('/<page>/edit', methods=['GET', 'POST'])
-@login_required
-def edit_dynamic_page(page):
-    # 权限检查：仅管理员或 user.id==1 可编辑
-    if not (current_user.is_admin or current_user.id == 1):
-        abort(403)
-
-    json_path = os.path.join(DYNAMIC_PAGES_FOLDER, f"{page}.json")
-    # 读取现有 JSON
-    try:
-        with open(json_path, 'r', encoding='utf-8') as f:
-            page_data = json.load(f)
-    except FileNotFoundError:
-        abort(404, description="dynamic页面不存在")
-    except json.JSONDecodeError:
-        abort(500, description="页面数据错误")
-
-    if request.method == 'POST':
-        # 更新 title 和 content
-        title = request.form.get('title', '').strip()
-        content = request.form.get('content', '').strip()
-
-        # 处理文件名变更
-        if title and title != page:
-            safe = re.sub(r'[^0-9A-Za-z_-]', '_', title)
-            new_path = os.path.join(DYNAMIC_PAGES_FOLDER, f"{safe}.json")
-            if os.path.exists(new_path):
-                flash("目标文件名已存在，请换一个", "danger")
-                return redirect(url_for('setting.edit_dynamic_page', page=page))
-            os.rename(json_path, new_path)
-            page = safe
-            json_path = new_path
-
-        # 重组 page_data
-        page_data['title'] = title
-        page_data['content'] = content
-
-        # 重建组件列表
-        new_components = [
-            {'type': 'title', 'content': title},
-            {'type': 'content', 'content': content}
-        ]
-        count = int(request.form.get('elements_count', 0))
-        for idx in range(count):
-            ctype = request.form.get(f'elements-{idx}-type')
-            if not ctype:
-                continue
-            # 不同模块字段收集
-            if ctype == 'text':
-                text = request.form.get(f'elements-{idx}-content', '').strip()
-                new_components.append({'type': 'text', 'content': text})
-            elif ctype == 'image':
-                src = request.form.get(f'elements-{idx}-src', '').strip()
-                caption = request.form.get(f'elements-{idx}-content', '').strip()
-                new_components.append({'type': 'image', 'src': src, 'content': caption})
-            elif ctype == 'link':
-                href = request.form.get(f'elements-{idx}-href', '').strip()
-                text = request.form.get(f'elements-{idx}-content', '').strip() or href
-                new_components.append({'type': 'link', 'href': href, 'text': text})
-            elif ctype == 'quote':
-                quote = request.form.get(f'elements-{idx}-content', '').strip()
-                new_components.append({'type': 'quote', 'content': quote})
-            elif ctype == 'code':
-                code = request.form.get(f'elements-{idx}-code', '').strip()
-                new_components.append({'type': 'code', 'content': code})
-            elif ctype == 'html':
-                html = request.form.get(f'elements-{idx}-html', '').strip()
-                new_components.append({'type': 'html', 'content': html})
-            elif ctype == 'gallery':
-                imgs = request.form.get(f'elements-{idx}-images', '')
-                images = [u.strip() for u in imgs.split(',') if u.strip()]
-                new_components.append({'type': 'gallery', 'images': images})
-            elif ctype == 'flipcard':
-                front = request.form.get(f'elements-{idx}-front', '').strip()
-                back = request.form.get(f'elements-{idx}-back', '').strip()
-                new_components.append({'type': 'flipcard', 'front': front, 'back': back})
-            elif ctype == 'faq':
-                question = request.form.get(f'elements-{idx}-question', '').strip()
-                answer = request.form.get(f'elements-{idx}-answer', '').strip()
-                new_components.append({'type': 'faq', 'question': question, 'answer': answer})
-            else:
-                # fallback
-                val = request.form.get(f'elements-{idx}-content', '').strip()
-                new_components.append({'type': ctype, 'content': val})
-
-        page_data['components'] = new_components
-
-        # 保存回 JSON
-        try:
-            with open(json_path, 'w', encoding='utf-8') as f:
-                json.dump(page_data, f, ensure_ascii=False, indent=4)
-            flash(f"页面 “{title}” 更新成功！", 'success')
-        except Exception as e:
-            flash(f"保存失败：{e}", 'danger')
-
-        return redirect(url_for('index.dynamic_page', page=page))
-
-    # GET 渲染
-    return render_template('edit_dynamic_page.html', page=page, page_data=page_data)
 
 @setting_bp.route('/new_dynamic_page', methods=['GET', 'POST'])
 @login_required
 def new_dynamic_page():
-    # 权限检查
+    """
+    创建新动态页面：
+      GET  渲染文件名输入表单
+      POST 使用 filename 生成初始 JSON 并跳转到编辑
+    """
     if not (current_user.is_admin or current_user.id == 1):
         abort(403)
 
     if request.method == 'GET':
-        # 显示让用户输入“文件名”的表单
+        # 仅显示一个让用户输入 filename（不包含 .json）的表单
         return render_template('new_dynamic_page.html')
 
-    # POST：从表单读取 title 并创建 JSON
-    title = request.form.get('title', '').strip()
-    if not title:
+    # POST：读取 filename 字段
+    filename_input = request.form.get('filename', '').strip()
+    if not filename_input:
         flash("文件名不能为空", 'danger')
         return redirect(url_for('setting.new_dynamic_page'))
 
-    # 简单清洗，保证文件系统安全
-    safe = re.sub(r'[^0-9A-Za-z_-]', '_', title)
-    filename = f"{safe}.json"
-    fullpath = os.path.join(DYNAMIC_PAGES_FOLDER, filename)
+    # 清洗为安全文件名（不含扩展名）
+    safe = re.sub(r'[^0-9A-Za-z_-]', '_', filename_input)
+    json_filename = f"{safe}.json"
+    full_path = os.path.join(DYNAMIC_PAGES_FOLDER, json_filename)
 
-    if os.path.exists(fullpath):
+    if os.path.exists(full_path):
         flash("该文件名已存在，请换一个", 'danger')
         return redirect(url_for('setting.new_dynamic_page'))
 
-    # 构造初始内容
-    new_page_data = {
-        'title':   title,
-        'content': '这里输入页面主内容…',
-        'components': []
+    # 初始 JSON 只需 filename 顶级字段，组件由编辑器中添加
+    initial_data = {
+        "filename": safe
     }
 
-    # 确保目录存在
-    os.makedirs(DYNAMIC_PAGES_FOLDER, exist_ok=True)
-
     try:
-        with open(fullpath, 'w', encoding='utf-8') as f:
-            json.dump(new_page_data, f, ensure_ascii=False, indent=4)
-        flash(f'新建页面 “{title}” 成功！', 'success')
+        os.makedirs(DYNAMIC_PAGES_FOLDER, exist_ok=True)
+        with open(full_path, 'w', encoding='utf-8') as f:
+            json.dump(initial_data, f, ensure_ascii=False, indent=4)
+        flash(f'新建页面 "{safe}" 成功！', 'success')
     except Exception as e:
         flash(f'新建页面失败：{e}', 'danger')
         return redirect(url_for('setting.new_dynamic_page'))
 
-    # 创建完毕后，跳转到编辑该页面，以便添加组件
-    return redirect(url_for('setting.edit_dynamic_page', page=safe))
-
+    # 跳转到编辑路由，由编辑器负责后续组件添加
+    return redirect(url_for('index.edit_dynamic_page', page=safe))
 
 
 

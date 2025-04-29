@@ -1,3 +1,4 @@
+{# templates/new_dynamic_page.html #}
 {% extends 'base.html' %}
 {% block content %}
 <div class="new-page-container">
@@ -6,10 +7,16 @@
   </div>
   <form method="POST" id="new-page-form" class="new-page-form" novalidate>
     <div class="form-group">
-      <label for="title">页面文件名（title）：</label>
-      <input id="title" name="title" type="text" class="input-field" placeholder="仅限字母、数字、下划线和短横线" pattern="^[A-Za-z0-9_-]+$" required>
+      <label for="filename">页面文件名（filename）：</label>
+      <input id="filename"
+             name="filename"
+             type="text"
+             class="input-field"
+             placeholder="仅限字母、数字、下划线和短横线"
+             pattern="^[A-Za-z0-9_-]+$"
+             required>
       <small class="hint">示例: my_page-1</small>
-      <div class="error-message" id="title-error">文件名格式不正确。</div>
+      <div class="error-message" id="filename-error">文件名格式不正确。</div>
     </div>
     <div class="form-actions">
       <button type="submit" class="btn btn-save">创建并编辑</button>
@@ -22,19 +29,19 @@
 // 客户端验证文件名格式
 (function() {
   const form = document.getElementById('new-page-form');
-  const titleInput = document.getElementById('title');
-  const errorDiv = document.getElementById('title-error');
+  const filenameInput = document.getElementById('filename');
+  const errorDiv = document.getElementById('filename-error');
 
-  titleInput.addEventListener('input', () => {
-    const valid = titleInput.checkValidity();
+  filenameInput.addEventListener('input', () => {
+    const valid = filenameInput.checkValidity();
     errorDiv.style.display = valid ? 'none' : 'block';
   });
 
   form.addEventListener('submit', (e) => {
-    if (!titleInput.checkValidity()) {
+    if (!filenameInput.checkValidity()) {
       e.preventDefault();
       errorDiv.style.display = 'block';
-      titleInput.focus();
+      filenameInput.focus();
     }
   });
 })();
