@@ -9,4 +9,4 @@ include Index/templates/*
 include Index/dynamic_pages/*
 include Neibr/templates/*
 include Settings/templates/*
-include Index/templates/partials/*
+include Index/templates/partials/**/*
