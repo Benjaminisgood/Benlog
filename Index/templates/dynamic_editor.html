@@ -6,9 +6,9 @@
   </div>
 
   <form method="POST" id="edit-page-form" class="edit-page-form">
-    <!-- 文件名输入 -->
+    <!-- 文件名输入：保证 POST 时 request.form['filename'] 存在 -->
     <div class="form-group">
-      <label for="filename">文件名：</label>
+      <label for="filename">文件名（不含 .json）：</label>
       <input id="filename"
              name="filename"
              type="text"
@@ -16,6 +16,9 @@
              required
              value="{{ page }}">
     </div>
+
+    <!-- 隐藏组件数量，后端遍历时使用 -->
+    <input id="elements_count" name="elements_count" type="hidden" value="{{ page_components|length }}">
 
     <h3 class="section-heading">元素列表</h3>
     <div id="elements-container">
@@ -27,109 +30,29 @@
 
     <div class="form-actions">
       <button type="button" class="btn btn-add" onclick="add()">添加元素</button>
-      <input id="elements_count"
-             name="elements_count"
-             type="hidden"
-             value="{{ page_components|length }}">
       <button type="submit" class="btn btn-save">保存更改</button>
     </div>
   </form>
 </div>
 
-<!-- 全局组件模板定义，仅需一次 -->
-<template id="tmpl-title">
-  <div class="control-group">
-    <label>标题内容：</label>
-    <input name="elements-__IDX__-content" type="text" class="input-field" placeholder="输入标题">
-  </div>
-</template>
-<template id="tmpl-text">
-  <div class="control-group">
-    <label>文本内容：</label>
-    <textarea name="elements-__IDX__-content" class="textarea-field" placeholder="输入文本"></textarea>
-  </div>
-</template>
-<template id="tmpl-link">
-  <div class="control-group">
-    <label>链接地址：</label>
-    <input name="elements-__IDX__-href" type="url" class="input-field" placeholder="https://...">
-  </div>
-  <div class="control-group">
-    <label>链接文本：</label>
-    <input name="elements-__IDX__-text" type="text" class="input-field" placeholder="显示文字">
-  </div>
-</template>
-<template id="tmpl-quote">
-  <div class="control-group">
-    <label>引用内容：</label>
-    <textarea name="elements-__IDX__-content" class="textarea-field" placeholder="输入引用"></textarea>
-  </div>
-</template>
-<template id="tmpl-code">
-  <div class="control-group">
-    <label>代码内容：</label>
-    <textarea name="elements-__IDX__-content" class="textarea-field" placeholder="输入代码"></textarea>
-  </div>
-  <div class="control-group">
-    <label>代码语言：</label>
-    <input name="elements-__IDX__-language" type="text" class="input-field" placeholder="例如 python">
-  </div>
-</template>
-<template id="tmpl-image">
-  <div class="control-group">
-    <label>图片URL：</label>
-    <input name="elements-__IDX__-src" type="text" class="input-field" placeholder="图片链接">
-  </div>
-  <div class="control-group">
-    <label>图片描述：</label>
-    <input name="elements-__IDX__-alt" type="text" class="input-field" placeholder="alt 文本">
-  </div>
-</template>
-<template id="tmpl-gallery">
-  <div class="control-group">
-    <label>图片列表 (逗号分隔)：</label>
-    <input name="elements-__IDX__-images" type="text" class="input-field" placeholder="url1,url2,...">
-  </div>
-</template>
-<template id="tmpl-flipcard">
-  <div class="control-group">
-    <label>正面：</label>
-    <input name="elements-__IDX__-front" type="text" class="input-field" placeholder="front">
-  </div>
-  <div class="control-group">
-    <label>背面：</label>
-    <input name="elements-__IDX__-back" type="text" class="input-field" placeholder="back">
-  </div>
-</template>
-<template id="tmpl-faq">
-  <div class="control-group">
-    <label>问题：</label>
-    <input name="elements-__IDX__-question" type="text" class="input-field" placeholder="问">
-  </div>
-  <div class="control-group">
-    <label>回答：</label>
-    <textarea name="elements-__IDX__-answer" class="textarea-field" placeholder="答"></textarea>
-  </div>
-</template>
-<template id="tmpl-html">
-  <div class="control-group">
-    <label>HTML 代码：</label>
-    <textarea name="elements-__IDX__-content" class="textarea-field" placeholder="原生 HTML"></textarea>
-  </div>
-</template>
+{# 编辑器模板片段：只需一次，放在主模板里 #}
+{% include 'partials/editor/_editor_templates.html' %}
 
 <script>
+// 克隆 <template> 并替换占位符 __IDX__
 function getTemplate(type, idx) {
   const tpl = document.getElementById(`tmpl-${type}`);
   return tpl ? tpl.innerHTML.replace(/__IDX__/g, idx) : '';
 }
 
+// 根据选择的类型渲染对应输入区（只针对新添加或类型切换）
 function toggleExtra(idx) {
   const sel   = document.getElementsByName(`elements-${idx}-type`)[0];
   const main  = document.getElementById(`main-${idx}`);
   main.innerHTML = getTemplate(sel.value, idx);
 }
 
+// 添加新元素卡片
 function add() {
   const container = document.getElementById('elements-container');
   const idx = container.children.length + 1;
@@ -140,51 +63,70 @@ function add() {
     <div class="control-group">
       <label>类型：</label>
       <select name="elements-${idx}-type" class="select-field" onchange="toggleExtra(${idx})">
-        <option value="title">title</option>
-        <option value="text">text</option>
-        <option value="link">link</option>
-        <option value="quote">quote</option>
-        <option value="code">code</option>
-        <option value="image">image</option>
-        <option value="gallery">gallery</option>
-        <option value="flipcard">flipcard</option>
-        <option value="faq">faq</option>
-        <option value="html">html</option>
+        {% for opt in ['title','text','link','quote','code','image','gallery','flipcard','faq','html'] %}
+        <option value="{{ opt }}">{{ opt }}</option>
+        {% endfor %}
       </select>
     </div>
-    <div class="control-group" id="main-${idx}"></div>
+    <div id="main-${idx}" class="control-group"></div>
     <div class="element-actions">
-      <button type="button" onclick="move(${idx}, 'up')">↑</button>
-      <button type="button" onclick="move(${idx}, 'down')">↓</button>
+      <button type="button" onclick="move(${idx}, 'up')">↑ 上移</button>
+      <button type="button" onclick="move(${idx}, 'down')">↓ 下移</button>
       <button type="button" onclick="remove(${idx})">删除</button>
     </div>`;
   container.appendChild(card);
   toggleExtra(idx);
-  updateCount();
+  document.getElementById('elements_count').value = container.children.length;
 }
 
+// 删除指定卡片
 function remove(idx) {
-  document.querySelector(`[data-index='${idx}']`).remove();
-  updateCount();
-}
-
-function move(idx, dir) {
-  const c = document.getElementById('elements-container');
   const el = document.querySelector(`[data-index='${idx}']`);
-  const sib = dir==='up'? el.previousElementSibling: el.nextElementSibling;
-  if(sib) c.insertBefore(dir==='up'? el: sib, dir==='up'? sib: el);
-  updateCount();
+  if (el) el.remove();
+  document.getElementById('elements_count').value = document.getElementById('elements-container').children.length;
 }
 
-function updateCount() {
-  document.getElementById('elements_count').value =
-    document.getElementById('elements-container').children.length;
+// 上移/下移操作
+function move(idx, dir) {
+  const c  = document.getElementById('elements-container');
+  const el = document.querySelector(`[data-index='${idx}']`);
+  const sib = dir==='up' ? el.previousElementSibling : el.nextElementSibling;
+  if (sib) {
+    c.insertBefore(dir==='up' ? el : sib,
+                   dir==='up' ? sib : el);
+  }
+  document.getElementById('elements_count').value = c.children.length;
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.element-card').forEach((card, i) => toggleExtra(i+1));
-});
 </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <style>
 .editor-container { 
   max-width: 900px; 
