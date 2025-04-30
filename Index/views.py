@@ -39,8 +39,8 @@ DYNAMIC_PAGES_FOLDER = os.path.abspath(
     os.path.join(os.path.dirname(__file__), 'dynamic_pages')
 )
 if not os.path.exists(DYNAMIC_PAGES_FOLDER):
-    raise FileNotFoundError(f"目录 {DYNAMIC_PAGES_FOLDER} 不存在！")
-
+    os.makedirs(DYNAMIC_PAGES_FOLDER)
+    
 @index_bp.route('/<page>', methods=['GET'])
 def dynamic_page(page):
     """

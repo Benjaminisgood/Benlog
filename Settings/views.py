@@ -375,15 +375,19 @@ def delete_folder(folder_name):
 DYNAMIC_PAGES_FOLDER = os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..', 'Index', 'dynamic_pages')
 )
+#if not os.path.exists(DYNAMIC_PAGES_FOLDER):
+#    raise FileNotFoundError(f"目录 {DYNAMIC_PAGES_FOLDER} 不存在！")
 if not os.path.exists(DYNAMIC_PAGES_FOLDER):
-    raise FileNotFoundError(f"目录 {DYNAMIC_PAGES_FOLDER} 不存在！")
+    os.makedirs(DYNAMIC_PAGES_FOLDER)
 
 DYNAMIC_PAGES_FOLDER = os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..', 'Index', 'dynamic_pages')
 )
+#if not os.path.exists(DYNAMIC_PAGES_FOLDER):
+#    raise FileNotFoundError(f"目录 {DYNAMIC_PAGES_FOLDER} 不存在！")
 if not os.path.exists(DYNAMIC_PAGES_FOLDER):
-    raise FileNotFoundError(f"目录 {DYNAMIC_PAGES_FOLDER} 不存在！")
-
+    os.makedirs(DYNAMIC_PAGES_FOLDER)
+    
 @setting_bp.route('/manage_dynamic_page', methods=['GET'])
 @login_required
 def manage_dynamic_page():
