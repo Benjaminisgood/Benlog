@@ -89,13 +89,13 @@ def create_post():
 
         db.session.commit()
         flash('帖子创建成功。', 'create_post')
-        return redirect(url_for('neibr.post_detail', post_id=post.id))
+        return redirect(url_for('neibr.post_detail', title=post.title))
     
     return render_template('create_post.html', title='创建帖子')
 
-@neibr_bp.route('/post/<int:post_id>', methods=['GET', 'POST'])
+@neibr_bp.route('/post/<string:title>', methods=['GET', 'POST'])
 @login_required
-def post_detail(post_id):
+def post_detail(title):
     """
     显示特定帖子的详情，包括文案、多媒体文件、导航链接和评论。
     参数：
@@ -103,7 +103,7 @@ def post_detail(post_id):
     返回值：
         渲染 post_detail.html 模板，传入帖子数据。
     """
-    post = Post.query.get_or_404(post_id)
+    post = Post.query.filter_by(title=title).first_or_404()
     user_id = post.user_id
 
     # 构建帖子文件夹路径：static/neibr/user_id/post_id
@@ -144,7 +144,7 @@ def post_detail(post_id):
             yaml.safe_dump(comments, f)
 
         flash('评论已提交！', 'success')
-        return redirect(url_for('neibr.post_detail', post_id=post_id))
+        return redirect(url_for('neibr.post_detail', title=post.title))
 
     return render_template(
         'post_detail.html',
@@ -155,10 +155,10 @@ def post_detail(post_id):
         previous_post=previous_post,
         next_post=next_post
     )
-@neibr_bp.route('/edit_post/<int:post_id>', methods=['GET', 'POST'])
+@neibr_bp.route('/edit_post/<string:title>', methods=['GET', 'POST'])
 @login_required
-def edit_post(post_id):
-    post = Post.query.get_or_404(post_id)
+def edit_post(title):
+    post = Post.query.filter_by(title=title).first_or_404()
 
     # 确保当前用户是帖子作者
     if post.user_id != current_user.id:
@@ -198,7 +198,7 @@ def edit_post(post_id):
 
         db.session.commit()
         flash('帖子已更新。', 'success')
-        return redirect(url_for('neibr.post_detail', post_id=post.id))
+        return redirect(url_for('neibr.post_detail', title=post.title))
 
     # 读取帖子文案
     folder_path = os.path.join(UPLOAD_BASE_PATH, str(current_user.id), str(post.id))

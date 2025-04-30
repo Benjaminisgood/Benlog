@@ -8,3 +8,4 @@ gunicorn
 requests
 pymdown-extensions
 openai
+python-slugify

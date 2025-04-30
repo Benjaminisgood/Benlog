@@ -55,7 +55,7 @@
 
   <div class="nav-links">
     {% if previous_post %}
-      <a href="{{ url_for('neibr.post_detail', post_id=previous_post.id) }}">← 上一条</a>
+      <a href="{{ url_for('neibr.post_detail', title=previous_post.title) }}">← 上一条</a>
     {% else %}
       <div></div>
     {% endif %}
@@ -63,7 +63,7 @@
     <a href="javascript:void(0);" onclick="toggleCommentBox()">评论</a>
 
     {% if next_post %}
-      <a href="{{ url_for('neibr.post_detail', post_id=next_post.id) }}">下一条 →</a>
+      <a href="{{ url_for('neibr.post_detail', title=next_post.title) }}">下一条 →</a>
     {% endif %}
   </div>
 </div>

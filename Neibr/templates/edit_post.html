@@ -75,7 +75,7 @@
     <!-- 提交按钮 -->
     <div class="form-group button-group">
       <button type="submit" class="btn btn-primary">保存更改</button>
-      <a href="{{ url_for('neibr.post_detail', post_id=post.id) }}" class="btn btn-secondary">取消</a>
+      <a href="{{ url_for('neibr.post_detail', title=post.title) }}" class="btn btn-secondary">取消</a>
     </div>
   </form>
 </div>

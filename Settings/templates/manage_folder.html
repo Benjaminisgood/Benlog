@@ -66,67 +66,159 @@
 
 <!-- Scripts -->
 <script>
-// Dropzone initialization
-Dropzone.options.myDropzone = {
-  paramName: 'file', maxFilesize: 2, dictDefaultMessage: '拖拽文件到此处或点击上传',
-  addRemoveLinks: true, autoProcessQueue: true, acceptedFiles: '.jpg,.png,.gif,.pdf',
-  init: function() { this.on('success', file => console.log('上传成功：', file)); }
-};
+  // ---------------- Dropzone initialization ----------------
+  Dropzone.options.myDropzone = {
+    paramName: 'file',
+    maxFilesize: 2,
+    dictDefaultMessage: '拖拽文件到此处或点击上传',
+    addRemoveLinks: true,
+    autoProcessQueue: true,
+    acceptedFiles: '.jpg,.png,.gif,.pdf',
+    init: function() {
+      this.on('success', file => console.log('上传成功：', file));
+    }
+  };
 
-// Copy Markdown link
-function copyMarkdownLink(url, file) {
-  let md;
-  if (file.match(/\.(jpg|jpeg|png|gif)$/i)) md = `![${file}](${url})`;
-  else if (file.match(/\.(mp3|wav|ogg|m4a)$/i)) md = `<audio controls src="${url}" title="${file}"></audio>`;
-  else if (file.match(/\.(mp4|mov|avi|wmv)$/i)) md = `<video controls src="${url}" title="${file}"></video>`;
-  else md = `[${file}](${url})`;
-  navigator.clipboard.writeText(md).then(()=>alert('已复制 Markdown 链接')).catch(e=>alert('复制失败：'+e));
-}
-
-// Copy HTML link
-function copyHtmlLink(url, file) {
-  let html;
-  if (file.match(/\.(jpg|jpeg|png|gif)$/i)) html = `<img src="${url}" alt="${file}" />`;
-  else if (file.match(/\.(mp3|wav|ogg|m4a)$/i)) html = `<audio controls src="${url}" title="${file}"></audio>`;
-  else if (file.match(/\.(mp4|mov|avi|wmv)$/i)) html = `<video controls src="${url}" title="${file}"></video>`;
-  else html = `<a href="${url}">${file}</a>`;
-  navigator.clipboard.writeText(html).then(()=>alert('已复制 HTML 链接')).catch(e=>alert('复制失败：'+e));
-}
-
-// Copy relative URL link
-//function copyUrlLink(url) {
-//  navigator.clipboard.writeText(url)
-//    .then(()=>alert('已复制 相对 URL：' + url))
-//    .catch(e=>alert('复制失败：'+e));
-//}
-function copyUrlLink(url) {
-  const tempInput = document.createElement("input");
-  tempInput.value = url;
-  document.body.appendChild(tempInput);
-  tempInput.select();
-  try {
-    document.execCommand("copy");
-    alert('已复制页面链接：' + url);
-  } catch (err) {
-    alert('复制失败：' + err);
+  /* --- 原始 copyMarkdownLink 函数 ---
+  function copyMarkdownLink(url, file) {
+    let md;
+    if (file.match(/\.(jpg|jpeg|png|gif)$/i)) md = `![${file}](${url})`;
+    else if (file.match(/\.(mp3|wav|ogg|m4a)$/i)) md = `<audio controls src="${url}" title="${file}"></audio>`;
+    else if (file.match(/\.(mp4|mov|avi|wmv)$/i)) md = `<video controls src="${url}" title="${file}"></video>`;
+    else md = `[${file}](${url})`;
+    navigator.clipboard.writeText(md)
+      .then(() => alert('已复制 Markdown 链接'))
+      .catch(e => alert('复制失败：' + e));
   }
-  document.body.removeChild(tempInput);
-}
-// Copy external Web link
-function copyWebLink(url) {
-  navigator.clipboard.writeText(url)
-    .then(()=>alert('已复制 Web 链接：' + url))
-    .catch(e=>alert('复制失败：'+e));
-}
+  */
 
-// Rename modal functions
-function showRenameModal(btn) {
-  const old = btn.dataset.filename;
-  document.getElementById('old-filename').value = old;
-  document.getElementById('new-filename').value = old;
-  document.getElementById('rename-modal').classList.remove('hidden');
-}
-function closeRenameModal() { document.getElementById('rename-modal').classList.add('hidden'); }
+  // 改进版 copyMarkdownLink
+  function copyMarkdownLink(url, file) {
+    let md;
+    if (/\.(jpe?g|png|gif)$/i.test(file)) {
+      md = `![${file}](${url})`;
+    } else if (/\.(mp3|wav|ogg|m4a)$/i.test(file)) {
+      md = `<audio controls src="${url}" title="${file}"></audio>`;
+    } else if (/\.(mp4|mov|avi|wmv)$/i.test(file)) {
+      md = `<video controls src="${url}" title="${file}"></video>`;
+    } else {
+      md = `[${file}](${url})`;
+    }
+    copyText(md, 'Markdown 链接');
+  }
+
+  /* --- 原始 copyHtmlLink 函数 ---
+  function copyHtmlLink(url, file) {
+    let html;
+    if (file.match(/\.(jpg|jpeg|png|gif)$/i)) html = `<img src="${url}" alt="${file}" />`;
+    else if (file.match(/\.(mp3|wav|ogg|m4a)$/i)) html = `<audio controls src="${url}" title="${file}"></audio>`;
+    else if (file.match(/\.(mp4|mov|avi|wmv)$/i)) html = `<video controls src="${url}" title="${file}"></video>`;
+    else html = `<a href="${url}">${file}</a>`;
+    navigator.clipboard.writeText(html)
+      .then(() => alert('已复制 HTML 链接'))
+      .catch(e => alert('复制失败：' + e));
+  }
+  */
+
+  // 改进版 copyHtmlLink
+  function copyHtmlLink(url, file) {
+    let html;
+    if (/\.(jpe?g|png|gif)$/i.test(file)) {
+      html = `<img src="${url}" alt="${file}" />`;
+    } else if (/\.(mp3|wav|ogg|m4a)$/i.test(file)) {
+      html = `<audio controls src="${url}" title="${file}"></audio>`;
+    } else if (/\.(mp4|mov|avi|wmv)$/i.test(file)) {
+      html = `<video controls src="${url}" title="${file}"></video>`;
+    } else {
+      html = `<a href="${url}">${file}</a>`;
+    }
+    copyText(html, 'HTML 链接');
+  }
+
+  /* --- 原始 copyUrlLink 函数 ---
+  //function copyUrlLink(url) {
+  //  navigator.clipboard.writeText(url)
+  //    .then(()=>alert('已复制 相对 URL：' + url))
+  //    .catch(e=>alert('复制失败：'+e));
+  //}
+  function copyUrlLink(url) {
+    const tempInput = document.createElement("input");
+    tempInput.value = url;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    try {
+      document.execCommand("copy");
+      alert('已复制页面链接：' + url);
+    } catch (err) {
+      alert('复制失败：' + err);
+    }
+    document.body.removeChild(tempInput);
+  }
+  */
+
+  // 改进版 copyUrlLink
+  function copyUrlLink(url) {
+    copyText(url, '相对 URL');
+  }
+
+  /* --- 原始 copyWebLink 函数 ---
+  function copyWebLink(url) {
+    navigator.clipboard.writeText(url)
+      .then(()=>alert('已复制 Web 链接：' + url))
+      .catch(e=>alert('复制失败：'+e));
+  }
+  */
+
+  // 改进版 copyWebLink
+  function copyWebLink(url) {
+    copyText(url, 'Web 链接');
+  }
+
+  // ------------- 通用复制函数 -------------
+  function copyText(text, label) {
+    if (
+      navigator.clipboard &&
+      (window.isSecureContext || location.hostname === 'localhost')
+    ) {
+      // HTTPS 或 localhost —— 现代 Clipboard API
+      navigator.clipboard
+        .writeText(text)
+        .then(() => alert(`已复制 ${label}：` + text))
+        .catch(err => fallbackCopy(text, label, err));
+    } else {
+      // HTTP 页面或 Clipboard API 不可用 —— 回退
+      fallbackCopy(text, label);
+    }
+  }
+
+  // ---------- 回退复制方案（支持 HTTP） ----------
+  function fallbackCopy(text, label, origErr) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      alert(`已复制 ${label}（fallback）：` + text);
+    } catch (err) {
+      console.error('Fallback 复制失败：', err, origErr);
+      alert(`复制 ${label} 失败：` + err);
+    }
+    document.body.removeChild(ta);
+  }
+
+  // Rename modal functions
+  function showRenameModal(btn) {
+    const old = btn.dataset.filename;
+    document.getElementById('old-filename').value = old;
+    document.getElementById('new-filename').value = old;
+    document.getElementById('rename-modal').classList.remove('hidden');
+  }
+  function closeRenameModal() {
+    document.getElementById('rename-modal').classList.add('hidden');
+  }
 </script>
 
 <!-- Styles -->

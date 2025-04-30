@@ -41,7 +41,7 @@
             <span>{{ tag.strip() }}</span>
           {% endfor %}
         </div>
-        <a href="{{ url_for('neibr.post_detail', post_id=post.id) }}">查看详情 →</a>
+        <a href="{{ url_for('neibr.post_detail', title=post.title) }}">查看详情 →</a>
       </div>
     {% endfor %}
   </div>
@@ -59,7 +59,7 @@
             <span>{{ tag.strip() }}</span>
           {% endfor %}
         </div>
-        <a href="{{ url_for('neibr.post_detail', post_id=post.id) }}">查看详情 →</a>
+        <a href="{{ url_for('neibr.post_detail', title=post.title) }}">查看详情 →</a>
       </div>
     {% endfor %}
   </div>
@@ -74,8 +74,8 @@
             <span>{{ tag.strip() }}</span>
             {% endfor %}
         </div>
-        <a href="{{ url_for('neibr.edit_post', post_id=post.id) }}">编辑帖子 →</a>
-        <a href="{{ url_for('neibr.post_detail', post_id=post.id) }}">查看详情 →</a>
+        <a href="{{ url_for('neibr.edit_post', title=post.title) }}">编辑帖子 →</a>
+        <a href="{{ url_for('neibr.post_detail', title=post.title) }}">查看详情 →</a>
     </div>
     {% else %}
     <p>你还没有发布任何帖子。</p>
