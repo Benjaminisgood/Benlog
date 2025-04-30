@@ -73,7 +73,7 @@
     dictDefaultMessage: '拖拽文件到此处或点击上传',
     addRemoveLinks: true,
     autoProcessQueue: true,
-    acceptedFiles: '.jpg,.png,.gif,.pdf',
+    acceptedFiles: '.jpg,.png,.gif,.pdf,.nef'
     init: function() {
       this.on('success', file => console.log('上传成功：', file));
     }
@@ -95,7 +95,7 @@
   // 改进版 copyMarkdownLink
   function copyMarkdownLink(url, file) {
     let md;
-    if (/\.(jpe?g|png|gif)$/i.test(file)) {
+    if (/\.(jpe?g|png|gif|nef|gif|bmp|svg|webp|tiff?|ico|apng)$/i.test(file)) {
       md = `![${file}](${url})`;
     } else if (/\.(mp3|wav|ogg|m4a)$/i.test(file)) {
       md = `<audio controls src="${url}" title="${file}"></audio>`;
@@ -123,7 +123,7 @@
   // 改进版 copyHtmlLink
   function copyHtmlLink(url, file) {
     let html;
-    if (/\.(jpe?g|png|gif)$/i.test(file)) {
+    if (/\.(jpe?g|png|gif|nef|gif|bmp|svg|webp|tiff?|ico|apng)$/i.test(file)) {
       html = `<img src="${url}" alt="${file}" />`;
     } else if (/\.(mp3|wav|ogg|m4a)$/i.test(file)) {
       html = `<audio controls src="${url}" title="${file}"></audio>`;
