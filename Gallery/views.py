@@ -207,7 +207,7 @@ def upload_file(folder_name):
 
 @gallery_bp.route('/manage/<folder_name>/rename', methods=['POST'])
 @login_required
-def rename_file():
+def rename_file(folder_name):  # ✅ 必须显式接受 folder_name
     """
     重命名子画廊中的文件。
     """
