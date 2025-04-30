@@ -9,7 +9,7 @@ from werkzeug.utils import secure_filename # type: ignore
 import yaml
 from datetime import datetime
 from flask import send_from_directory, abort # type: ignore
-
+from flask import session
 
 # 项目根目录下的 static/neibr 路径
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -39,6 +39,10 @@ def index():
     my_posts = Post.query.filter_by(user_id=current_user.id).order_by(Post.creation_time.desc()).all()
 
     all_posts = latest_posts + random_posts + my_posts
+    session['neibr_seq_latest'] = [p.id for p in latest_posts]
+    session['neibr_seq_random'] = [p.id for p in random_posts]
+    session['neibr_seq_my']     = [p.id for p in my_posts]
+ 
     user_ids = {p.user_id for p in all_posts}
     users = User.query.filter(User.id.in_(user_ids)).all()
     user_map = {u.id: u.username for u in users}
@@ -107,7 +111,7 @@ def post_detail(title):
     user_id = post.user_id
 
     # 构建帖子文件夹路径：static/neibr/user_id/post_id
-    folder_path = os.path.join(UPLOAD_BASE_PATH, str(user_id), str(post_id))
+    folder_path = os.path.join(UPLOAD_BASE_PATH, str(user_id), str(post.id))
 
     # 读取帖子文案
     with open(os.path.join(folder_path, 'post.txt'), 'r') as f:
@@ -118,10 +122,23 @@ def post_detail(title):
 
     # 获取所有帖子以支持上下导航
     all_posts = Post.query.order_by(Post.creation_time.desc()).all()
-    current_index = all_posts.index(post)
-    previous_post = all_posts[current_index - 1] if current_index > 0 else None
-    next_post = all_posts[current_index + 1] if current_index < len(all_posts) - 1 else None
 
+    current_index = all_posts.index(post)
+
+    # 动态上一条/下一条：根据用户来自哪个列表(src)和索引(idx)
+    src = request.args.get('src', 'latest')  # 可选 'latest','random','my'
+    idx = int(request.args.get('idx', 0))
+    seq = session.get(f'neibr_seq_{src}', [])
+
+    previous_post = None
+    next_post     = None
+    if seq:
+        if idx > 0:
+            previous_post = Post.query.get(seq[idx-1])
+        if idx < len(seq) - 1:
+            next_post = Post.query.get(seq[idx+1])
+
+            
     # 读取评论
     comments_file = os.path.join(folder_path, 'comments.yaml')
     if os.path.exists(comments_file):
@@ -153,7 +170,9 @@ def post_detail(title):
         media_files=media_files,
         comments=comments,
         previous_post=previous_post,
-        next_post=next_post
+        next_post=next_post,
+        src=src,
+        idx=idx
     )
 @neibr_bp.route('/edit_post/<string:title>', methods=['GET', 'POST'])
 @login_required
