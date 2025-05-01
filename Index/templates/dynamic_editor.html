@@ -39,65 +39,108 @@
 {% include 'partials/editor/_editor_templates.html' %}
 
 <script>
-// 克隆 <template> 并替换占位符 __IDX__
-function getTemplate(type, idx) {
-  const tpl = document.getElementById(`tmpl-${type}`);
-  return tpl ? tpl.innerHTML.replace(/__IDX__/g, idx) : '';
-}
-
-// 根据选择的类型渲染对应输入区（只针对新添加或类型切换）
-function toggleExtra(idx) {
-  const sel   = document.getElementsByName(`elements-${idx}-type`)[0];
-  const main  = document.getElementById(`main-${idx}`);
-  main.innerHTML = getTemplate(sel.value, idx);
-}
-
-// 添加新元素卡片
-function add() {
-  const container = document.getElementById('elements-container');
-  const idx = container.children.length + 1;
-  const card = document.createElement('div');
-  card.className = 'element-card';
-  card.dataset.index = idx;
-  card.innerHTML = `
-    <div class="control-group">
-      <label>类型：</label>
-      <select name="elements-${idx}-type" class="select-field" onchange="toggleExtra(${idx})">
-        {% for opt in ['title','text','link','quote','code','image','gallery','flipcard','faq','html'] %}
-        <option value="{{ opt }}">{{ opt }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div id="main-${idx}" class="control-group"></div>
-    <div class="element-actions">
-      <button type="button" onclick="move(${idx}, 'up')">↑ 上移</button>
-      <button type="button" onclick="move(${idx}, 'down')">↓ 下移</button>
-      <button type="button" onclick="remove(${idx})">删除</button>
-    </div>`;
-  container.appendChild(card);
-  toggleExtra(idx);
-  document.getElementById('elements_count').value = container.children.length;
-}
-
-// 删除指定卡片
-function remove(idx) {
-  const el = document.querySelector(`[data-index='${idx}']`);
-  if (el) el.remove();
-  document.getElementById('elements_count').value = document.getElementById('elements-container').children.length;
-}
-
-// 上移/下移操作
-function move(idx, dir) {
-  const c  = document.getElementById('elements-container');
-  const el = document.querySelector(`[data-index='${idx}']`);
-  const sib = dir==='up' ? el.previousElementSibling : el.nextElementSibling;
-  if (sib) {
-    c.insertBefore(dir==='up' ? el : sib,
-                   dir==='up' ? sib : el);
+  // 重建索引：更新每个 card 的 data-index、name、id 及 onclick/onchange
+  function reindex() {
+    const container = document.getElementById('elements-container');
+    const cards = container.querySelectorAll('.element-card');
+    cards.forEach((card, i) => {
+      const newIdx = i + 1;
+      const oldIdx = card.dataset.index;
+      card.dataset.index = newIdx;
+  
+      // 更新主区域 id
+      const main = card.querySelector(`[id^="main-"]`);
+      if (main) main.id = `main-${newIdx}`;
+  
+      // 更新所有 name 和 id 属性
+      card.querySelectorAll('[name]').forEach(el => {
+        el.name = el.name.replace(`elements-${oldIdx}-`, `elements-${newIdx}-`);
+      });
+      card.querySelectorAll('[id]').forEach(el => {
+        el.id = el.id.replace(`-${oldIdx}`, `-${newIdx}`);
+      });
+  
+      // 更新 select 的 onchange
+      const sel = card.querySelector('select');
+      if (sel) sel.setAttribute('onchange', `toggleExtra(${newIdx})`);
+  
+      // 更新按钮 onclick
+      card.querySelectorAll('.element-actions button').forEach(btn => {
+        if (btn.textContent.includes('上移'))    btn.setAttribute('onclick', `move(${newIdx}, 'up')`);
+        else if (btn.textContent.includes('下移')) btn.setAttribute('onclick', `move(${newIdx}, 'down')`);
+        else if (btn.textContent.includes('删除')) btn.setAttribute('onclick', `remove(${newIdx})`);
+      });
+    });
+  
+    // 同步隐藏的元素总数
+    document.getElementById('elements_count').value = cards.length;
   }
-  document.getElementById('elements_count').value = c.children.length;
-}
-</script>
+  
+  // 克隆 <template> 并替换占位符 __IDX__
+  function getTemplate(type, idx) {
+    const tpl = document.getElementById(`tmpl-${type}`);
+    return tpl ? tpl.innerHTML.replace(/__IDX__/g, idx) : '';
+  }
+  
+  // 根据选择的类型渲染对应输入区
+  function toggleExtra(idx) {
+    const sel  = document.getElementsByName(`elements-${idx}-type`)[0];
+    const main = document.getElementById(`main-${idx}`);
+    main.innerHTML = getTemplate(sel.value, idx);
+  }
+  
+  // 添加新元素卡片
+  function add() {
+    const container = document.getElementById('elements-container');
+    const idx = container.children.length + 1;
+    const card = document.createElement('div');
+    card.className = 'element-card';
+    card.dataset.index = idx;
+    card.innerHTML = `
+      <div class="control-group">
+        <label>类型：</label>
+        <select name="elements-${idx}-type" class="select-field" onchange="toggleExtra(${idx})">
+          {% for opt in ['title','text','link','quote','code','image','gallery','flipcard','faq','html'] %}
+          <option value="{{ opt }}">{{ opt }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div id="main-${idx}" class="control-group"></div>
+      <div class="element-actions">
+        <button type="button">↑ 上移</button>
+        <button type="button">↓ 下移</button>
+        <button type="button">删除</button>
+      </div>`;
+    container.appendChild(card);
+    toggleExtra(idx);
+    // 初始化按钮事件
+    card.querySelectorAll('.element-actions button').forEach(btn => {
+      if (btn.textContent.includes('上移'))    btn.onclick = () => move(idx, 'up');
+      else if (btn.textContent.includes('下移')) btn.onclick = () => move(idx, 'down');
+      else if (btn.textContent.includes('删除')) btn.onclick = () => remove(idx);
+    });
+    reindex();
+  }
+  
+  // 删除指定卡片
+  function remove(idx) {
+    const el = document.querySelector(`.element-card[data-index='${idx}']`);
+    if (el) el.remove();
+    reindex();
+  }
+  
+  // 上移/下移操作
+  function move(idx, dir) {
+    const container = document.getElementById('elements-container');
+    const el = document.querySelector(`.element-card[data-index='${idx}']`);
+    const sib = (dir === 'up') ? el.previousElementSibling : el.nextElementSibling;
+    if (sib) {
+      container.insertBefore(dir === 'up' ? el : sib,
+                             dir === 'up' ? sib : el);
+    }
+    reindex();
+  }
+  </script>
 
 
 
