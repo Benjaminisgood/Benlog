@@ -107,12 +107,13 @@ def render_gallery_page(title, folder, media_type,
 
 # 画廊配置：key → (标题, 子文件夹名, 媒体类型, 初始批量, 是否随机)
 GALLERY_CONFIG = {
-    "photograph":   ("摄影",            "photograph", "image", 12, True),
-    "darwin_album": ("达尔文的专属相册","darwin_album","image", 12, True),
-    "paintings":    ("我的绘画作品",    "paintings",   "image", 12, True),
-    "audios":       ("音乐和弹唱作品",  "audios",      "audio", 6,  False),
-    "ebooks":       ("电子书籍资源",    "ebooks",      "ebook", 6,  False),
-    "attachments":  ("附件资源",        "attachments","ebook", None, False),
+    "photograph":   ("摄影", "photograph", "image", 12, True),
+    "album": ("相册","album","image", 12, True),
+    "paintings":    ("绘画",    "paintings",   "image", 12, True),
+    "audios":       ("专辑",  "audios",      "audio", 6,  False),
+    "music":       ("音乐",  "music",      "audio", 6,  False),
+    "ebooks":       ("电子书",    "ebooks",      "ebook", 6,  False),
+    "attachments":  ("图床+YYMM/附件等",        "attachments","image", None, False),
 }
 
 # 单个画廊页：/gallery/<page_key>
