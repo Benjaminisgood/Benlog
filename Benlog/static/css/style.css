@@ -15,6 +15,12 @@
   --quick-card-hover-bg: rgba(255, 255, 255, 0.7); /* 快捷卡片悬停背景色 */
   --quick-label-color: #222; /* 快捷标签颜色 */
 
+  --inline-code-bg: rgba(230,236,240,0.4);
+  --inline-code-color: #bf2c2c;
+  --code-block-bg: #f0f4f8;
+  --blockquote-bg: #f9f9f9;
+  --blockquote-color: #586069;
+  --heading-color: #2f363d;
   /* 按钮样式 */
   --btn-bg-color: #3366cc; /* 默认按钮背景色 */
   --btn-hover-bg-color: #0055cc; /* 按钮悬停时的背景色 */
@@ -41,6 +47,13 @@
   --quick-card-bg: rgba(40, 40, 40, 0.5); /* 暗模式快捷卡片背景色 */
   --quick-card-hover-bg: rgba(60, 60, 60, 0.7); /* 暗模式快捷卡片悬停背景色 */
   --quick-label-color: #ddd; /* 暗模式快捷标签颜色 */
+
+  --inline-code-bg: rgba(75, 85, 99, 0.4);  /* slate-600@40% */
+  --inline-code-color: #f87171;             /* red-400，提升可读性 */
+  --code-block-bg: rgba(30, 41, 59, 0.8);    /* slate-800@80% */
+  --blockquote-bg: rgba(55, 65, 81, 0.5);    /* slate-700@50% */
+  --blockquote-color: #9ca3af;              /* slate-400 */
+  --heading-color: #f3f4f6;                  /* gray-100，清晰突出 */
 
   /* 按钮样式 */
   --btn-bg-color: #6699ff; /* 暗模式按钮背景色 */

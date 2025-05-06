@@ -5,7 +5,7 @@
     {% for note in notes %}
       <li>
         <div class="post-card">
-          <a href="{{ url_for('edu.show_note', slug=note.slug) }}">
+          <a href="{{ url_for('edu.show_note', slug=note.slug) }}"target="_blank" rel="noopener noreferrer">
             <h3>{{ note.slug }}</h3>
           </a>
           <p class="post-meta">

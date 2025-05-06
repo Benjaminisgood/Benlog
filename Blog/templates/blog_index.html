@@ -6,11 +6,10 @@
     {% for post in posts %}
       <li>
         <div class="post-card">
-          <a href="{{ url_for('blog.show_post', slug=post.slug) }}">
+          <a href="{{ url_for('blog.show_post', slug=post.slug) }}"target="_blank" rel="noopener noreferrer">
             <h3>{{ post.slug }}</h3>
           </a>
           <p class="post-meta">
-            <!-- 点击时间信息将触发编辑认证模态窗口 -->
               Last Modified: {{ post.last_modified.strftime("%Y-%m-%d %H:%M:%S") }}
             </a>
           </p>
