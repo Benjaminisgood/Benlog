@@ -42,7 +42,7 @@ def show_post(slug):
         abort(404)
     # 加载并解析 Markdown 文件（包括 frontmatter 数据）
     post_data = frontmatter.load(filepath)
-    title = post_data.get('title', 'Untitled')
+    #title = post_data.get('title', 'Untitled')
     content_md = post_data.content  # Markdown 内容（不包含 frontmatter）
     # 将 Markdown 转为 HTML
     content_html = markdown.markdown(
@@ -61,8 +61,8 @@ def show_post(slug):
     )
     return render_template(
         'blog_post.html',
-        title=title,
-        post_title=title,
+        #title=title,
+        #post_title=title,
         post_content=content_html,
         post_date=post_data.get('date', ''),
         frontmatter=post_data.metadata

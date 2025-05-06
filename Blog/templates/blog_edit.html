@@ -1,115 +1,165 @@
 {% extends "base.html" %}
+
 {% block content %}
 <h1 class="page-heading">编辑文章</h1>
+
 <form method="POST" class="edit-form">
-    <label for="new_slug">文档名称 (重命名)：</label>
-    <input type="text" name="new_slug" id="new_slug" value="{{ slug }}" class="input-field" required>
-    <br><br>
-    <textarea name="content" placeholder="在此处编辑文章内容..." cols="80" rows="20" class="textarea-field" required>{{ content }}</textarea>
-    <div class="form-buttons">
-        <input type="submit" value="保存" class="btn btn-save">
-        <input type="submit" name="delete" value="删除" class="btn btn-delete" onclick="return confirm('确定要删除此文件吗？此操作不可恢复！');">
-    </div>
+  <label for="new_slug">文档名称 (重命名)：</label>
+  <input
+    type="text"
+    name="new_slug"
+    id="new_slug"
+    value="{{ slug }}"
+    class="input-field"
+    required
+  >
+  <br><br>
+
+  <div class="editor-card">
+    <textarea
+      id="editor"
+      name="content"
+      class="textarea-field"
+      placeholder="在此处编辑文章内容..."
+      required
+    >{{ content }}</textarea>
+  </div>
+
+  <div class="form-buttons">
+    <input type="submit" value="保存" class="btn btn-save">
+    <input
+      type="submit"
+      name="delete"
+      value="删除"
+      class="btn btn-delete"
+      onclick="return confirm('确定要删除此文件吗？此操作不可恢复！');"
+    >
+  </div>
 </form>
 
-<!-- 局部CSS样式 -->
 <style>
-    .page-heading {
-        text-align: center;
-        color: var(--text-color); /* 使用全局文本颜色 */
-        margin-bottom: 20px;
-        font-size: 2rem;
-    }
-
-    .edit-form {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 20px;
-        background: var(--card-bg-color); /* 使用全局卡片背景色 */
-        border: 1px solid var(--card-border-color); /* 使用全局边框颜色 */
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    .edit-form label {
-        font-size: 1.2rem;
-        font-weight: bold;
-        color: var(--text-color); /* 使用全局文本颜色 */
-    }
-
-    .input-field, .textarea-field {
-        width: 100%;
-        padding: 15px;
-        font-size: 1rem;
-        border: 1px solid var(--input-border-color); /* 使用全局输入框边框色 */
-        border-radius: 5px;
-        resize: vertical;
-        background-color: var(--input-bg-color); /* 使用全局输入框背景色 */
-        color: var(--text-color); /* 使用全局文本颜色 */
-        box-sizing: border-box;
-        margin-bottom: 15px;
-    }
-
-    .textarea-field {
-        height: 200px; /* 默认高度 */
-    }
-
-    .input-field:focus, .textarea-field:focus {
-        border-color: var(--input-focus-border-color); /* 使用全局聚焦时边框颜色 */
-        outline: none;
-    }
-
-    .form-buttons {
-        display: flex;
-        gap: 10px;
-        justify-content: space-between;
-    }
-
-    .btn {
-        padding: 10px 20px;
-        border-radius: 5px;
-        color: #fff;
-        cursor: pointer;
-        transition: background-color 0.3s ease, transform 0.2s ease;
-        border: none;
-    }
-
-    .btn-save {
-        background-color: var(--btn-bg-color); /* 使用全局按钮背景色 */
-    }
-
-    .btn-save:hover {
-        background-color: var(--btn-hover-bg-color); /* 使用全局按钮悬停背景色 */
-        transform: translateY(-2px);
-    }
-
-    .btn-delete {
-        background-color: var(--btn-hover-bg-color); /* 使用全局按钮悬停背景色 */
-    }
-
-    .btn-delete:hover {
-        background-color: var(--btn-bg-color); /* 使用全局按钮背景色 */
-        transform: translateY(-2px);
-    }
-
-    /* 响应式设计：适配小屏幕 */
-    @media (max-width: 768px) {
-        .edit-form {
-            padding: 15px;
-        }
-
-        .page-heading {
-            font-size: 1.5rem;
-        }
-
-        .btn {
-            font-size: 0.9rem;
-        }
-
-        .input-field, .textarea-field {
-            font-size: 0.9rem;
-        }
-    }
+  .page-heading {
+    text-align: center;
+    color: var(--text-color);
+    margin-bottom: 20px;
+    font-size: 2rem;
+  }
+  .edit-form {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    background: var(--card-bg-color);
+    border: 1px solid var(--card-border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .edit-form label {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--text-color);
+  }
+  .input-field {
+    width: 100%;
+    padding: 15px;
+    font-size: 1rem;
+    border: 1px solid var(--input-border-color);
+    border-radius: 5px;
+    background-color: var(--input-bg-color);
+    color: var(--text-color);
+    box-sizing: border-box;
+    margin-bottom: 15px;
+  }
+  .editor-card {
+    position: relative;
+    margin: 1rem 0;
+    background: var(--card-bg-color);
+    border: 1px solid var(--card-border-color);
+    border-radius: 5px;
+  }
+  .textarea-field {
+    visibility: hidden;
+  }
+  .CodeMirror {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: auto;
+    min-height: 300px;
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.6;
+    background: var(--card-bg-color);
+    color: var(--text-color);
+  }
+  .form-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    margin-top: 1rem;
+  }
+  .btn {
+    padding: 10px 20px;
+    border-radius: 5px;
+    color: var(--btn-text-color);
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    border: none;
+  }
+  .btn-save {
+    background-color: var(--btn-bg-color);
+  }
+  .btn-save:hover {
+    background-color: var(--btn-hover-bg-color);
+    transform: translateY(-2px);
+  }
+  .btn-delete {
+    background-color: var(--btn-hover-bg-color);
+  }
+  .btn-delete:hover {
+    background-color: var(--btn-bg-color);
+    transform: translateY(-2px);
+  }
+  @media (max-width: 768px) {
+    .edit-form { padding: 15px; }
+    .page-heading { font-size: 1.5rem; }
+    .btn { font-size: 0.9rem; }
+    .input-field, .textarea-field { font-size: 0.9rem; }
+    .CodeMirror { min-height: 200px; }
+  }
 </style>
 
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.8/codemirror.min.css"
+/>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.8/theme/neo.min.css"
+/>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.8/theme/material-darker.min.css"
+/>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.8/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.8/mode/markdown/markdown.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.8/mode/xml/xml.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark'
+      ? 'material-darker'
+      : 'neo';
+    const editor = CodeMirror.fromTextArea(
+      document.getElementById('editor'),
+      {
+        mode: 'gfm',
+        theme: theme,
+        lineNumbers: false,
+        lineWrapping: true,
+        autofocus: true
+      }
+    );
+    editor.on('change', cm => cm.save());
+  });
+</script>
 {% endblock %}
