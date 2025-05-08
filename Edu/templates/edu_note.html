@@ -175,9 +175,243 @@
 #toc-modal-body li{margin-bottom:.5rem;}
 #toc-modal-body a{color:var(--link-color);font-size:.875rem;}
 #toc-modal-body a:hover{text-decoration:underline;}
+    /* 前置信息卡片样式 */
+    .post-metadata {
+      background: #f7f7f7;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 1em;
+      margin-bottom: 1.5em;
+    }
+    .post-metadata .post-title {
+      margin: 0;
+      font-size: 1.8em;
+      font-weight: bold;
+    }
+    .post-metadata .post-meta {
+      margin-top: 0.5em;
+      font-size: 0.9em;
+      color: #666;
+    }
+    .post-metadata .post-meta span {
+      margin-right: 1em;
+    }
+
+    /* 内容区基础样式（保留原有 .post-content 定义） */
+    .post-content img {
+      max-width: 100%;
+      cursor: zoom-in;
+    }
+    .post-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1em 0;
+    }
+    .post-content th, .post-content td {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+    .post-content tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+    .post-content th {
+      background: #f2f2f2;
+      font-weight: bold;
+      text-align: left;
+    }
+
+    /* 块级提示框（Admonition）样式 */
+    .admonition {
+      border-left: 4px solid;
+      border-radius: 4px;
+      padding: 0.75em 1em;
+      margin: 1.5em 0;
+    }
+    .admonition p { margin: 0; }
+    .admonition.info { border-color: #2196F3; background: #f0f8ff; }
+    .admonition.info::before {
+      content: "ℹ️ Info:";
+      font-weight: bold;
+      margin-right: 0.5em;
+    }
+    .admonition.warning { border-color: #ff9800; background: #fff8e1; }
+    .admonition.warning::before {
+      content: "⚠️ Warning:";
+      font-weight: bold;
+      margin-right: 0.5em;
+    }
+    .admonition.tip { border-color: #4caf50; background: #f1f8e9; }
+    .admonition.tip::before {
+      content: "💡 Tip:";
+      font-weight: bold;
+      margin-right: 0.5em;
+    }
+
+    /* Q&A 折叠组件样式 */
+    .qa-block {
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin: 1em 0;
+    }
+    .qa-block .question {
+      padding: 0.75em 1em;
+      background: #e0f7fa;
+      cursor: pointer;
+      position: relative;
+      font-weight: bold;
+    }
+    .qa-block .question::after {
+      content: "＋";
+      position: absolute;
+      right: 1em;
+      font-weight: bold;
+    }
+    .qa-block.open .question::after {
+      content: "－";
+    }
+    .qa-block .answer {
+      display: none;
+      padding: 0.75em 1em;
+      background: #fafafa;
+      border-top: 1px solid #ccc;
+    }
+    .qa-block.open .answer {
+      display: block;
+    }
+
+    /* 可翻转卡片组件样式 */
+    .flip-card {
+      background: transparent;
+      perspective: 1000px;
+      display: inline-block;
+      margin: 1em 0;
+      cursor: pointer;
+      /* 固定尺寸可以在这里设置，如需要固定宽高 */
+      width: 300px;
+      height: 150px;
+    }
+    .flip-card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+    }
+    .flip-card.flipped .flip-card-inner {
+      transform: rotateY(180deg);
+    }
+    .flip-card-front, .flip-card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+      padding: 1em;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .flip-card-front {
+      background: #f0f0f0;
+      color: #000;
+    }
+    .flip-card-back {
+      background: #f0f0f0;
+      color: #000;
+      transform: rotateY(180deg);
+    }
+
+    /* 目录弹窗样式 */
+    .toc-toggle {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      padding: 8px 12px;
+      font-size: 14px;
+      background: #333;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      z-index: 1000;
+    }
+    .toc-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      z-index: 1001;
+      align-items: center;
+      justify-content: center;
+    }
+    .toc-overlay-content {
+      background: #fff;
+      width: 80%; height: 80%;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-y: auto;
+      position: relative;
+    }
+    .toc-overlay-content h2 {
+      margin-top: 0;
+      margin-bottom: 1em;
+    }
+    .toc-overlay-content .toc-close {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 30px;
+      color: #aaa;
+      cursor: pointer;
+    }
+    .toc-overlay-content ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    .toc-overlay-content ul li {
+      margin: 0.5em 0;
+    }
+    .toc-overlay-content ul li li {
+      /* 缩进子目录项 */
+      margin-left: 1.5em;
+    }
+    .toc-overlay-content ul li a {
+      text-decoration: none;
+      color: #337ab7;
+    }
+    .toc-overlay-content ul li a:hover {
+      text-decoration: underline;
+    }
 </style>
 
 <script>
+
+    // 代码高亮初始化（如果使用 highlight.js）
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('pre code').forEach((block) => {
+        try { hljs.highlightElement(block); } catch(e) {}
+      });
+    });
+    
+    // 问答折叠 Q&A 组件交互
+    document.querySelectorAll('.qa-block .question').forEach(q => {
+      q.addEventListener('click', () => {
+        const qaBlock = q.parentElement;
+        qaBlock.classList.toggle('open');
+      });
+    });
+
+    // 可翻转卡片交互：点击卡片容器时翻转
+    document.querySelectorAll('.flip-card').forEach(card => {
+      card.addEventListener('click', () => {
+        card.classList.toggle('flipped');
+      });
+    });
+
 document.addEventListener('DOMContentLoaded',()=>{
   /* ---------- 生成目录 ---------- */
   const headers=document.querySelectorAll('.note-content h1, .note-content h2, .note-content h3, .note-content h4');
@@ -218,4 +452,8 @@ function closeModal(){document.getElementById('imageModal').style.display='none'
 </script>
 
 <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css" />
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 {% endblock %}
