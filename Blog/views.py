@@ -106,10 +106,10 @@ def new_post():
     filename = f"post_{timestamp}.md"
     filepath = os.path.join(POSTS_DIR, filename)
     
-    # 定义默认 frontmatter 与内容
+    # 定义默认 frontmatter 与内容 %H:%M:%S
     default_frontmatter = {
         'title': 'New Post',
-        'date': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        'date': datetime.now().strftime("%Y-%m-%d")
     }
     default_content = "在此处编辑内容..."
     post_data = frontmatter.Post(default_content, **default_frontmatter)

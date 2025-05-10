@@ -124,15 +124,15 @@ def manage_notes():
 def new_note():
     if not (current_user.is_admin or current_user.id == 1):
         abort(403)
-    # 生成新文件名，格式例如 note_20250408123045.md
-    timestamp = datetime.now().strftime('%Y%m%d %H:%M:%S')
+    # 生成新文件名，格式例如 note_20250408123045.md %H:%M:%S
+    timestamp = datetime.now().strftime('%Y%m%d')
     filename = f"note_{timestamp}.md"
     filepath = os.path.join(NOTES_DIR, filename)
     
-    # 定义默认 frontmatter 与内容
+    # 定义默认 frontmatter 与内容 %H:%M:%S
     default_frontmatter = {
         'title': 'New Note',
-        'date': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        'date': datetime.now().strftime("%Y-%m-%d")
     }
     default_content = "在此处编辑内容..."
     note_data = frontmatter.Post(default_content, **default_frontmatter)
