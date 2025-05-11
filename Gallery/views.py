@@ -46,7 +46,7 @@ MEDIA_EXTENSIONS = {
     ),
     "audio": (
         '.mp3', '.wav', '.ogg', '.m4a', '.flac', '.aac',
-        '.wma', '.opus', '.aiff', '.alac'
+        '.wma', '.opus', '.aiff', '.alac', '.webm'
     ),
     "ebook": (
         '.pdf', '.epub', '.txt', '.docx', '.pptx', '.xlsx',
