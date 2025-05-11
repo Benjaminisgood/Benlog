@@ -99,7 +99,7 @@
       md = `![${file}](${url})`;
     } else if (/\.(mp3|wav|ogg|m4a)$/i.test(file)) {
       md = `<audio controls src="${url}" title="${file}"></audio>`;
-    } else if (/\.(mp4|mov|avi|wmv)$/i.test(file)) {
+    } else if (/\.(mp4|mov|avi|wmv|webm)$/i.test(file)) {
       md = `<video controls src="${url}" title="${file}"></video>`;
     } else {
       md = `[${file}](${url})`;
@@ -127,7 +127,7 @@
       html = `<img src="${url}" alt="${file}" />`;
     } else if (/\.(mp3|wav|ogg|m4a)$/i.test(file)) {
       html = `<audio controls src="${url}" title="${file}"></audio>`;
-    } else if (/\.(mp4|mov|avi|wmv)$/i.test(file)) {
+    } else if (/\.(mp4|mov|avi|wmv|webm)$/i.test(file)) {
       html = `<video controls src="${url}" title="${file}"></video>`;
     } else {
       html = `<a href="${url}">${file}</a>`;
