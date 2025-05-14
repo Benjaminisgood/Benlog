@@ -41,7 +41,7 @@ def index():
     blog_posts_dir  = project_root / "Blog"    / "posts"
     edu_notes_dir   = project_root / "Edu"     / "notes"
     neibr_dir       = project_root / "Neibr"   / "neibr"
-    gallery_dir     = project_root / "Gallery" / "static" / "galleries"
+    gallery_dir     = project_root / "Gallery" / "galleries"
 
     # ------- 统计工具 -------
     def count_files(path: Path, exts: tuple | None = None) -> int:
