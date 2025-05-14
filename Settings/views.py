@@ -15,33 +15,64 @@ from flask import session
 import time
 import re
 from datetime import timedelta
+from flask import Blueprint, render_template, current_app
+from pathlib import Path
 
 
+
+# --------------- 视图文件顶部新增导入 ---------------
+from pathlib import Path
+# --------------------------------------------------
 
 @setting_bp.route('/')
 @login_required
 def index():
-    """后台管理首页：管理员和ID为1的用户显示额外功能"""
-    
-    # 判断是否为管理员，是否为超级管理员
-    is_admin = current_user.is_admin  # 普通管理员
-    is_user1 = current_user.id == 1  # 超级管理员
+    """后台管理首页：动态统计文件数量并按权限显示额外功能"""
 
-    # 定义是否显示额外的内容
-    extra_for_admin = is_admin  # 只有管理员能看到管理员的内容
-    extra_for_user1 = is_user1  # 只有ID为1的用户能看到超级管理员的内容
+    # ------- 权限判定 -------
+    is_admin = getattr(current_user, "is_admin", False)      # 普通管理员
+    is_user1 = current_user.id == 1                          # 超级管理员
 
-    # 渲染模板，传递是否显示额外内容的标志
+    extra_for_admin = is_admin
+    extra_for_user1 = is_user1
+
+    # ------- 目录基准 -------
+    project_root = Path(current_app.root_path).parent  # e.g. …/Benlog
+    blog_posts_dir  = project_root / "Blog"    / "posts"
+    edu_notes_dir   = project_root / "Edu"     / "notes"
+    neibr_dir       = project_root / "Neibr"   / "neibr"
+    gallery_dir     = project_root / "Gallery" / "static" / "galleries"
+
+    # ------- 统计工具 -------
+    def count_files(path: Path, exts: tuple | None = None) -> int:
+        if not path.exists():
+            return 0
+        if exts:
+            return sum(1 for p in path.rglob('*') if p.is_file() and p.suffix.lower() in exts)
+        return sum(1 for p in path.rglob('*') if p.is_file())
+    def count_dirs(path: Path, depth: int = 1) -> int:
+
+        if not path.exists():
+            return 0
+        if depth == 1:
+            return sum(1 for p in path.iterdir() if p.is_dir())
+        return sum(1 for p in path.rglob('*') if p.is_dir())
+
+    # ------- 各类别文件数 -------
+    notes_count       = count_files(edu_notes_dir,  ('.md', '.markdown', '.html'))
+    posts_count       = count_files(blog_posts_dir, ('.md', '.markdown', '.html'))
+    users_count = count_dirs(neibr_dir, depth=1)
+    media_files_count = count_files(gallery_dir)  # 统计所有媒体文件
+
     return render_template(
         'setting_index.html',
-                       notes_count=10,
-                       posts_count=25,
-                       users_count=5,
-                       media_files_count=50,
-        extra_for_admin=extra_for_admin,
-        extra_for_user1=extra_for_user1
+        notes_count       = notes_count,
+        posts_count       = posts_count,
+        users_count       = users_count,
+        media_files_count = media_files_count,
+        extra_for_admin   = extra_for_admin,
+        extra_for_user1   = extra_for_user1
     )
-
 
 @setting_bp.route('/manage_users')
 @login_required
