@@ -62,7 +62,7 @@ def index():
     notes_count       = count_files(edu_notes_dir,  ('.md', '.markdown', '.html'))
     posts_count       = count_files(blog_posts_dir, ('.md', '.markdown', '.html'))
     users_count = count_dirs(neibr_dir, depth=1)
-    media_files_count = count_files(gallery_dir)  # 统计所有媒体文件
+    media_files_count = count_dirs(gallery_dir, depth=1)  # 统计所有媒体文件
 
     return render_template(
         'setting_index.html',
