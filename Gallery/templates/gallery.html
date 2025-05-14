@@ -17,7 +17,7 @@
           </div>
         {% endfor %}
       {% else %}
-        <p style="text-align: center; color: var(--text-color);">当前没有可展示的图片。</p>
+        <p style="text-align: center; color: var(--text-color);">当前没有可展示的内容。</p>
       {% endif %}
 
     {% elif media_type == "audio" %}
@@ -36,7 +36,7 @@
           </div>
         {% endfor %}
       {% else %}
-        <p style="text-align: center; color: var(--text-color);">当前没有可展示的音频。</p>
+        <p style="text-align: center; color: var(--text-color);">当前没有可展示的内容。</p>
       {% endif %}
     {% elif media_type == "ebook" %}
       {% if items %}
@@ -53,7 +53,7 @@
           </div>
         {% endfor %}
       {% else %}
-        <p style="text-align: center; color: var(--text-color);">当前没有可展示的电子书。</p>
+        <p style="text-align: center; color: var(--text-color);">当前没有可展示的内容。</p>
       {% endif %}
     
     {% elif media_type == "video" %}
@@ -69,7 +69,7 @@
       </div>
     {% endfor %}
   {% else %}
-    <p style="text-align:center;color:var(--text-color);">当前没有可展示的视频。</p>
+    <p style="text-align:center;color:var(--text-color);">当前没有可展示的内容。</p>
   {% endif %} 
   {% endif %}   
   </div>
