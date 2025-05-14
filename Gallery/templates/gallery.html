@@ -55,10 +55,25 @@
       {% else %}
         <p style="text-align: center; color: var(--text-color);">当前没有可展示的电子书。</p>
       {% endif %}
-    {% endif %}
-    <!-- 用于触发加载更多的观察器 -->
-    <div id="load-more"></div>
+    
+    {% elif media_type == "video" %}
+    {% if items %}
+    {% for item in items %}
+      <div class="gallery-item">
+        <div class="img-container">
+          <video controls
+                 src="{{ url_for('gallery.static', filename=folder ~ '/' ~ item) }}"
+                 loading="lazy" style="width:100%;border-radius:8px;"></video>
+          <div class="caption-overlay">{{ item }}</div>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p style="text-align:center;color:var(--text-color);">当前没有可展示的视频。</p>
+  {% endif %} 
+  {% endif %}   
   </div>
+  <div id="load-more"></div>
 </div>
 
 {% if media_type == "image" %}
@@ -210,6 +225,8 @@
     let offset = {{ items|length }};
     const folder = "{{ folder }}";
     const mediaType = "{{ media_type }}";
+    const staticBase = "{{ url_for('gallery.static', filename='') }}";   // ★ 新增
+
     let loading = false;
     const loadMoreEl = document.getElementById('load-more');
     const observer = new IntersectionObserver((entries) => {
@@ -217,7 +234,7 @@
         if (entry.isIntersecting && !loading) {
           loading = true;
           const loadMoreUrl = "{{ url_for('gallery.gallery_load_more') }}";
-          fetch(`${loadMoreUrl}?folder=${encodeURIComponent(folder)}&media_type=${encodeURIComponent(mediaType)}&offset=${offset}`)
+          fetch(`${loadMoreUrl}?folder=${encodeURIComponent(folder)}&offset=${offset}`)
 
             .then(response => response.json())
             .then(data => {
@@ -231,7 +248,7 @@
   
                   if (mediaType === "image") {
                     let img = document.createElement('img');
-                    img.src = `/static/gallery/${folder}/${item}`;
+                    img.src = `${staticBase}${folder}/${item}`;
                     img.alt = item;
                     img.loading = 'lazy';
                     img.onclick = function() { openModal(this.src, item); };
@@ -260,34 +277,52 @@
                     let audioEl = document.createElement('audio');
                     audioEl.controls = true;
                     let source = document.createElement('source');
-                    source.src = `/static/gallery/${folder}/${item}`;
+                    source.src = `${staticBase}${folder}/${item}`;
                     audioEl.appendChild(source);
                     galleryItem.appendChild(audioEl);
                   }
                   else if (mediaType === "ebook") {
-                    // 电子书项：点击下载或打开
-                    let anchor = document.createElement('a');
-                    anchor.href = `/static/gallery/${folder}/${item}`;
+                    // 电子书项：点击下载或新标签打开
+                    const fileUrl = `${staticBase}${folder}/${item}`;
+
+                    const anchor = document.createElement('a');
+                    anchor.href   = fileUrl;
                     anchor.target = '_blank';
-                    anchor.rel = 'noopener noreferrer';
+                    anchor.rel    = 'noopener noreferrer';
                     anchor.download = item;
-  
-                    let img = document.createElement('img');
-                    img.src = `/static/gallery/${folder}/${item}`;
-                    img.alt = item;
+
+                    /* ① 封面图 —— 若没有生成 PDF/EPUB 缩略图，可改成通用图标 */
+                    const img = document.createElement('img');
+                    img.src     = "https://img.icons8.com/color/96/000000/pdf-2--v1.png";  // ★ 可替换
+                    img.alt     = item;
                     img.loading = 'lazy';
                     anchor.appendChild(img);
-  
+
+                    /* ② 容器 & 标题 */
                     containerEl.appendChild(anchor);
-  
-                    let caption = document.createElement('div');
+
+                    const caption = document.createElement('div');
                     caption.className = 'caption-overlay';
                     caption.textContent = item;
                     containerEl.appendChild(caption);
                   }
   
+                  else if (mediaType === "video") {
+                    const video = document.createElement('video');
+                    video.controls = true;
+                    video.src = `${staticBase}${folder}/${item}`;
+                    video.style.width = '100%';
+                    video.style.borderRadius = '8px';
+                    containerEl.appendChild(video);
+
+                    const caption = document.createElement('div');
+                    caption.className = 'caption-overlay';
+                    caption.textContent = item;
+                    containerEl.appendChild(caption);
+                  }
+
                   galleryItem.appendChild(containerEl);
-                  container.insertBefore(galleryItem, loadMoreEl);
+                  container.appendChild(galleryItem);
                 });
                 offset += data.items.length;
               }

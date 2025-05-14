@@ -1,154 +1,124 @@
 import os
 import random
-import json
-import logging
+from collections import Counter
 from datetime import datetime
 
-import frontmatter
-import markdown
 from flask import (
     request, redirect, flash,
     render_template, abort,
     current_app, url_for, jsonify,
     send_from_directory
 )
-from flask_login import login_required, current_user
+from flask_login import login_required
 from werkzeug.utils import secure_filename
 from . import gallery_bp
 
-# 当前模块目录（Gallery 目录）
+# 当前模块目录
 MODULE_DIR = os.path.dirname(__file__)
-# Blueprint 定义的静态目录（相对于 MODULE_DIR）
+# Blueprint 静态目录  (…/Gallery/static/galleries)
 GALLERIES_DIR = os.path.join(MODULE_DIR, gallery_bp.static_folder)
-
-# 确保主 galleries 目录存在
 os.makedirs(GALLERIES_DIR, exist_ok=True)
 
-# 扫描所有子文件夹并渲染“所有画廊”列表
+# ======== 媒体扩展名映射 ========
+MEDIA_EXTENSIONS = {
+    "image": ('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp',
+              '.svg', '.tiff', '.nef', '.cr2', '.raw', '.dng',
+              '.heic', '.heif'),
+    "audio": ('.mp3', '.wav', '.ogg', '.m4a', '.flac', '.aac',
+              '.wma', '.opus', '.aiff', '.alac', '.webm'),
+    "ebook": ('.pdf', '.epub', '.txt', '.docx', '.pptx', '.xlsx',
+              '.doc', '.ppt', '.xls', '.mobi'),
+    "video": ('.mp4', '.webm', '.mov', '.avi')          
+}
+
+# ---------- 工具函数 ----------
+def ensure_directory_exists(folder_name):
+    path = os.path.join(GALLERIES_DIR, folder_name)
+    os.makedirs(path, exist_ok=True)
+    return path
+
+def detect_media_type(folder_path):                       # ★ 自动侦测
+    counter = Counter()
+    for fname in os.listdir(folder_path):
+        low = fname.lower()
+        for mtype, exts in MEDIA_EXTENSIONS.items():
+            if low.endswith(exts):
+                counter[mtype] += 1
+                break
+    if not counter:                                       # 空文件夹
+        return "image"
+    return counter.most_common(1)[0][0]
+
+def get_media_list(folder_name, media_type):
+    path = ensure_directory_exists(folder_name)
+    exts = MEDIA_EXTENSIONS[media_type]
+    return [f for f in os.listdir(path) if f.lower().endswith(exts)]
+
+def calc_batch_size(total):                               # ★ 批量策略
+    """
+    经验策略：
+    - <= 12 张 → 全部一次性加载
+    - 13-60 张 → 12
+    - >  60 张 → 18
+    你可按需调整。
+    """
+    if total <= 12:
+        return total
+    if total <= 60:
+        return 12
+    return 18 if media_type != "video" else 9
+
+def get_media_batch(media_list, offset=0, batch_size=12):
+    return media_list[offset: offset + batch_size]
+
+# ---------- 视图 ----------
+# 所有画廊列表
 @gallery_bp.route('/')
 def index():
     galleries = sorted(
         d for d in os.listdir(GALLERIES_DIR)
         if os.path.isdir(os.path.join(GALLERIES_DIR, d))
     )
-    return render_template(
-        'gallery_index.html',
-        title="所有画廊",
-        galleries=galleries
-    )
+    return render_template('gallery_index.html',
+                           title="所有画廊",
+                           galleries=galleries)
 
-# 媒体扩展名映射
-MEDIA_EXTENSIONS = {
-    "image": (
-        '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp',
-        '.svg', '.tiff', '.nef', '.cr2', '.raw', '.dng',
-        '.heic', '.heif', '.indd', '.ai', '.eps'
-    ),
-    "audio": (
-        '.mp3', '.wav', '.ogg', '.m4a', '.flac', '.aac',
-        '.wma', '.opus', '.aiff', '.alac', '.webm'
-    ),
-    "ebook": (
-        '.pdf', '.epub', '.txt', '.docx', '.pptx', '.xlsx',
-        '.doc', '.ppt', '.xls', '.mobi'
-    ),
-}
+# 单个画廊页
+@gallery_bp.route('/<folder>')
+def gallery_page(folder):
+    path = ensure_directory_exists(folder)
+    media_type = detect_media_type(path)                  # ★
+    media_list = get_media_list(folder, media_type)
 
-def ensure_directory_exists(folder_name):
-    """
-    确保某个画廊子目录存在，返回它的绝对路径。
-    """
-    path = os.path.join(GALLERIES_DIR, folder_name)
-    os.makedirs(path, exist_ok=True)
-    return path
+    random.seed(folder)                                   # ★ 一律随机
+    random.shuffle(media_list)
 
-def get_media_from_folder(folder_name, media_type):
-    """
-    获取指定子画廊（folder_name）内符合 media_type 的所有文件名列表。
-    """
-    path = ensure_directory_exists(folder_name)
-    exts = MEDIA_EXTENSIONS.get(media_type, ())
-    return [
-        fname for fname in os.listdir(path)
-        if fname.lower().endswith(exts)
-    ]
+    batch_size = calc_batch_size(len(media_list))         # ★
+    first_batch = get_media_batch(media_list, 0, batch_size)
 
-def get_media_batch(media_list, offset=0, batch_size=12):
-    """
-    对媒体列表做分页截取。
-    """
-    return media_list[offset:offset + batch_size]
+    return render_template('gallery.html',
+                           title=folder,                  # ★ 标题即文件夹名
+                           folder=folder,
+                           media_type=media_type,
+                           items=first_batch,
+                           batch_size=batch_size,         # ★ 传给前端方便无限加载
+                           total=len(media_list))
 
-def render_gallery_page(title, folder, media_type,
-                        batch_size=None, randomize=False):
-    """
-    通用渲染画廊页面：
-    - 确保文件夹存在
-    - 获取媒体列表，可选乱序与分页
-    - 返回 gallery.html 模板
-    """
-    ensure_directory_exists(folder)
-    media_list = get_media_from_folder(folder, media_type)
-
-    if randomize and media_type == "image":
-        random.seed(folder)
-        random.shuffle(media_list)
-
-    if batch_size:
-        media_list = get_media_batch(media_list, batch_size=batch_size)
-
-    return render_template(
-        'gallery.html',
-        title=title,
-        folder=folder,
-        media_type=media_type,
-        items=media_list
-    )
-
-# 画廊配置：key → (标题, 子文件夹名, 媒体类型, 初始批量, 是否随机)
-GALLERY_CONFIG = {
-    "photograph":   ("摄影", "photograph", "image", 12, True),
-    "album": ("相册","album","image", 12, True),
-    "paintings":    ("绘画",    "paintings",   "image", 12, True),
-    "audios":       ("专辑",  "audios",      "audio", 6,  False),
-    "music":       ("音乐",  "music",      "audio", 6,  False),
-    "ebooks":       ("电子书",    "ebooks",      "ebook", 6,  False),
-    "attachments":  ("图床+YYMM/附件等",        "attachments","image", None, False),
-}
-
-# 单个画廊页：/gallery/<page_key>
-@gallery_bp.route('/<page_key>')
-def gallery_page(page_key):
-    cfg = GALLERY_CONFIG.get(page_key)
-    if cfg:
-        title, folder, media_type, batch_size, randomize = cfg
-    else:
-        # 默认值
-        title, folder, media_type, batch_size, randomize = (
-            page_key, page_key, 'image', 10, False
-        )
-    return render_gallery_page(
-        title, folder, media_type, batch_size, randomize
-    )
-
-# 无限加载接口：/gallery/load_more
+# 无限加载接口
 @gallery_bp.route('/load_more')
 def gallery_load_more():
-    folder     = request.args.get('folder') or abort(400, "Missing folder")
-    media_type = request.args.get('media_type', 'image')
-    try:
-        offset = int(request.args.get('offset', 0))
-    except ValueError:
-        offset = 0
+    folder = request.args.get('folder') or abort(400, "Missing folder")
+    offset = int(request.args.get('offset', 0) or 0)
 
-    media_list = get_media_from_folder(folder, media_type)
-    if media_type == "image":
-        random.seed(folder)
-        random.shuffle(media_list)
+    path = ensure_directory_exists(folder)
+    media_type = detect_media_type(path)                  # ★ 再次侦测以防类型变化
+    media_list = get_media_list(folder, media_type)
+    random.seed(folder)
+    random.shuffle(media_list)
 
-    batch = get_media_batch(media_list, offset=offset)
+    batch_size = calc_batch_size(len(media_list))         # 与首批保持一致
+    batch = get_media_batch(media_list, offset, batch_size)
     return jsonify({'items': batch})
-
 
 @gallery_bp.route('/manage/<folder_name>')
 @login_required

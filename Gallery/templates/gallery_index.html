@@ -7,7 +7,8 @@
     {% for folder in galleries %}
       <li class="gallery-list-item">
         <a class="gallery-link"
-           href="{{ url_for('gallery.gallery_page', page_key=folder) }}">
+           href="{{ url_for('gallery.gallery_page', folder=folder) }}">
+    {{ folder }}">
           查看{{ folder.replace('_', ' ').title() }}
         </a>
         <a class="gallery-link"
