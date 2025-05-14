@@ -54,7 +54,7 @@ def get_media_list(folder_name, media_type):
     exts = MEDIA_EXTENSIONS[media_type]
     return [f for f in os.listdir(path) if f.lower().endswith(exts)]
 
-def calc_batch_size(total):                               # ★ 批量策略
+def calc_batch_size(total, media_type="image"):                               # ★ 批量策略
     """
     经验策略：
     - <= 12 张 → 全部一次性加载
@@ -66,7 +66,7 @@ def calc_batch_size(total):                               # ★ 批量策略
         return total
     if total <= 60:
         return 12
-    return 18 if media_type != "video" else 9
+    return 9 if media_type == "video" else 18
 
 def get_media_batch(media_list, offset=0, batch_size=12):
     return media_list[offset: offset + batch_size]
@@ -93,7 +93,7 @@ def gallery_page(folder):
     random.seed(folder)                                   # ★ 一律随机
     random.shuffle(media_list)
 
-    batch_size = calc_batch_size(len(media_list))         # ★
+    batch_size = calc_batch_size(len(media_list), media_type)         # ★
     first_batch = get_media_batch(media_list, 0, batch_size)
 
     return render_template('gallery.html',
@@ -116,7 +116,7 @@ def gallery_load_more():
     random.seed(folder)
     random.shuffle(media_list)
 
-    batch_size = calc_batch_size(len(media_list))         # 与首批保持一致
+    batch_size = calc_batch_size(len(media_list), media_type)         # 与首批保持一致
     batch = get_media_batch(media_list, offset, batch_size)
     return jsonify({'items': batch})
 
