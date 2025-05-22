@@ -69,8 +69,6 @@ flask --app "Benlog.app:create_app" run --host=0.0.0.0 --port=80
 <img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/edunotes.png" alt="edunotes.png" />
 <img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/neibr.png" alt="neibr.png" />
 
-![test image](https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/aboutme.png)
-
 ---
 
 ## 🔒 配置说明（可选）
