@@ -55,9 +55,19 @@ flask --app "Benlog.app:create_app" run --host=0.0.0.0 --port=80
 
 ---
 
-### 🖼 示例截图（部署完成后访问）
+### 🖼 示例截图  
 
-<img src="https://img.example.com/homepage_screenshot.png" width="600">
+<img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/admin.png" alt="admin.png" />
+<img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/gallery.png" alt="gallery.png" />
+<img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/quicklinks.png" alt="quicklinks.png" />
+<img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/gallerymanage.png" alt="gallerymanage.png" />
+<img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/index.png" alt="index.png" />
+<img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/menu.png" alt="menu.png" />
+<img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/aboutme.png" alt="aboutme.png" />
+<img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/setting.png" alt="setting.png" />
+<img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/blog.png" alt="blog.png" />
+<img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/edunotes.png" alt="edunotes.png" />
+<img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/neibr.png" alt="neibr.png" />
 
 ---
 
