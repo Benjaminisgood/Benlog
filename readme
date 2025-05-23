@@ -30,7 +30,7 @@ Benlog 是一个面向科研工作者、学生与写作爱好者的 **Flask 驱�
 
 ## 🚀 快速部署教程（适合 0 基础用户）
 
-### 📦 一键安装运行
+### 📦 一键安装运行（请尽可能使用最新版python、flask等）
 
 ```bash
 # 下载项目源码
@@ -68,6 +68,13 @@ flask --app "Benlog.app:create_app" run --host=0.0.0.0 --port=80
 <img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/blog.png" alt="blog.png" />
 <img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/edunotes.png" alt="edunotes.png" />
 <img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/neibr.png" alt="neibr.png" />
+项目会不断完善中，未来更新内容：  
+- 标签功能
+- 社区群组
+- 图床缓存
+- 人工智能
+- 细节优化
+
 
 ---
 
@@ -90,7 +97,7 @@ DEBUG = False
 
 ---
 
-## 如果你要开发，📤 贡献/部署建议
+## 如果你要开发，欢迎fork，📤 贡献/部署建议
 
 1. 建议新功能用分支开发：
 ```bash
