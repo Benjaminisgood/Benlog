@@ -13,7 +13,7 @@ Benlog 是一个面向科研工作者、学生与写作爱好者的 **Flask 驱�
 | `Index(dynamic_links)` | 外链聚合页面（动态pages以及友情链接） |
 | `Blog` | Markdown+html 博客文章 |
 | `Edu` | Markdown+html 学习笔记 |
-| `Neibr` | 简易论坛样帖子（支持文本+图片） |
+| `Neibr` | 简易论坛帖子社区 |
 | `Gallery` | 图床个人展示一体化 |
 | `Index(AI)` | 即可以大语言模型提问，也可以站内搜索，也是个人ai助理 |
 
