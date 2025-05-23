@@ -34,7 +34,7 @@ Benlog 是一个面向科研工作者、学生与写作爱好者的 **Flask 驱�
 
 ```bash
 # 下载项目源码
-git clone https://github.com/yourname/Benlog.git
+git clone https://github.com/Benjaminisgood/Benlog.git
 cd Benlog
 
 # 建立虚拟环境
