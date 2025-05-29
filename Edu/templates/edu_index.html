@@ -4,9 +4,13 @@
   <div class="page-header">
     <h1>Education Notes</h1>
   </div>
-  <div class="page-header">
-    <a href="{{ url_for('edu.new_note') }}" id="new-note-button" class="btn">＋ New Note</a>
-  </div>
+<div class="page-header">
+  <form method="POST" action="{{ url_for('edu.new_note') }}">
+    <button type="submit" id="new-note-button" class="btn">
+      ＋ New Note
+    </button>
+  </form>
+</div>
 
   {% if notes %}
   <ul class="post-list">
