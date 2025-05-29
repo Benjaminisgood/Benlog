@@ -31,3 +31,4 @@ Blog/posts/*
 Edu/notes/*
 Gallery/galleries/**/*
 Index/dynamic_pages/*
+#deploy.sh
