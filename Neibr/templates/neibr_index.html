@@ -27,9 +27,10 @@
     <button id="btn-my-posts">我的帖子</button>
   </div>
 
+  <!-- 最新帖子 -->
   <div id="latest-posts" class="posts-container">
     {% for post in latest_posts %}
-      <div class="card">
+      <div class="card" data-href="{{ url_for('neibr.post_detail', title=post.title, src='latest', idx=loop.index0) }}">
         <h3>{{ post.title }}</h3>
         <div class="post-meta">
           <span class="author">作者：{{ user_map[post.user_id] }}</span>
@@ -40,16 +41,17 @@
             <span>{{ tag.strip() }}</span>
           {% endfor %}
         </div>
-        <a href="{{ url_for('neibr.post_detail', title=post.title, src='latest', idx=loop.index0) }}">
-          查看详情 →
-        </a>
       </div>
     {% endfor %}
+    <div class="load-more-wrapper">
+      <button id="load-more-latest" class="btn-load-more">加载更多</button>
+    </div>
   </div>
 
+  <!-- 随机帖子 -->
   <div id="random-posts" class="posts-container" style="display:none;">
     {% for post in random_posts %}
-      <div class="card">
+      <div class="card" data-href="{{ url_for('neibr.post_detail', title=post.title, src='random', idx=loop.index0) }}">
         <h3>{{ post.title }}</h3>
         <div class="post-meta">
           <span class="author">作者：{{ user_map[post.user_id] }}</span>
@@ -60,45 +62,109 @@
             <span>{{ tag.strip() }}</span>
           {% endfor %}
         </div>
-        <a href="{{ url_for('neibr.post_detail', title=post.title, src='random', idx=loop.index0) }}">
-          查看详情 →
-        </a>
       </div>
     {% endfor %}
+    <div class="load-more-wrapper">
+      <button id="load-more-random" class="btn-load-more">加载更多</button>
+    </div>
   </div>
 
+  <!-- 我的帖子 -->
   <div id="my-posts" class="posts-container" style="display:none;">
     {% for post in my_posts %}
-    <div class="card">
+      <div class="card" data-href="{{ url_for('neibr.edit_post', title=post.title) }}">
         <h3>{{ post.title }}</h3>
-        <span class="date">发表于：{{ post.creation_time.strftime('%Y-%m-%d %H:%M') }}</span>
-        <div class="tags">
-            {% for tag in post.tags.split(',') %}
-            <span>{{ tag.strip() }}</span>
-            {% endfor %}
+        <div class="post-meta">
+          <span class="date">发表于：{{ post.creation_time.strftime('%Y-%m-%d %H:%M') }}</span>
         </div>
-        <a href="{{ url_for('neibr.edit_post', title=post.title) }}">编辑帖子 →</a>
-        <a href="{{ url_for('neibr.post_detail', title=post.title, src='my', idx=loop.index0) }}">
-          查看详情 →
-        </a>
-    </div>
+        <div class="tags">
+          {% for tag in post.tags.split(',') %}
+            <span>{{ tag.strip() }}</span>
+          {% endfor %}
+        </div>
+      </div>
     {% else %}
-    <p>你还没有发布任何帖子。</p>
+      <p>你还没有发布任何帖子。</p>
     {% endfor %}
+    <div class="load-more-wrapper">
+      <button id="load-more-my" class="btn-load-more">加载更多</button>
+    </div>
+  </div>
 </div>
 
 
 <style>
-.card {
-  max-width: 700px;
+.btn-load-more {
+  display: block;
   margin: 20px auto;
-  padding: 25px;
-  background: var(--card-bg-color);
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, 'PingFang SC', 'Noto Sans SC', sans-serif;
+  background-color: var(--link-color, #007bff);
+  color: #fff;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
 }
+.btn-load-more:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+.load-more-wrapper {
+  text-align: center;
+}
+  .card {
+    max-width: 700px;
+    margin: 20px auto;
+    padding: 25px;
+    background: var(--card-bg-color);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  }
+    .post-meta {
+    font-size: 0.9rem;
+    color: var(--text-secondary-color, #666);
+    margin: 8px 0;
+    display: flex;
+    gap: 12px;
+  }
+  .post-meta .author::before { content: "👤 "; }
+  .post-meta .date::before   { content: "📅 "; }
+  .tags span {
+    display: inline-block;
+    background: var(--card-bg-color);
+    color: #ff2442;
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 12px;
+    margin-right: 6px;
+    margin-bottom: 6px;
+  }
+  .posts-container { padding: 0; }
 
+    .load-more-wrapper {
+    text-align: center;
+    margin: 20px 0;
+  }
+  .btn-load-more {
+    background-color: var(--link-color, #007bff);
+    color: #fff;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+  }
+  .btn-load-more:hover {
+    background-color: #0056b3;
+    transform: translateY(-1px);
+  }
+  
 .form-group {
   margin-bottom: 20px;
 }
@@ -227,38 +293,87 @@
 
 
 <script>
-    const btnLatest = document.getElementById('btn-latest');
-    const btnRandom = document.getElementById('btn-random');
-    const btnMyPosts = document.getElementById('btn-my-posts');
-    const latestPosts = document.getElementById('latest-posts');
-    const randomPosts = document.getElementById('random-posts');
-    const myPosts = document.getElementById('my-posts');
+  // 切换区块
+  const btnLatest = document.getElementById('btn-latest');
+  const btnRandom = document.getElementById('btn-random');
+  const btnMyPosts = document.getElementById('btn-my-posts');
+  const latestPosts = document.getElementById('latest-posts');
+  const randomPosts = document.getElementById('random-posts');
+  const myPosts = document.getElementById('my-posts');
+  btnLatest.onclick = () => {
+    latestPosts.style.display = 'block';
+    randomPosts.style.display = 'none';
+    myPosts.style.display = 'none';
+    btnLatest.classList.add('active');
+    btnRandom.classList.remove('active');
+    btnMyPosts.classList.remove('active');
+  };
+  btnRandom.onclick = () => {
+    randomPosts.style.display = 'block';
+    latestPosts.style.display = 'none';
+    myPosts.style.display = 'none';
+    btnRandom.classList.add('active');
+    btnLatest.classList.remove('active');
+    btnMyPosts.classList.remove('active');
+  };
+  btnMyPosts.onclick = () => {
+    myPosts.style.display = 'block';
+    latestPosts.style.display = 'none';
+    randomPosts.style.display = 'none';
+    btnMyPosts.classList.add('active');
+    btnLatest.classList.remove('active');
+    btnRandom.classList.remove('active');
+  };
 
-    btnLatest.onclick = () => {
-        latestPosts.style.display = 'block';
-        randomPosts.style.display = 'none';
-        myPosts.style.display = 'none';
-        btnLatest.classList.add('active');
-        btnRandom.classList.remove('active');
-        btnMyPosts.classList.remove('active');
-    };
+  // 卡片点击跳转
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', () => {
+      window.location.href = card.dataset.href;
+    });
+  });
 
-    btnRandom.onclick = () => {
-        randomPosts.style.display = 'block';
-        latestPosts.style.display = 'none';
-        myPosts.style.display = 'none';
-        btnRandom.classList.add('active');
-        btnLatest.classList.remove('active');
-        btnMyPosts.classList.remove('active');
+  // 加载更多
+  document.addEventListener('DOMContentLoaded', () => {
+    const sections = {
+      latest:  { btnId:'load-more-latest', contId:'latest-posts', page:1, src:'latest' },
+      random:  { btnId:'load-more-random', contId:'random-posts', page:1, src:'random' },
+      my:      { btnId:'load-more-my',     contId:'my-posts',     page:1, src:'my' }
     };
-
-    btnMyPosts.onclick = () => {
-        myPosts.style.display = 'block';
-        latestPosts.style.display = 'none';
-        randomPosts.style.display = 'none';
-        btnMyPosts.classList.add('active');
-        btnLatest.classList.remove('active');
-        btnRandom.classList.remove('active');
-    };
+    Object.values(sections).forEach(sec => {
+      const btn = document.getElementById(sec.btnId);
+      btn.addEventListener('click', () => {
+        sec.page += 1;
+        fetch(`{{ url_for('neibr.api_posts') }}?src=${sec.src}&page=${sec.page}`)
+          .then(res => res.json())
+          .then(data => {
+            const container = document.getElementById(sec.contId);
+            data.posts.forEach(p => {
+              const card = document.createElement('div');
+              card.className = 'card';
+              card.dataset.href = sec.src==='my'
+                ? p.edit_url
+                : p.url;
+              card.innerHTML = `
+                <h3>${p.title}</h3>
+                <div class="post-meta">
+                  ${sec.src!=='my' ? `<span class="author">作者：${p.author}</span>` : ''}
+                  <span class="date">发表于：${p.date}</span>
+                </div>
+                <div class="tags">
+                  ${p.tags.map(t=>`<span>${t}</span>`).join('')}
+                </div>
+              `;
+              // 新增点击跳转
+              card.addEventListener('click', () => {
+                window.location.href = card.dataset.href;
+              });
+              container.appendChild(card);
+            });
+            if (!data.has_more) btn.style.display = 'none';
+          });
+      });
+    });
+  });
 </script>
+
 {% endblock %}

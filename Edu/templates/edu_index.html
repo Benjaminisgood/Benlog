@@ -1,150 +1,126 @@
 {% extends "base.html" %}
 {% block content %}
+
+<div class="page-header">
   <h1>Education Notes</h1>
-  <ul class="post-list">
-    {% for note in notes %}
-      <li>
-        <div class="post-card">
-          <a href="{{ url_for('edu.show_note', slug=note.slug) }}"target="_blank" rel="noopener noreferrer">
-            <h3>{{ note.slug }}</h3>
-          </a>
-          <p class="post-meta">
-            Last Modified: {{ note.last_modified.strftime("%Y-%m-%d %H:%M:%S") }}
-          </p>
-        </div>
-      </li>
-    {% endfor %}
-    {% if notes|length == 0 %}
-      <p><em>No notes available.</em></p>
+</div>
+
+{% if notes %}
+<ul class="note-list">
+  {% for note in notes %}
+  <li class="note-card">
+    <a href="{{ url_for('edu.show_note', slug=note.slug) }}"
+       class="note-link"
+       target="_blank" rel="noopener noreferrer">
+      <h3>{{ note.slug }}</h3>
+      <p class="note-meta">
+        Last Modified: {{ note.last_modified.strftime("%Y-%m-%d %H:%M:%S") }}
+      </p>
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+
+<nav class="pagination">
+  {% if page > 1 %}
+    <a href="{{ url_for('edu.list_notes', page=page-1) }}">« Prev</a>
+  {% else %}
+    <span class="disabled">« Prev</span>
+  {% endif %}
+
+  {% for p in range(1, total_pages + 1) %}
+    {% if p == page %}
+      <span class="current">{{ p }}</span>
+    {% else %}
+      <a href="{{ url_for('edu.list_notes', page=p) }}">{{ p }}</a>
     {% endif %}
-  </ul>
+  {% endfor %}
 
-  
-  <style>
-    /* 按钮样式 */
-    #new-post-button {
-      background-color: var(--link-color, #007bff);
-      color: #fff;
-      border: none;
-      padding: 10px 20px;
-      font-size: 1em;
-      border-radius: 5px;
-      cursor: pointer;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      transition: background-color 0.2s, transform 0.2s;
-      margin-bottom: 20px;
-    }
-    #new-post-button:hover {
-      background-color: #0056b3;
-      transform: translateY(-2px);
-    }
-    
-    /* 列表与卡片 */
-    .post-list {
-      list-style: none;
-      padding: 0;
-    }
-    .post-list li {
-      margin: 0.5em 0;
-    }
-    .post-card {
-      background: var(--card-bg-color, #fff);
-      border: 1px solid var(--card-border-color, #ddd);
-      border-radius: 8px;
-      padding: 16px;
-      margin: 12px 0;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .post-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    }
-    .post-list li a {
-      color: var(--link-color, #007bff);
-      text-decoration: none;
-    }
-    .post-list li a:hover {
-      text-decoration: underline;
-    }
-    .post-meta {
-      color: var(--meta-text-color, #555);
-      font-size: 0.9em;
-      margin-top: 8px;
-    }
-    .edit-link {
-      color: inherit;
-      border-bottom: 1px dotted transparent;
-      transition: border-bottom 0.2s;
-    }
-    .edit-link:hover {
-      border-bottom: 1px dotted currentColor;
-    }
-    
-    /* 模态框样式 */
-    .modal {
-      display: none; /* 初始隐藏 */
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.6);
-      z-index: 1000;
-      /* 使用 Flex 居中 */
-      align-items: center;
-      justify-content: center;
-    }
-    .modal-content {
-      background-color: #fff;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-      width: 320px;
-      position: relative;
-      text-align: center;
-    }
-    .close {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      color: #aaa;
-      font-size: 24px;
-      cursor: pointer;
-    }
-    .modal-content form {
-      margin-top: 20px;
-    }
-    .modal-content label {
-      display: block;
-      font-size: 0.9em;
-      margin-bottom: 8px;
-      text-align: left;
-    }
-    .modal-content input[type="password"] {
-      width: 100%;
-      padding: 10px;
-      box-sizing: border-box;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    .modal-content input[type="submit"] {
-      background-color: var(--link-color, #007bff);
-      color: #fff;
-      border: none;
-      width: 100%;
-      padding: 10px;
-      font-size: 1em;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.2s, transform 0.2s;
-    }
-    .modal-content input[type="submit"]:hover {
-      background-color: #0056b3;
-      transform: translateY(-2px);
-    }
-  </style>
+  {% if page < total_pages %}
+    <a href="{{ url_for('edu.list_notes', page=page+1) }}">Next »</a>
+  {% else %}
+    <span class="disabled">Next »</span>
+  {% endif %}
+</nav>
 
+{% else %}
+  <p class="no-notes"><em>No notes available.</em></p>
+{% endif %}
+
+<style>
+.page-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.note-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+.note-card {
+  background: var(--card-bg-color);
+  border: 1px solid var(--card-border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.note-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+.note-link {
+  display: block;
+  padding: 16px;
+  color: inherit;
+  text-decoration: none;
+}
+.note-link h3 {
+  margin: 0;
+  color: var(--link-color, #007bff);
+}
+.note-link p {
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+  color: var(--meta-text-color, #555);
+}
+.pagination {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 30px 0;
+}
+.pagination a,
+.pagination span {
+  padding: 6px 10px;
+  border: 1px solid var(--card-border-color, #ddd);
+  border-radius: 4px;
+  text-decoration: none;
+  color: var(--link-color, #007bff);
+  transition: background-color 0.2s;
+}
+.pagination a:hover { background-color: var(--btn-hover-bg-color, #e9ecef); }
+.pagination .current {
+  background-color: var(--btn-bg-color, #007bff);
+  color: #fff;
+  border-color: var(--btn-bg-color, #007bff);
+}
+.pagination .disabled {
+  color: #ccc;
+  border-color: #ccc;
+  cursor: default;
+}
+.no-notes {
+  text-align: center;
+  color: var(--meta-text-color, #555);
+  margin-top: 40px;
+}
+@media (max-width: 600px) {
+  .note-list { grid-template-columns: 1fr; }
+}
+</style>
 
 {% endblock %}

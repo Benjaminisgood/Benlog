@@ -1,116 +1,141 @@
 {% extends "base.html" %}
-{% block content %}
-<h1 class="page-heading">编辑文档</h1>
-<form method="POST" class="edit-form">
-    <label for="new_slug">文档名称 (重命名)：</label>
-    <input type="text" name="new_slug" id="new_slug" value="{{ slug }}" class="input-field" required>
-    <br><br>
-    <textarea name="content" placeholder="在此处编辑文档内容..." class="textarea-field" required>{{ content }}</textarea>
-    <div class="form-buttons">
-        <input type="submit" value="保存" class="btn btn-save">
-        <input type="submit" name="delete" value="删除" class="btn btn-delete" onclick="return confirm('确定要删除此文件吗？此操作不可恢复！');">
-    </div>
-</form>
 
-<!-- 局部CSS样式 -->
-<style>
-    /* 页面标题 */
+{% block content %}
+  <h1 class="page-heading">编辑文档：{{ slug }}</h1>
+
+  <!-- 重命名表单 -->
+  <form method="POST"
+        action="{{ url_for('edu.rename_note', slug=slug) }}"
+        class="edit-form">
+    <label for="new_slug">重命名为：</label>
+    <input
+      type="text"
+      name="new_slug"
+      id="new_slug"
+      value="{{ slug }}"
+      class="input-field"
+      required
+    >
+    <button type="submit" class="btn btn-rename">重命名</button>
+  </form>
+
+  <!-- 正文编辑表单 -->
+  <form method="POST"
+        action="{{ url_for('edu.edit_note', slug=slug) }}"
+        class="edit-form"
+        style="margin-top:1.5em;">
+    <div class="editor-card">
+      <textarea
+        name="content"
+        rows="20"
+        class="textarea-field"
+        required
+      >{{ content }}</textarea>
+    </div>
+    <button type="submit" class="btn btn-save">保存内容</button>
+  </form>
+
+
+  <style>
     .page-heading {
-        text-align: center;
-        color: var(--text-color); /* 使用全局文本颜色 */
-        margin-bottom: 20px;
-        font-size: 2rem;
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 1em;
+      color: var(--text-color);
     }
 
     .edit-form {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 20px;
-        background: var(--card-bg-color); /* 使用全局卡片背景色 */
-        border: 1px solid var(--card-border-color); /* 使用全局边框颜色 */
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      max-width: 800px;
+      margin: 0 auto 2em;
+      padding: 1.5em;
+      background: var(--card-bg-color);
+      border: 1px solid var(--card-border-color);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
     .edit-form label {
-        font-size: 1em;
-        font-weight: bold;
-        color: var(--text-color); /* 使用全局文本颜色 */
+      display: block;
+      font-size: 1.1rem;
+      margin-bottom: 0.5em;
+      color: var(--text-color);
+      font-weight: bold;
     }
 
-    .input-field, .textarea-field {
-        width: 100%;
-        padding: 15px;
-        font-size: 1rem;
-        border: 1px solid var(--input-border-color); /* 使用全局输入框边框色 */
-        border-radius: 5px;
-        resize: vertical;
-        background-color: var(--input-bg-color); /* 使用全局输入框背景色 */
-        color: var(--text-color); /* 使用全局文本颜色 */
-        box-sizing: border-box;
-        margin-bottom: 15px;
+    .input-field {
+      width: 100%;
+      padding: 0.75em;
+      font-size: 1rem;
+      border: 1px solid var(--input-border-color);
+      border-radius: 5px;
+      background: var(--input-bg-color);
+      color: var(--text-color);
+      margin-bottom: 1em;
+      box-sizing: border-box;
+    }
+
+    .editor-card {
+      margin-bottom: 1em;
     }
 
     .textarea-field {
-        height: 200px; /* 默认高度 */
-    }
-
-    .input-field:focus, .textarea-field:focus {
-        border-color: var(--input-focus-border-color); /* 使用全局聚焦时边框颜色 */
-        outline: none;
-    }
-
-    .form-buttons {
-        display: flex;
-        gap: 10px;
-        justify-content: space-between;
+      width: 100%;
+      min-height: 300px;
+      padding: 1em;
+      font-family: monospace;
+      font-size: 1rem;
+      line-height: 1.5;
+      border: 1px solid var(--card-border-color);
+      border-radius: 5px;
+      background: var(--card-bg-color);
+      color: var(--text-color);
+      box-sizing: border-box;
+      resize: vertical;
     }
 
     .btn {
-        padding: 10px 20px;
-        border-radius: 5px;
-        color: white;
-        cursor: pointer;
-        transition: background-color 0.3s ease, transform 0.2s ease;
-        border: none;
+      display: inline-block;
+      padding: 0.6em 1.2em;
+      border: none;
+      border-radius: 5px;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+      text-decoration: none;
+      margin-right: 1em;
+    }
+
+    .btn-rename {
+      background-color: #17a2b8;
+    }
+    .btn-rename:hover {
+      background-color: #138496;
+      transform: translateY(-1px);
     }
 
     .btn-save {
-        background-color: var(--btn-bg-color); /* 使用全局按钮背景色 */
+      background-color: var(--btn-bg-color);
     }
-
     .btn-save:hover {
-        background-color: var(--btn-hover-bg-color); /* 使用全局按钮悬停背景色 */
-        transform: translateY(-2px);
+      background-color: var(--btn-hover-bg-color);
+      transform: translateY(-1px);
     }
 
-    .btn-delete {
-        background-color: var(--btn-hover-bg-color); /* 使用全局按钮悬停背景色 */
+    .btn-back {
+      background-color: #6c757d;
+      margin-top: 1em;
+    }
+    .btn-back:hover {
+      background-color: #5a6268;
+      transform: translateY(-1px);
     }
 
-    .btn-delete:hover {
-        background-color: var(--btn-bg-color); /* 使用全局按钮背景色 */
-        transform: translateY(-2px);
+    @media (max-width: 600px) {
+      .edit-form { padding: 1em; }
+      .page-heading { font-size: 1.5rem; }
+      .textarea-field { min-height: 200px; }
+      .btn { font-size: 0.9rem; }
     }
-
-    /* 响应式设计：适配小屏幕 */
-    @media (max-width: 768px) {
-        .edit-form {
-            padding: 15px;
-        }
-
-        .page-heading {
-            font-size: 1.5rem;
-        }
-
-        .btn {
-            font-size: 0.9rem;
-        }
-
-        .input-field, .textarea-field {
-            font-size: 0.9rem;
-        }
-    }
-</style>
-
+  </style>
 {% endblock %}

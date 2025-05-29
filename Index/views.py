@@ -13,6 +13,7 @@ import json
 from flask_login import login_required, current_user
 import re
 
+
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 
@@ -220,15 +221,36 @@ def llm_query():
     return render_template('llm.html', query=query, answer=answer)
 
 
-# Load the quick-links.json file from /Index/dynamic_links directory
+# Helper: 确保目录和文件存在
+def ensure_json_file(path, default):
+    dirpath = os.path.dirname(path)
+    os.makedirs(dirpath, exist_ok=True)
+    if not os.path.isfile(path):
+        # 写入默认内容
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(default, f, ensure_ascii=False, indent=2)
+
 def load_quick_links():
-    links_file_path = os.path.join(os.path.dirname(__file__), 'dynamic_links', 'quick-links.json')
-    with open(links_file_path, 'r', encoding='utf-8') as file:
-        return json.load(file)
+    links_file = os.path.join(
+        os.path.dirname(__file__),
+        'dynamic_links',
+        'quick-links.json'
+    )
+    # 如果目录或文件不存在，就创建
+    ensure_json_file(links_file, default=[])
+    # 读取并返回
+    with open(links_file, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
 def load_friend_links():
-    links_file_path = os.path.join(os.path.dirname(__file__), 'dynamic_links', 'friend-links.json')
-    with open(links_file_path, 'r', encoding='utf-8') as file:
-        return json.load(file)
+    links_file = os.path.join(
+        os.path.dirname(__file__),
+        'dynamic_links',
+        'friend-links.json'
+    )
+    ensure_json_file(links_file, default=[])
+    with open(links_file, 'r', encoding='utf-8') as f:
+        return json.load(f)
 
 
 @index_bp.route('/')
