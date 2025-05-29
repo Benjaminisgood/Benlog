@@ -1,59 +1,83 @@
 {% extends "base.html" %}
 {% block content %}
-  <h1>Blog Posts</h1>
 
+  <div class="page-header">
+    <h1>Blog Posts</h1>
+  </div>
+  <div class="page-header">
+    <a href="{{ url_for('blog.new_post') }}" id="new-post-button" class="btn">＋ New Post</a>
+  </div>
+  {% if posts %}
   <ul class="post-list">
     {% for post in posts %}
-      <li>
-        <div class="post-card">
-          <a href="{{ url_for('blog.show_post', slug=post.slug) }}"target="_blank" rel="noopener noreferrer">
-            <h3>{{ post.slug }}</h3>
-          </a>
-          <p class="post-meta">
-              Last Modified: {{ post.last_modified.strftime("%Y-%m-%d %H:%M:%S") }}
-            </a>
-          </p>
-        </div>
-      </li>
+    <li class="post-card">
+      <div class="post-info">
+        <a href="{{ url_for('blog.show_post', slug=post.slug) }}"
+           target="_blank" rel="noopener noreferrer">
+          <h3>{{ post.slug }}</h3>
+        </a>
+        <p class="post-meta">
+          Last Modified: {{ post.last_modified.strftime("%Y-%m-%d %H:%M:%S") }}
+        </p>
+      </div>
+      <div class="post-actions">
+        <a href="{{ url_for('blog.edit_post', slug=post.slug) }}"
+           class="btn btn-edit">✎ Edit</a>
+        <form method="POST"
+              action="{{ url_for('blog.delete_post', slug=post.slug) }}"
+              onsubmit="return confirm('Are you sure you want to delete this post?');"
+              style="display:inline">
+          <button type="submit" class="btn btn-delete">🗑 Delete</button>
+        </form>
+      </div>
+    </li>
     {% endfor %}
-    {% if posts|length == 0 %}
-      <p><em>No posts available.</em></p>
-    {% endif %}
   </ul>
+  {% else %}
+    <p class="no-posts"><em>No posts available.</em></p>
+  {% endif %}
 
   <style>
-    /* 按钮样式 */
+    /* 页眉 */
+    .page-header {
+      display: flex;
+      justify-content: center;   /* 水平居中所有子元素 */
+      align-items: center;       /* 垂直居中 */
+      gap: 20px;                 /* 子元素间距 */
+      margin-bottom: 20px;
+    }
+
+    /* “New Post” 按钮 */
     #new-post-button {
       background-color: var(--link-color, #007bff);
       color: #fff;
-      border: none;
-      padding: 10px 20px;
-      font-size: 1em;
+      padding: 8px 16px;
       border-radius: 5px;
-      cursor: pointer;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      text-decoration: none;
       transition: background-color 0.2s, transform 0.2s;
-      margin-bottom: 20px;
     }
     #new-post-button:hover {
       background-color: #0056b3;
       transform: translateY(-2px);
     }
-    
-    /* 列表与卡片 */
+
+    /* 列表布局 */
     .post-list {
       list-style: none;
       padding: 0;
-    }
-    .post-list li {
-      margin: 0.5em 0;
+      margin: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
     }
     .post-card {
       background: var(--card-bg-color, #fff);
       border: 1px solid var(--card-border-color, #ddd);
       border-radius: 8px;
       padding: 16px;
-      margin: 12px 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       transition: transform 0.2s, box-shadow 0.2s;
     }
@@ -61,91 +85,71 @@
       transform: translateY(-2px);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
     }
-    .post-list li a {
+
+    /* 标题与元信息 */
+    .post-info h3 {
+      margin: 0;
       color: var(--link-color, #007bff);
-      text-decoration: none;
     }
-    .post-list li a:hover {
+    .post-info h3:hover {
       text-decoration: underline;
     }
     .post-meta {
       color: var(--meta-text-color, #555);
-      font-size: 0.9em;
+      font-size: 0.9rem;
       margin-top: 8px;
     }
-    .edit-link {
-      color: inherit;
-      border-bottom: 1px dotted transparent;
-      transition: border-bottom 0.2s;
+
+    /* 操作按钮 */
+    .post-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 12px;
     }
-    .edit-link:hover {
-      border-bottom: 1px dotted currentColor;
-    }
-    
-    /* 模态框样式 */
-    .modal {
-      display: none; /* 初始隐藏 */
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.6);
-      z-index: 1000;
-      /* 使用 Flex 居中 */
-      align-items: center;
-      justify-content: center;
-    }
-    .modal-content {
-      background-color: #fff;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-      width: 320px;
-      position: relative;
-      text-align: center;
-    }
-    .close {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      color: #aaa;
-      font-size: 24px;
-      cursor: pointer;
-    }
-    .modal-content form {
-      margin-top: 20px;
-    }
-    .modal-content label {
-      display: block;
-      font-size: 0.9em;
-      margin-bottom: 8px;
-      text-align: left;
-    }
-    .modal-content input[type="password"] {
-      width: 100%;
-      padding: 10px;
-      box-sizing: border-box;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    .modal-content input[type="submit"] {
-      background-color: var(--link-color, #007bff);
-      color: #fff;
+    .btn {
+      padding: 6px 12px;
       border: none;
-      width: 100%;
-      padding: 10px;
-      font-size: 1em;
-      border-radius: 5px;
+      border-radius: 4px;
+      color: #fff;
       cursor: pointer;
+      font-size: 0.9rem;
       transition: background-color 0.2s, transform 0.2s;
+      text-decoration: none;
+      display: inline-block;
     }
-    .modal-content input[type="submit"]:hover {
-      background-color: #0056b3;
-      transform: translateY(-2px);
+    .btn-edit {
+      background-color: #17a2b8;
+    }
+    .btn-edit:hover {
+      background-color: #138496;
+      transform: translateY(-1px);
+    }
+    .btn-delete {
+      background-color: #dc3545;
+    }
+    .btn-delete:hover {
+      background-color: #c82333;
+      transform: translateY(-1px);
+    }
+
+    /* 无文章时 */
+    .no-posts {
+      text-align: center;
+      color: var(--meta-text-color, #555);
+      margin-top: 40px;
+    }
+
+    /* 响应式：小屏幕下列表单列 */
+    @media (max-width: 600px) {
+      .post-list {
+        grid-template-columns: 1fr;
+      }
+      .post-actions {
+        flex-direction: column;
+        gap: 8px;
+      }
     }
   </style>
-
 
 {% endblock %}

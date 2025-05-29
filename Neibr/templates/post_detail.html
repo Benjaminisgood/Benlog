@@ -3,6 +3,13 @@
 
 <div class="card">
   <div class="title">{{ post.title }}</div>
+  <!-- 新增作者和发布时间 -->
+  <div class="post-meta" style="margin-bottom: 12px; color: var(--meta-text-color); font-size: 0.9rem;">
+    <span class="meta-author">作者：{{ author }}</span>
+    <span class="meta-date" style="margin-left: 1em;">
+      发布时间：{{ post.creation_time.strftime('%Y-%m-%d %H:%M:%S') }}
+    </span>
+  </div>
 
   <div class="tags">
     {% for tag in post.tags.split(',') %}
