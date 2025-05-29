@@ -10,6 +10,8 @@ import yaml
 from datetime import datetime
 from flask import send_from_directory, abort # type: ignore
 from flask import session
+from flask import jsonify, request
+from math import ceil
 
 # 项目根目录下的 static/neibr 路径
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -109,6 +111,7 @@ def post_detail(title):
     """
     post = Post.query.filter_by(title=title).first_or_404()
     user_id = post.user_id
+    author = User.query.get(user_id).username
 
     # 构建帖子文件夹路径：static/neibr/user_id/post_id
     folder_path = os.path.join(UPLOAD_BASE_PATH, str(user_id), str(post.id))
@@ -166,6 +169,7 @@ def post_detail(title):
     return render_template(
         'post_detail.html',
         post=post,
+        author=author,
         post_text=post_text,
         media_files=media_files,
         comments=comments,
@@ -248,3 +252,48 @@ def media_file(user_id, post_id, filename):
 
     # 4) 安全地发送文件
     return send_from_directory(folder, filename)
+
+
+
+
+@neibr_bp.route('/api/posts')
+@login_required
+def api_posts():
+    src  = request.args.get('src', 'latest')
+    page = int(request.args.get('page', 1))
+    per_page = 10
+
+    # 基础查询：公开或本人的帖子
+    base_q = Post.query.filter(
+      (Post.is_hidden == False) | (Post.user_id == current_user.id)
+    )
+
+    if src == 'latest':
+        q = base_q.order_by(Post.creation_time.desc())
+    elif src == 'random':
+        q = base_q.order_by(db.func.random())
+    elif src == 'my':
+        q = base_q.filter_by(user_id=current_user.id) \
+                  .order_by(Post.creation_time.desc())
+    else:
+        q = base_q.order_by(Post.creation_time.desc())
+
+    total = q.count()
+    posts = q.offset((page-1)*per_page) \
+             .limit(per_page).all()
+
+    # 组装 JSON
+    items = []
+    for p in posts:
+        items.append({
+            'title': p.title,
+            'author': User.query.get(p.user_id).username,
+            'date': p.creation_time.strftime('%Y-%m-%d %H:%M'),
+            'tags': [t.strip() for t in p.tags.split(',')],
+            'url': url_for('neibr.post_detail', title=p.title, src=src, idx=(page-1)*per_page + posts.index(p))
+        })
+
+    return jsonify({
+        'posts': items,
+        'has_more': page * per_page < total
+    })
