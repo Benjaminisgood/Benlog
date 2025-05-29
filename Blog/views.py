@@ -66,28 +66,33 @@ def upload_post():
 
 @blog_bp.route('/')
 def list_posts():
-    """列出所有文章，显示文件名和最后修改时间（由近到远排序）。"""
-    if not os.path.exists(POSTS_DIR):
-        abort(500, description=f"POSTS_DIR 不存在：{POSTS_DIR}")
+    # 1. 获取 page 参数
+    try:
+        page = int(request.args.get('page', 1))
+    except ValueError:
+        page = 1
 
-    posts = []
-    for filename in os.listdir(POSTS_DIR):
-        if filename.endswith(('.md', '.html')):
-            filepath = os.path.join(POSTS_DIR, filename)
-            # 获取文件最后修改时间
-            last_modified_timestamp = os.path.getmtime(filepath)
-            last_modified_time = datetime.fromtimestamp(last_modified_timestamp)
-            # 使用文件名（不含扩展名）作为 slug
-            slug = filename.rsplit('.', 1)[0]
-            posts.append({
-                'filename': filename,
-                'slug': slug,
-                'last_modified': last_modified_time
-            })
-    # 按最后修改时间由近到远排序
-    posts.sort(key=lambda x: x['last_modified'], reverse=True)
-    return render_template('blog_index.html', title="Blog", posts=posts)
+    # 2. 拿到所有文章
+    all_posts = get_all_posts()  # 之前定义的函数
 
+    # 3. 计算总页数，并确保 page 在合理范围
+    total = len(all_posts)
+    total_pages = math.ceil(total / PER_PAGE) if total else 1
+    page = max(1, min(page, total_pages))
+
+    # 4. 切片出当前页的文章
+    start = (page - 1) * PER_PAGE
+    end   = start + PER_PAGE
+    page_posts = all_posts[start:end]
+
+    # 5. 渲染，传入 page 和 total_pages
+    return render_template(
+        'blog_index.html',
+        title="Blog",
+        posts=page_posts,
+        page=page,
+        total_pages=total_pages
+    )
 
 @blog_bp.route('/<slug>')
 def show_post(slug):

@@ -33,6 +33,30 @@
     </li>
     {% endfor %}
   </ul>
+   <!-- 分页导航 -->
+  <nav class="pagination">
+    {% if page > 1 %}
+      <a href="{{ url_for('blog.list_posts', page=page-1) }}">« Prev</a>
+    {% else %}
+      <span class="disabled">« Prev</span>
+    {% endif %}
+
+    {# 显示页码 #}
+    {% for p in range(1, total_pages + 1) %}
+      {% if p == page %}
+        <span class="current">{{ p }}</span>
+      {% else %}
+        <a href="{{ url_for('blog.list_posts', page=p) }}">{{ p }}</a>
+      {% endif %}
+    {% endfor %}
+
+    {% if page < total_pages %}
+      <a href="{{ url_for('blog.list_posts', page=page+1) }}">Next »</a>
+    {% else %}
+      <span class="disabled">Next »</span>
+    {% endif %}
+  </nav>
+
   {% else %}
     <p class="no-posts"><em>No posts available.</em></p>
   {% endif %}
@@ -133,6 +157,39 @@
       transform: translateY(-1px);
     }
 
+      .pagination {
+    display: flex;              /* 启用 Flexbox 布局 */
+    justify-content: center;    /* 水平居中所有分页项 */
+    flex-wrap: wrap;            /* 支持多行时换行 */
+    margin: 30px 0;             /* 保持上下间距 */
+    gap: 5px;                   /* 子元素间距 */
+    /* text-align: center; */   /* 可保留或删除，Flexbox 足够 */
+  }
+
+  .pagination a,
+  .pagination span {
+    display: inline-block;
+    margin: 0;
+    padding: 6px 10px;
+    border: 1px solid var(--card-border-color, #ddd);
+    border-radius: 4px;
+    text-decoration: none;
+    color: var(--link-color, #007bff);
+    transition: background-color 0.2s;
+  }
+  .pagination a:hover {
+    background-color: var(--btn-hover-bg-color, #e9ecef);
+  }
+  .pagination .current {
+    background-color: var(--btn-bg-color, #007bff);
+    color: #fff;
+    border-color: var(--btn-bg-color, #007bff);
+  }
+  .pagination .disabled {
+    color: #ccc;
+    border-color: #ccc;
+    cursor: default;
+  }
     /* 无文章时 */
     .no-posts {
       text-align: center;
