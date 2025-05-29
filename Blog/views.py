@@ -16,7 +16,7 @@ def list_posts():
 
     posts = []
     for filename in os.listdir(POSTS_DIR):
-        if filename.endswith('.md'):
+        if filename.endswith(('.md', '.html')):
             filepath = os.path.join(POSTS_DIR, filename)
             # 获取文件最后修改时间
             last_modified_timestamp = os.path.getmtime(filepath)
@@ -35,38 +35,47 @@ def list_posts():
 
 @blog_bp.route('/<slug>')
 def show_post(slug):
-    """显示单个文章，使用 slug（文件名去除 .md 部分）标识。"""
-    filename = f"{slug}.md"
-    filepath = os.path.join(POSTS_DIR, filename)
-    if not os.path.exists(filepath):
-        abort(404)
-    # 加载并解析 Markdown 文件（包括 frontmatter 数据）
-    post_data = frontmatter.load(filepath)
-    #title = post_data.get('title', 'Untitled')
-    content_md = post_data.content  # Markdown 内容（不包含 frontmatter）
-    # 将 Markdown 转为 HTML
-    content_html = markdown.markdown(
-        content_md,
-        extensions=[
-            'extra',                  # Markdown Extra 增强功能
-            'pymdownx.tilde',         # 删除线支持：使用 ~~删除线~~
-            'pymdownx.tasklist',      # 任务列表支持：- [ ] 和 - [x]
-            'pymdownx.arithmatex'     # 数学公式支持（支持 $...$ 和 $$...$$）
-        ],
-        extension_configs={
-            'pymdownx.arithmatex': {
-                'generic': True      # 开启通用模式，方便 MathJax 渲染
+    """支持显示 .md 或 .html 文件的文章"""
+    md_path = os.path.join(POSTS_DIR, f"{slug}.md")
+    html_path = os.path.join(POSTS_DIR, f"{slug}.html")
+
+    if os.path.exists(md_path):
+        # 解析 Markdown 文件
+        post_data = frontmatter.load(md_path)
+        content_md = post_data.content
+        content_html = markdown.markdown(
+            content_md,
+            extensions=[
+                'extra',
+                'pymdownx.tilde',
+                'pymdownx.tasklist',
+                'pymdownx.arithmatex'
+            ],
+            extension_configs={
+                'pymdownx.arithmatex': {'generic': True}
             }
-        }
-    )
-    return render_template(
-        'blog_post.html',
-        #title=title,
-        #post_title=title,
-        post_content=content_html,
-        post_date=post_data.get('date', ''),
-        frontmatter=post_data.metadata
-    )
+        )
+        return render_template(
+            'blog_post.html',
+            post_content=content_html,
+            post_date=post_data.get('date', ''),
+            frontmatter=post_data.metadata
+        )
+
+    elif os.path.exists(html_path):
+        # 直接读取 .html 文件内容并原样渲染
+        with open(html_path, 'r', encoding='utf-8') as f:
+            html_content = f.read()
+        return render_template(
+            'blog_post.html',
+            post_content=html_content,
+            post_date='',  # 或者你可以用某种方式提取日期
+            frontmatter={}
+        )
+
+    else:
+        abort(404, description="没有找到该文章")
+
 
 @blog_bp.route('/manage_posts')
 @login_required
@@ -81,15 +90,17 @@ def manage_posts():
 
     posts = []
     for filename in os.listdir(POSTS_DIR):
-        if filename.endswith('.md'):
+        if filename.endswith(('.md', '.html')):  # ✅ 支持两种后缀
             filepath = os.path.join(POSTS_DIR, filename)
             last_modified = datetime.fromtimestamp(os.path.getmtime(filepath))
-            slug = filename.rsplit('.', 1)[0]
+            slug, ext = filename.rsplit('.', 1)
             posts.append({
                 'filename': filename,
                 'slug': slug,
+                'ext': ext,  # ✅ 额外加上扩展名，方便前端判断类型
                 'last_modified': last_modified
             })
+
 
     posts.sort(key=lambda x: x['last_modified'], reverse=True)
 
@@ -128,51 +139,48 @@ def new_post():
 def edit_post(slug):
     if not (current_user.is_admin or current_user.id == 1):
         abort(403)
-    """编辑指定文章，直接读取和保存整个 .md 文件的内容"""
-    filename = f"{slug}.md"
-    filepath = os.path.join(POSTS_DIR, filename)
-    if not os.path.exists(filepath):
-        abort(404)
-    
+
+    # 自动检测支持的文件扩展名
+    for ext in ['.md', '.html']:
+        filename = f"{slug}{ext}"
+        filepath = os.path.join(POSTS_DIR, filename)
+        if os.path.exists(filepath):
+            file_ext = ext
+            break
+    else:
+        abort(404, description="未找到对应的 .md 或 .html 文件")
+
+    # POST 提交编辑内容
     if request.method == 'POST':
-        # 检查是否点击了删除按钮
+        # 删除逻辑（适用于所有扩展名）
         if 'delete' in request.form:
-            try:
-                os.remove(filepath)
-            except Exception as e:
-                flash("删除失败：" + str(e), "error")
-                return redirect(url_for('blog.show_post', slug=slug))
-            flash("文章已成功删除。", "success")
-            # 删除后重定向到博客首页或其他合适的页面
+            os.remove(filepath)
+            flash("文件已删除", "success")
             return redirect(url_for('blog.list_posts'))
-        
-        # 如果不是删除操作，则按更新处理
+
+        # 更新内容
         new_content = request.form.get('content', '')
         new_slug = request.form.get('new_slug', '').strip() or slug
+        new_filename = f"{new_slug}{file_ext}"
+        new_filepath = os.path.join(POSTS_DIR, new_filename)
 
-        # 如果新名称不等于原来的名称，则执行重命名逻辑
+        # 若重命名了
         if new_slug != slug:
-            new_filename = f"{new_slug}.md"
-            new_filepath = os.path.join(POSTS_DIR, new_filename)
-            # 如果新名称已经存在则提示错误
             if os.path.exists(new_filepath):
-                flash("重命名失败：文档名称已存在。", "error")
-                return redirect(url_for('edu.edit_note', slug=slug))
-            try:
-                os.rename(filepath, new_filepath)
-            except Exception as e:
-                flash("重命名失败：" + str(e), "error")
-                return redirect(url_for('edu.edit_note', slug=slug))
-            # 更新文件路径与 slug 为新名称
+                flash("重命名失败：文件已存在", "error")
+                return redirect(url_for('blog.edit_post', slug=slug))
+            os.rename(filepath, new_filepath)
             filepath = new_filepath
             slug = new_slug
 
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(new_content)
-        flash("文章已成功更新。", "success")
+
+        flash("保存成功", "success")
         return redirect(url_for('blog.show_post', slug=slug))
-    
+
+    # GET：读取文件内容用于编辑
     with open(filepath, 'r', encoding='utf-8') as f:
         file_text = f.read()
-    
+
     return render_template('blog_edit.html', content=file_text, slug=slug)
