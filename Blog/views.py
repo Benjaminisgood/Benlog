@@ -66,6 +66,8 @@ def upload_post():
 
 @blog_bp.route('/')
 def list_posts():
+    os.makedirs(POSTS_DIR, exist_ok=True)
+
     # 1. 获取 page 参数
     try:
         page = int(request.args.get('page', 1))
