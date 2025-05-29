@@ -1,4 +1,5 @@
-import os
+import os, math
+import re
 from flask import request, redirect, flash, render_template, abort, current_app, url_for
 import frontmatter, markdown
 from datetime import datetime
@@ -7,6 +8,61 @@ from flask_login import login_required, current_user
 
 # POSTS_DIR 存放 blog 模块的 Markdown 文件
 POSTS_DIR = os.path.join(os.path.dirname(__file__), 'posts')
+ALLOWED_EXTENSIONS = {'md', 'html'}
+PER_PAGE = 10  # 每页显示条数
+
+def get_all_posts():
+    """返回按时间倒序排列的所有文章元信息列表"""
+    posts = []
+    if not os.path.exists(POSTS_DIR):
+        abort(500, description=f"POSTS_DIR 不存在：{POSTS_DIR}")
+    for filename in os.listdir(POSTS_DIR):
+        if filename.endswith(('.md', '.html')):
+            filepath = os.path.join(POSTS_DIR, filename)
+            lm = datetime.fromtimestamp(os.path.getmtime(filepath))
+            slug = filename.rsplit('.', 1)[0]
+            posts.append({'slug': slug, 'last_modified': lm})
+    posts.sort(key=lambda x: x['last_modified'], reverse=True)
+    return posts
+
+def allowed_file(filename: str) -> bool:
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def sanitize_filename(filename: str) -> str:
+    # 去除路径，替换所有非字母数字、下划线、连字符、点 为下划线
+    name = os.path.basename(filename)
+    return re.sub(r'[^A-Za-z0-9._-]', '_', name)
+
+@blog_bp.route('/upload', methods=['POST'])
+@login_required
+def upload_post():
+    # 权限检查
+    if not (current_user.is_admin or current_user.id == 1):
+        abort(403)
+
+    if 'post_file' not in request.files:
+        flash("未选择文件", "error")
+        return redirect(url_for('blog.list_posts'))
+
+    file = request.files['post_file']
+    if file.filename == '':
+        flash("未选择文件", "error")
+        return redirect(url_for('blog.list_posts'))
+
+    if not allowed_file(file.filename):
+        flash("只能上传 .md 或 .html 文件", "error")
+        return redirect(url_for('blog.list_posts'))
+
+    # 安全清洗文件名
+    filename = sanitize_filename(file.filename)
+    save_path = os.path.join(POSTS_DIR, filename)
+
+    # 保存文件
+    file.save(save_path)
+
+    flash("上传成功！", "success")
+    return redirect(url_for('blog.list_posts'))
 
 @blog_bp.route('/')
 def list_posts():
@@ -137,50 +193,59 @@ def new_post():
 @blog_bp.route('/<slug>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_post(slug):
-    if not (current_user.is_admin or current_user.id == 1):
-        abort(403)
-
-    # 自动检测支持的文件扩展名
-    for ext in ['.md', '.html']:
-        filename = f"{slug}{ext}"
-        filepath = os.path.join(POSTS_DIR, filename)
-        if os.path.exists(filepath):
-            file_ext = ext
+    # 定位文件
+    filepath = None
+    for ext in ('md', 'html'):
+        p = os.path.join(POSTS_DIR, f"{slug}.{ext}")
+        if os.path.exists(p):
+            filepath = p
             break
-    else:
-        abort(404, description="未找到对应的 .md 或 .html 文件")
+    if filepath is None:
+        abort(404, description="Post not found")
 
-    # POST 提交编辑内容
     if request.method == 'POST':
-        # 删除逻辑（适用于所有扩展名）
-        if 'delete' in request.form:
-            os.remove(filepath)
-            flash("文件已删除", "success")
-            return redirect(url_for('blog.list_posts'))
-
-        # 更新内容
+        # 仅保存正文内容
         new_content = request.form.get('content', '')
-        new_slug = request.form.get('new_slug', '').strip() or slug
-        new_filename = f"{new_slug}{file_ext}"
-        new_filepath = os.path.join(POSTS_DIR, new_filename)
-
-        # 若重命名了
-        if new_slug != slug:
-            if os.path.exists(new_filepath):
-                flash("重命名失败：文件已存在", "error")
-                return redirect(url_for('blog.edit_post', slug=slug))
-            os.rename(filepath, new_filepath)
-            filepath = new_filepath
-            slug = new_slug
-
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(new_content)
-
-        flash("保存成功", "success")
+        flash("内容已保存", "success")
         return redirect(url_for('blog.show_post', slug=slug))
 
-    # GET：读取文件内容用于编辑
+    # GET：读取内容并渲染编辑页面
     with open(filepath, 'r', encoding='utf-8') as f:
         file_text = f.read()
+    return render_template('blog_edit.html', slug=slug, content=file_text)
 
-    return render_template('blog_edit.html', content=file_text, slug=slug)
+@blog_bp.route('/<slug>/rename', methods=['POST'])
+@login_required
+def rename_post(slug):
+    if not (current_user.is_admin or current_user.id == 1):
+        abort(403)
+    new_slug = request.form.get('new_slug', '').strip()
+    if not new_slug:
+        flash("新名称不能为空", "error")
+        return redirect(url_for('blog.edit_post', slug=slug))
+    for ext in ('md', 'html'):
+        old_path = os.path.join(POSTS_DIR, f"{slug}.{ext}")
+        if os.path.exists(old_path):
+            new_path = os.path.join(POSTS_DIR, f"{new_slug}.{ext}")
+            if os.path.exists(new_path):
+                flash("重命名失败：目标文件已存在", "error")
+                return redirect(url_for('blog.edit_post', slug=slug))
+            os.rename(old_path, new_path)
+            flash("重命名成功", "success")
+            return redirect(url_for('blog.edit_post', slug=new_slug))
+    abort(404, description="Post not found")
+
+@blog_bp.route('/<slug>/delete', methods=['POST'])
+@login_required
+def delete_post(slug):
+    if not (current_user.is_admin or current_user.id == 1):
+        abort(403)
+    for ext in ('md', 'html'):
+        path = os.path.join(POSTS_DIR, f"{slug}.{ext}")
+        if os.path.exists(path):
+            os.remove(path)
+            flash("文章已删除", "success")
+            return redirect(url_for('blog.manage_posts'))
+    abort(404, description="Post not found")

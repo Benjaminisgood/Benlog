@@ -46,8 +46,9 @@
   <div class='card section-card'>
     <h2>⚙️ 管理功能</h2>
     <div class='quick-cards'>
-      <a href="{{ url_for('edu.manage_notes') }}" class='quick-card'>📄 管理教育笔记</a>
       <a href="{{ url_for('blog.manage_posts') }}" class='quick-card'>📝 管理博客文章</a>
+
+      <a href="{{ url_for('edu.manage_notes') }}" class='quick-card'>📄 管理教育笔记</a>
     </div>
   </div>
   {% endif %}

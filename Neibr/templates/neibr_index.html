@@ -43,9 +43,12 @@
         <a href="{{ url_for('neibr.post_detail', title=post.title, src='latest', idx=loop.index0) }}">
           查看详情 →
         </a>
+        </div>
+      {% endfor %}
+      <div class="load-more-wrapper">
+        <button id="load-more-latest" class="btn-load-more">加载更多</button>
       </div>
-    {% endfor %}
-  </div>
+    </div>
 
   <div id="random-posts" class="posts-container" style="display:none;">
     {% for post in random_posts %}
@@ -63,9 +66,12 @@
         <a href="{{ url_for('neibr.post_detail', title=post.title, src='random', idx=loop.index0) }}">
           查看详情 →
         </a>
+        </div>
+      {% endfor %}
+      <div class="load-more-wrapper">
+        <button id="load-more-latest" class="btn-load-more">加载更多</button>
       </div>
-    {% endfor %}
-  </div>
+    </div>
 
   <div id="my-posts" class="posts-container" style="display:none;">
     {% for post in my_posts %}
@@ -81,14 +87,37 @@
         <a href="{{ url_for('neibr.post_detail', title=post.title, src='my', idx=loop.index0) }}">
           查看详情 →
         </a>
+        </div>
+      {% else %}
+        <p>你还没有发布任何帖子。</p>
+      {% endfor %}
+      <div class="load-more-wrapper">
+        <button id="load-more-my" class="btn-load-more">加载更多</button>
+      </div>
     </div>
-    {% else %}
-    <p>你还没有发布任何帖子。</p>
-    {% endfor %}
-</div>
+
+  </div>
 
 
 <style>
+.btn-load-more {
+  display: block;
+  margin: 20px auto;
+  background-color: var(--link-color, #007bff);
+  color: #fff;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+.btn-load-more:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+.load-more-wrapper {
+  text-align: center;
+}
 .card {
   max-width: 700px;
   margin: 20px auto;
@@ -261,4 +290,43 @@
         btnRandom.classList.remove('active');
     };
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const sections = {
+    latest:  { btnId: 'load-more-latest',  contId: 'latest-posts',  page: 1, src: 'latest' },
+    random:  { btnId: 'load-more-random',  contId: 'random-posts',  page: 1, src: 'random' },
+    my:      { btnId: 'load-more-my',      contId: 'my-posts',      page: 1, src: 'my' }
+  };
+
+  Object.values(sections).forEach(sec => {
+    const btn = document.getElementById(sec.btnId);
+    btn.addEventListener('click', () => {
+      sec.page += 1;
+      fetch(`{{ url_for('neibr.api_posts') }}?src=${sec.src}&page=${sec.page}`)
+        .then(res => res.json())
+        .then(data => {
+          const container = document.getElementById(sec.contId);
+          data.posts.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+              <h3>${p.title}</h3>
+              <div class="post-meta">
+                <span class="author">作者：${p.author}</span>
+                <span class="date">发表于：${p.date}</span>
+              </div>
+              <div class="tags">
+                ${p.tags.map(t => `<span>${t}</span>`).join('')}
+              </div>
+              <a href="${p.url}">查看详情 →</a>
+            `;
+            container.appendChild(card);
+          });
+          if (!data.has_more) btn.style.display = 'none';
+        });
+    });
+  });
+});
+</script>
+
 {% endblock %}
