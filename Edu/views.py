@@ -56,6 +56,8 @@ def upload_note():
 
 @edu_bp.route('/')
 def list_notes():
+    os.makedirs(NOTES_DIR, exist_ok=True)
+
     """分页列出所有文档，按最后修改时间倒序。"""
     try:
         page = int(request.args.get('page', 1))
