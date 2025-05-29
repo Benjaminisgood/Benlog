@@ -5,9 +5,10 @@ from datetime import datetime
 from . import edu_bp
 from flask_login import login_required, current_user
 import re
+from math import ceil
 
 NOTES_DIR = os.path.join(os.path.dirname(__file__), 'notes')
-# 允许的后缀
+PER_PAGE = 10  # 每页显示条目数
 ALLOWED_EXTENSIONS = {'md', 'html'}
 def allowed_file(filename):
     return '.' in filename and \
@@ -53,29 +54,42 @@ def upload_note():
     flash("上传成功！", "success")
     return redirect(url_for('edu.list_notes'))
 
-
 @edu_bp.route('/')
 def list_notes():
-    """列出所有文章，显示文件名和最后修改时间（由近到远排序）。"""
-    #NOTES_DIR = os.path.join(current_app.static_folder, 'notes/notes')
+    """分页列出所有文档，按最后修改时间倒序。"""
+    try:
+        page = int(request.args.get('page', 1))
+    except ValueError:
+        page = 1
+
+    # 读取所有笔记
+    all_notes = []
     if not os.path.exists(NOTES_DIR):
         abort(500, description=f"Notes directory not found: {NOTES_DIR}")
-    
-    notes = []
     for filename in os.listdir(NOTES_DIR):
         if filename.endswith(('.md', '.html')):
             filepath = os.path.join(NOTES_DIR, filename)
-            last_modified = datetime.fromtimestamp(os.path.getmtime(filepath))
+            lm = datetime.fromtimestamp(os.path.getmtime(filepath))
             slug, ext = filename.rsplit('.', 1)
-            notes.append({
-                'filename': filename,
-                'slug': slug,
-                'ext': ext,
-                'last_modified': last_modified
-            })
-    # 按最后修改时间由近到远排序
-    notes.sort(key=lambda x: x['last_modified'], reverse=True)
-    return render_template('edu_index.html', title="Education Notes", notes=notes)
+            all_notes.append({'slug': slug, 'last_modified': lm})
+    all_notes.sort(key=lambda x: x['last_modified'], reverse=True)
+
+    # 计算分页
+    total = len(all_notes)
+    total_pages = ceil(total / PER_PAGE) if total else 1
+    page = max(1, min(page, total_pages))
+    start = (page - 1) * PER_PAGE
+    end = start + PER_PAGE
+    page_notes = all_notes[start:end]
+
+    return render_template(
+        'edu_index.html',
+        title="Education Notes",
+        notes=page_notes,
+        page=page,
+        total_pages=total_pages
+    )
+
 
 @edu_bp.route('/<slug>')
 def show_note(slug):
