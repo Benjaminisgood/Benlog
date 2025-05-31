@@ -51,11 +51,22 @@ flask --app Benlog/app.py db upgrade
 
 # 运行本地开发服务器
 flask --app "Benlog.app:create_app" run --host=0.0.0.0 --port=80
-#或者
+# 或者
 pkill -f gunicorn
 gunicorn -w 3 --threads 6 -b 0.0.0.0:80 "Benlog.app:create_app()"
 
 ```
+
+---
+
+### 📦 一键更新
+# 如果需要进行版本更新也非常简单，只需在服务器中依次
+cd /Benlog
+source myenv/bin/activate
+chmod +x deploy.sh
+./deploy.sh
+# 随后再继续一键启动即可。
+# setup、manifest也可以帮助你先将程序打包，小白可以直接忽略。
 
 ---
 
