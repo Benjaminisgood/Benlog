@@ -129,18 +129,24 @@ def post_detail(title):
     current_index = all_posts.index(post)
 
     # 动态上一条/下一条：根据用户来自哪个列表(src)和索引(idx)
-    src = request.args.get('src', 'latest')  # 可选 'latest','random','my'
-    idx = int(request.args.get('idx', 0))
-    seq = session.get(f'neibr_seq_{src}', [])
+    src = request.args.get('src', 'latest')   # 'latest', 'random', 'my'
+    try:
+        idx = int(request.args.get('idx', 0))
+    except ValueError:
+        idx = 0
+
+    seq = session.get(f'neibr_seq_{src}', [])  # 可能是长度为 10 的列表，或更多
 
     previous_post = None
     next_post     = None
-    if seq:
+    # 只有当 idx 落在 [0, len(seq)-1] 范围内时，才尝试访问 seq
+    if seq and 0 <= idx < len(seq):
         if idx > 0:
-            previous_post = Post.query.get(seq[idx-1])
+            previous_id = seq[idx - 1]
+            previous_post = Post.query.get(previous_id)
         if idx < len(seq) - 1:
-            next_post = Post.query.get(seq[idx+1])
-
+            next_id = seq[idx + 1]
+            next_post = Post.query.get(next_id)
             
     # 读取评论
     comments_file = os.path.join(folder_path, 'comments.yaml')
@@ -178,6 +184,8 @@ def post_detail(title):
         src=src,
         idx=idx
     )
+
+
 @neibr_bp.route('/edit_post/<string:title>', methods=['GET', 'POST'])
 @login_required
 def edit_post(title):
@@ -279,18 +287,26 @@ def api_posts():
         q = base_q.order_by(Post.creation_time.desc())
 
     total = q.count()
-    posts = q.offset((page-1)*per_page) \
-             .limit(per_page).all()
+    posts = q.offset((page-1)*per_page).limit(per_page).all()
 
-    # 组装 JSON
     items = []
     for p in posts:
+        detail_url = url_for('neibr.post_detail',
+                             title=p.title,
+                             src=src,
+                             idx=(page-1)*per_page + posts.index(p))
+        if src == 'my':
+            edit_url = url_for('neibr.edit_post', title=p.title)
+        else:
+            edit_url = None
+
         items.append({
             'title': p.title,
             'author': User.query.get(p.user_id).username,
             'date': p.creation_time.strftime('%Y-%m-%d %H:%M'),
             'tags': [t.strip() for t in p.tags.split(',')],
-            'url': url_for('neibr.post_detail', title=p.title, src=src, idx=(page-1)*per_page + posts.index(p))
+            'url': detail_url,
+            'edit_url': edit_url
         })
 
     return jsonify({
