@@ -244,7 +244,7 @@
             .then(data => {
               if (data.items && data.items.length > 0) {
                 const container = document.getElementById('gallery-container');
-                data.items.forEach(item => {
+                data.items.forEach((item, idx) => {
                   let galleryItem = document.createElement('div');
                   galleryItem.className = 'gallery-item';
                   let containerEl = document.createElement('div');
@@ -252,18 +252,20 @@
   
                   if (mediaType === "image") {
                     let img = document.createElement('img');
-                    if (item.startsWith('thumb_')) {
-                      img.src = `${staticBase}${folder}/thumbnails/${item}`;
-                      img.setAttribute('data-original', `${staticBase}${folder}/${item.slice(6)}`);
-                      img.alt = item.slice(6);
-                    } else {
-                      img.src = `${staticBase}${folder}/${item}`;
-                      img.alt = item;
-                    }
+                    let thumb = data.thumbnails[idx];
+                    let isThumb = thumb !== item;
+
+                    img.src = isThumb
+                      ? `${staticBase}${folder}/thumbnails/${thumb}`
+                      : `${staticBase}${folder}/${item}`;
+                    img.setAttribute('data-original', `${staticBase}${folder}/${item}`);
+                    img.alt = item;
                     img.loading = 'lazy';
-                    img.onclick = function() { openModal(this.src, item); };
+                    img.onclick = function () {
+                      openModal(this.getAttribute('data-original'), item);
+                    };
                     containerEl.appendChild(img);
-  
+
                     let caption = document.createElement('div');
                     caption.className = 'caption-overlay';
                     caption.textContent = item;
