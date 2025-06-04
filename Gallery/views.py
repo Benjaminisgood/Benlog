@@ -87,11 +87,11 @@ def calc_batch_size(total, media_type="image"):                               # 
     - >  60 张 → 18
     你可按需调整。
     """
-    if total <= 12:
+    if total <= 8:
         return total
-    if total <= 60:
-        return 12
-    return 9 if media_type == "video" else 18
+    if total <= 40:
+        return 10
+    return 6 if media_type == "video" else 12
 
 def get_media_batch(media_list, offset=0, batch_size=12):
     return media_list[offset: offset + batch_size]
