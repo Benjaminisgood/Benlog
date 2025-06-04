@@ -8,12 +8,16 @@
       {% if items %}
         {% for item in items %}
           <div class="gallery-item">
-            <div class="img-container">
-              <img src="{{ url_for('gallery.static', filename=folder ~ '/' ~ item) }}" 
-                   alt="{{ item }}" loading="lazy" 
-                   onclick="openModal(this.src, '{{ item }}')">
-              <div class="caption-overlay">{{ item }}</div>
-            </div>
+            {% if item.startswith('thumb_') %}
+              <img src="{{ url_for('gallery.static', filename=folder ~ '/thumbnails/' ~ item) }}"
+                  data-original="{{ url_for('gallery_bp.static', filename=folder ~ '/' ~ item[6:]) }}"
+                  alt="{{ item[6:] }}" loading="lazy"
+                  onclick="openModal(this.getAttribute('data-original'), '{{ item[6:] }}')">
+            {% else %}
+              <img src="{{ url_for('gallery.static', filename=folder ~ '/' ~ item) }}"
+                  alt="{{ item }}" loading="lazy"
+                  onclick="openModal(this.src, '{{ item }}')">
+            {% endif %}
           </div>
         {% endfor %}
       {% else %}
@@ -248,8 +252,14 @@
   
                   if (mediaType === "image") {
                     let img = document.createElement('img');
-                    img.src = `${staticBase}${folder}/${item}`;
-                    img.alt = item;
+                    if (item.startsWith('thumb_')) {
+                      img.src = `${staticBase}${folder}/thumbnails/${item}`;
+                      img.setAttribute('data-original', `${staticBase}${folder}/${item.slice(6)}`);
+                      img.alt = item.slice(6);
+                    } else {
+                      img.src = `${staticBase}${folder}/${item}`;
+                      img.alt = item;
+                    }
                     img.loading = 'lazy';
                     img.onclick = function() { openModal(this.src, item); };
                     containerEl.appendChild(img);

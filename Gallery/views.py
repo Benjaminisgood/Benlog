@@ -2,7 +2,7 @@ import os
 import random
 from collections import Counter
 from datetime import datetime
-
+from PIL import Image
 from flask import (
     request, redirect, flash,
     render_template, abort,
@@ -36,6 +36,31 @@ def ensure_directory_exists(folder_name):
     path = os.path.join(GALLERIES_DIR, folder_name)
     os.makedirs(path, exist_ok=True)
     return path
+
+
+def ensure_thumbnail_directory(folder_name):
+    thumb_dir = os.path.join(GALLERIES_DIR, folder_name, 'thumbnails')
+    os.makedirs(thumb_dir, exist_ok=True)
+    return thumb_dir
+
+def generate_thumbnail(folder_name, filename):
+    """生成图片的缩略图，若不存在则创建"""
+    thumb_dir = ensure_thumbnail_directory(folder_name)
+    thumb_path = os.path.join(thumb_dir, f"thumb_{filename}")
+    original_path = os.path.join(GALLERIES_DIR, folder_name, filename)
+    
+    if not os.path.exists(thumb_path):
+        try:
+            img = Image.open(original_path)
+            img.thumbnail((200, 200))  # 设置缩略图尺寸
+            img.save(thumb_path)
+        except Exception as e:
+            current_app.logger.error(f"缩略图生成失败 {filename}: {e}")
+            return filename  # 生成失败时返回原图文件名
+    return f"thumb_{filename}"
+
+
+
 
 def detect_media_type(folder_path):                       # ★ 自动侦测
     counter = Counter()
@@ -95,12 +120,17 @@ def gallery_page(folder):
 
     batch_size = calc_batch_size(len(media_list), media_type)         # ★
     first_batch = get_media_batch(media_list, 0, batch_size)
+    thumbnails = [
+        generate_thumbnail(folder, fname)
+        for fname in first_batch
+    ]
 
     return render_template('gallery.html',
                            title=folder,                  # ★ 标题即文件夹名
                            folder=folder,
                            media_type=media_type,
                            items=first_batch,
+                           thumbnails=thumbnails,
                            batch_size=batch_size,         # ★ 传给前端方便无限加载
                            total=len(media_list))
 
@@ -118,7 +148,13 @@ def gallery_load_more():
 
     batch_size = calc_batch_size(len(media_list), media_type)         # 与首批保持一致
     batch = get_media_batch(media_list, offset, batch_size)
-    return jsonify({'items': batch})
+
+    thumbnails = [
+    generate_thumbnail(folder, fname)
+    for fname in batch
+]
+    return jsonify({'items': batch, 'thumbnails': thumbnails})
+
 
 @gallery_bp.route('/manage/<folder_name>')
 @login_required
