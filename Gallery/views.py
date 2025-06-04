@@ -15,7 +15,7 @@ from . import gallery_bp
 
 # 当前模块目录
 MODULE_DIR = os.path.dirname(__file__)
-# Blueprint 静态目录  (…/Gallery/static/galleries)
+MAX_INITIAL_LOAD = 50
 GALLERIES_DIR = os.path.join(MODULE_DIR, gallery_bp.static_folder)
 os.makedirs(GALLERIES_DIR, exist_ok=True)
 
@@ -77,7 +77,8 @@ def detect_media_type(folder_path):                       # ★ 自动侦测
 def get_media_list(folder_name, media_type):
     path = ensure_directory_exists(folder_name)
     exts = MEDIA_EXTENSIONS[media_type]
-    return [f for f in os.listdir(path) if f.lower().endswith(exts)]
+    return [f for f in os.listdir(path)
+        if f.lower().endswith(exts) and not f.startswith('thumb_')]
 
 def calc_batch_size(total, media_type="image"):                               # ★ 批量策略
     """
@@ -119,7 +120,7 @@ def gallery_page(folder):
     random.shuffle(media_list)
 
     batch_size = calc_batch_size(len(media_list), media_type)         # ★
-    first_batch = get_media_batch(media_list, 0, batch_size)
+    first_batch = get_media_batch(media_list, 0, min(batch_size, MAX_INITIAL_LOAD))
     thumbnails = [
         generate_thumbnail(folder, fname)
         for fname in first_batch
