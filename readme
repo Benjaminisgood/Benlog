@@ -60,12 +60,13 @@ gunicorn -w 3 --threads 6 -b 0.0.0.0:80 "Benlog.app:create_app()"
 ---
 
 ### 📦 一键更新
-# 如果需要进行版本更新也非常简单，只需在服务器中依次
-cd /Benlog
+# 如果需要进行版本更新也非常简单，只需在服务器中依次：
+cd /Benlogmain
 source myenv/bin/activate
 chmod +x deploy.sh
 ./deploy.sh
 # 随后再继续一键启动即可。
+gunicorn -w 3 --threads 6 -b 0.0.0.0:80 "Benlog.app:create_app()"
 # setup、manifest也可以帮助你先将程序打包，小白可以直接忽略。
 
 ---
