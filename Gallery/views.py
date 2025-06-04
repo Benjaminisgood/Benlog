@@ -120,12 +120,17 @@ def gallery_page(folder):
 
     batch_size = calc_batch_size(len(media_list), media_type)         # ★
     first_batch = get_media_batch(media_list, 0, batch_size)
+    thumbnails = [
+        generate_thumbnail(folder, fname)
+        for fname in first_batch
+    ]
 
     return render_template('gallery.html',
                            title=folder,                  # ★ 标题即文件夹名
                            folder=folder,
                            media_type=media_type,
                            items=first_batch,
+                           thumbnails=thumbnails,
                            batch_size=batch_size,         # ★ 传给前端方便无限加载
                            total=len(media_list))
 
@@ -143,7 +148,13 @@ def gallery_load_more():
 
     batch_size = calc_batch_size(len(media_list), media_type)         # 与首批保持一致
     batch = get_media_batch(media_list, offset, batch_size)
-    return jsonify({'items': batch})
+
+    thumbnails = [
+    generate_thumbnail(folder, fname)
+    for fname in batch
+]
+    return jsonify({'items': batch, 'thumbnails': thumbnails})
+
 
 @gallery_bp.route('/manage/<folder_name>')
 @login_required
