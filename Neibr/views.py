@@ -5,6 +5,8 @@ from flask_login import login_required, current_user, login_user  # type: ignore
 from .models import User, Post  # 从本地 models.py 导入 User 和 Post 模型
 from werkzeug.security import generate_password_hash, check_password_hash  # type: ignore # 用于密码加密和验证
 import os
+import io
+from PIL import Image
 from werkzeug.utils import secure_filename # type: ignore
 import yaml
 from datetime import datetime
@@ -16,10 +18,35 @@ from math import ceil
 # 项目根目录下的 static/neibr 路径
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 UPLOAD_BASE_PATH = os.path.join(BASE_DIR, 'Neibr', 'neibr')
+IMAGE_QUALITY = 75
+
 def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'webm', 'mp3', 'wav', 'nef','mov','MOV'}
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def compress_and_save_image(file_storage, save_path):
+    """
+    使用 Pillow 压缩并保存图片到磁盘
+    - file_storage: Flask 的 FileStorage 对象
+    - save_path: 最终保存路径
+    """
+    img = Image.open(file_storage.stream)
+    # 如果有透明通道或调色板模式，先转为 RGB
+    if img.mode in ("RGBA", "P"):
+        img = img.convert("RGB")
+    # 将压缩后的二进制写入内存
+    img_io = io.BytesIO()
+    img.save(
+        img_io,
+        format='JPEG',        # 统一保存为 JPEG
+        quality=IMAGE_QUALITY,
+        optimize=True
+    )
+    img_io.seek(0)
+    # 写入磁盘
+    with open(save_path, 'wb') as out_f:
+        out_f.write(img_io.read())
+        
 @neibr_bp.route('/')
 def index():
     """
@@ -86,8 +113,13 @@ def create_post():
         for file in files:
             if file and file.filename:
                 filename = secure_filename(file.filename)
+                ext = filename.rsplit('.', 1)[1].lower()
                 file_path = os.path.join(folder_path, filename)
-                file.save(file_path)
+
+                if ext in {'png', 'jpg', 'jpeg', 'gif'}:
+                    compress_and_save_image(file, file_path)
+                else:
+                    file.save(file_path)
 
         # 保存帖子文案到 post.txt
         with open(os.path.join(folder_path, 'post.txt'), 'w') as f:
@@ -218,7 +250,13 @@ def edit_post(title):
             for file in request.files.getlist('media_files'):
                 if file and allowed_file(file.filename): # type: ignore
                     filename = secure_filename(file.filename)
-                    file.save(os.path.join(folder_path, filename))
+                    ext = filename.rsplit('.', 1)[1].lower()
+                    file_path = os.path.join(folder_path, filename)
+
+                    if ext in {'png', 'jpg', 'jpeg', 'gif'}:
+                        compress_and_save_image(file, file_path)
+                    else:
+                        file.save(file_path)
 
         # 处理删除媒体文件请求
         delete_files = request.form.getlist('delete_files')
