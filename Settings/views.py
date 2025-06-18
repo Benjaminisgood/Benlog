@@ -346,6 +346,11 @@ def create_folder():
     # 1. 获取并清理用户输入
     folder_name = request.form.get('folder_name', '').strip()
     
+    """新增规则仅超级管理员"""
+    if current_user.id != 1:
+        flash("无权限访问", "error")
+        return redirect(url_for('setting.index'))
+
     # 2. 安全校验：禁止路径穿越
     if not folder_name or '..' in folder_name or '/' in folder_name:
         flash('非法的文件夹名称', 'error')
@@ -368,6 +373,11 @@ def delete_folder(folder_name):
     if '..' in folder_name or '/' in folder_name:
         flash('非法的文件夹名称', 'error')
         return redirect(url_for('setting.manage_gallery'))
+
+    """新增规则仅超级管理员"""
+    if current_user.id != 1:
+        flash("无权限访问", "error")
+        return redirect(url_for('setting.index'))
 
     # 2. 删除目录及其所有内容
     folder_path = os.path.join(GALLERY_PATH, folder_name)
@@ -428,6 +438,12 @@ def manage_dynamic_page():
       - edit_url: 跳转至 index 蓝图的编辑界面
       - view_url: 跳转至 index 蓝图的预览界面
     """
+
+    """新增规则仅超级管理员"""
+    if current_user.id != 1:
+        flash("无权限访问", "error")
+        return redirect(url_for('setting.index'))
+
     editable_pages = []
     for filename in os.listdir(DYNAMIC_PAGES_FOLDER):
         if not filename.endswith('.json'):
