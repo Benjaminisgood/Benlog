@@ -65,7 +65,7 @@ def index():
        (Post.is_hidden == False) | (Post.user_id == current_user.id)
     ). order_by(db.func.random()).limit(10).all()
 
-    my_posts = Post.query.filter_by(user_id=current_user.id).order_by(Post.creation_time.desc()).all()
+    my_posts = Post.query.filter_by(user_id=current_user.id).order_by(Post.creation_time.desc()).limit(10).all()
 
     all_posts = latest_posts + random_posts + my_posts
     session['neibr_seq_latest'] = [p.id for p in latest_posts]
