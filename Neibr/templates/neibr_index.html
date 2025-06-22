@@ -333,47 +333,54 @@
   });
 
   // 加载更多
-  document.addEventListener('DOMContentLoaded', () => {
-    const sections = {
-      latest:  { btnId:'load-more-latest', contId:'latest-posts', page:1, src:'latest' },
-      random:  { btnId:'load-more-random', contId:'random-posts', page:1, src:'random' },
-      my:      { btnId:'load-more-my',     contId:'my-posts',     page:1, src:'my' }
-    };
-    Object.values(sections).forEach(sec => {
-      const btn = document.getElementById(sec.btnId);
-      btn.addEventListener('click', () => {
-        sec.page += 1;
-        fetch(`{{ url_for('neibr.api_posts') }}?src=${sec.src}&page=${sec.page}`)
-          .then(res => res.json())
-          .then(data => {
-            const container = document.getElementById(sec.contId);
-            data.posts.forEach(p => {
-              const card = document.createElement('div');
-              card.className = 'card';
-              card.dataset.href = sec.src==='my'
-                ? p.edit_url
-                : p.url;
-              card.innerHTML = `
-                <h3>${p.title}</h3>
-                <div class="post-meta">
-                  ${sec.src!=='my' ? `<span class="author">作者：${p.author}</span>` : ''}
-                  <span class="date">发表于：${p.date}</span>
-                </div>
-                <div class="tags">
-                  ${p.tags.map(t=>`<span>${t}</span>`).join('')}
-                </div>
-              `;
-              // 新增点击跳转
-              card.addEventListener('click', () => {
-                window.location.href = card.dataset.href;
-              });
-              container.appendChild(card);
+document.addEventListener('DOMContentLoaded', () => {
+  const sections = {
+    latest:  { btnId:'load-more-latest', contId:'latest-posts', page:1, src:'latest' },
+    random:  { btnId:'load-more-random', contId:'random-posts', page:1, src:'random' },
+    my:      { btnId:'load-more-my',     contId:'my-posts',     page:1, src:'my' }
+  };
+
+  Object.values(sections).forEach(sec => {
+    const btn = document.getElementById(sec.btnId);
+    btn.addEventListener('click', () => {
+      sec.page += 1;
+      fetch(`{{ url_for('neibr.api_posts') }}?src=${sec.src}&page=${sec.page}`)
+        .then(res => res.json())
+        .then(data => {
+          const container = document.getElementById(sec.contId);
+          // 找到“加载更多”按钮的外层 wrapper
+          const wrapper = container.querySelector('.load-more-wrapper');
+
+          data.posts.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.dataset.href = sec.src === 'my' ? p.edit_url : p.url;
+            card.innerHTML = `
+              <h3>${p.title}</h3>
+              <div class="post-meta">
+                ${sec.src!=='my' ? `<span class="author">作者：${p.author}</span>` : ''}
+                <span class="date">发表于：${p.date}</span>
+              </div>
+              <div class="tags">
+                ${p.tags.map(t => `<span>${t}</span>`).join('')}
+              </div>
+            `;
+            card.addEventListener('click', () => {
+              window.location.href = card.dataset.href;
             });
-            if (!data.has_more) btn.style.display = 'none';
+
+            // 插入到按钮 wrapper 之前
+            container.insertBefore(card, wrapper);
           });
-      });
+
+          // 如果没有更多，隐藏整个 wrapper
+          if (!data.has_more) {
+            wrapper.style.display = 'none';
+          }
+        });
     });
   });
+});
 </script>
 
 {% endblock %}
