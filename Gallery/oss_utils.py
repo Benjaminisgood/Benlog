@@ -1,0 +1,59 @@
+# Gallery/oss_utils.py
+import oss2
+from flask import current_app
+
+
+def _get_bucket():
+    """
+    获取已配置的 OSS Bucket 实例，读取 app config 中的凭证和 endpoint。
+    """
+    ak = current_app.config.get('OSS_ACCESS_KEY_ID')
+    sk = current_app.config.get('OSS_ACCESS_KEY_SECRET')
+    endpoint = current_app.config.get('OSS_ENDPOINT')
+    bucket_name = current_app.config.get('OSS_BUCKET_NAME')
+
+    if not all([ak, sk, endpoint, bucket_name]):
+        raise RuntimeError(
+            'Missing OSS configuration: please set OSS_ACCESS_KEY_ID, OSS_ACCESS_KEY_SECRET, OSS_ENDPOINT, OSS_BUCKET_NAME'
+        )
+    auth = oss2.Auth(ak, sk)
+    return oss2.Bucket(auth, endpoint, bucket_name)
+
+
+def list_albums(prefix: str = '') -> list[str]:
+    """
+    列举指定前缀下的“相册”——使用 delimiter 分组得到的公共前缀列表
+    """
+    bucket = _get_bucket()
+    # 使用 list_objects 接口的 delimiter 参数模拟目录
+    result = bucket.list_objects(prefix=prefix, delimiter='/', max_keys=1000)
+    # OSS SDK 在返回值中通过 prefix_list 提供公共前缀
+    return result.prefix_list  # e.g. ['album1/', 'album2/']
+
+
+def list_objects(prefix: str = '', marker: str = None, max_keys: int = 100) -> tuple[list[str], str]:
+    """
+    列举指定前缀下的对象 key 列表，支持分页。
+    返回 (keys, next_marker)
+    """
+    bucket = _get_bucket()
+    iterator = oss2.ObjectIterator(bucket, prefix=prefix, marker=marker, max_keys=max_keys)
+    keys = [obj.key for obj in iterator]
+    return keys, iterator.next_marker
+
+
+def delete_object(key: str):
+    """
+    删除指定 key 的对象。
+    """
+    bucket = _get_bucket()
+    bucket.delete_object(key)
+
+
+def generate_signed_url(key: str, expires: int = 3600) -> str:
+    """
+    生成带签名的 GET URL，有效期 expires 秒。
+    """
+    bucket = _get_bucket()
+    return bucket.sign_url('GET', key, expires)
+

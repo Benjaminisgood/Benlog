@@ -10,3 +10,4 @@ pymdown-extensions
 openai
 python-slugify
 Pillow
+oss2
