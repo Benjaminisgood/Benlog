@@ -124,4 +124,9 @@ git push origin feature/xxx
 
 4. 📬 反馈 & 建议欢迎通过 issue 或 email 提出！
 
+5. 
+export FLASK_ENV=development
+export FLASK_DEBUG=1
+flask --app "Benlog.app:create_app" run --host=0.0.0.0 --port=80
+
 ---

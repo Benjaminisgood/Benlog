@@ -3,6 +3,9 @@ import os
 import logging
 from datetime import timedelta
 
+
+
+
 def create_app():
     base_dir = os.path.abspath(os.path.dirname(__file__))
     
@@ -18,6 +21,14 @@ def create_app():
         DEBUG=False,
         DOC_CREATION_PASSWORD='0715',
         REMEMBER_COOKIE_DURATION=timedelta(days=30)
+        OSS_ACCESS_KEY_ID     = ''
+        OSS_ACCESS_KEY_SECRET = ''
+        OSS_ENDPOINT          = 'oss-cn-shanghai-internal.aliyuncs.com'
+        OSS_BUCKET_NAME       = ''
+
+
+
+
 
     )
     
@@ -38,7 +49,6 @@ def create_app():
     from Settings import init_app as settings_init_app
     from Settings import setting_bp
     from Gallery import gallery_bp
-#    from Gallery import init_app as gallery_init_app
 
     app.register_blueprint(index_bp)
     app.register_blueprint(blog_bp, url_prefix='/blog')
@@ -50,7 +60,6 @@ def create_app():
 
     settings_init_app(app)
     neibr_init_app(app)
-#    gallery_init_app(app)
 
     app.logger.setLevel(logging.DEBUG)
     logging.basicConfig(level=logging.DEBUG)
