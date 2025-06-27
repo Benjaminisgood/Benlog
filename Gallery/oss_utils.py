@@ -2,23 +2,19 @@
 import oss2
 from flask import current_app
 
-
 def _get_bucket():
-    """
-    获取已配置的 OSS Bucket 实例，读取 app config 中的凭证和 endpoint。
-    """
-    ak = current_app.config.get('OSS_ACCESS_KEY_ID')
-    sk = current_app.config.get('OSS_ACCESS_KEY_SECRET')
-    endpoint = current_app.config.get('OSS_ENDPOINT')
-    bucket_name = current_app.config.get('OSS_BUCKET_NAME')
+    ak       = current_app.config['OSS_ACCESS_KEY_ID']
+    sk       = current_app.config['OSS_ACCESS_KEY_SECRET']
+    endpoint = current_app.config['OSS_ENDPOINT']        # e.g. 'benjaling-1974819625145002.oss-cn-shanghai-internal.oss-accesspoint.aliyuncs.com'
+    bucket   = current_app.config['OSS_BUCKET_NAME']     # 'benjaling'
 
-    if not all([ak, sk, endpoint, bucket_name]):
-        raise RuntimeError(
-            'Missing OSS configuration: please set OSS_ACCESS_KEY_ID, OSS_ACCESS_KEY_SECRET, OSS_ENDPOINT, OSS_BUCKET_NAME'
-        )
+    # 确保所有凭证和配置信息已填
+    if not all([ak, sk, endpoint, bucket]):
+        raise RuntimeError('Missing OSS config')
+
     auth = oss2.Auth(ak, sk)
-    return oss2.Bucket(auth, endpoint, bucket_name)
-
+    # 关键：启用 is_cname 模式
+    return oss2.Bucket(auth, endpoint, bucket, is_cname=True)
 
 def list_albums(prefix: str = '') -> list[str]:
     """
