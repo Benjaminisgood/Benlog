@@ -33,7 +33,7 @@ BACKUP_DIR="$(mktemp -d)"
 echo "🔄 开始部署..."
 
 # 1️⃣ 进入项目目录并配置 Git
-cd "$PROJECT_DIR"
+# cd "$PROJECT_DIR"
 if [ ! -d ".git" ]; then
   echo "→ 初始化 Git 仓库..."
   git init
