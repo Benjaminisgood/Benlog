@@ -328,66 +328,6 @@ def logout():
 
 
 
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-#BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-GALLERY_PATH = os.path.join(BASE_DIR, 'Gallery', 'galleries')
-#GALLERY_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'Benlog', 'static', 'gallery')
-# List all folders in the gallery directory
-@setting_bp.route('/manage_gallery')
-@login_required
-def manage_gallery():
-    # Get a list of all folders in the gallery directory
-    folders = [f for f in os.listdir(GALLERY_PATH) if os.path.isdir(os.path.join(GALLERY_PATH, f))]
-    return render_template('manage_gallery.html', folders=folders)
-
-@setting_bp.route('/manage_gallery/create', methods=['POST'])
-@login_required
-def create_folder():
-    # 1. 获取并清理用户输入
-    folder_name = request.form.get('folder_name', '').strip()
-    
-    """新增规则仅超级管理员"""
-    if current_user.id != 1:
-        flash("无权限访问", "error")
-        return redirect(url_for('setting.index'))
-
-    # 2. 安全校验：禁止路径穿越
-    if not folder_name or '..' in folder_name or '/' in folder_name:
-        flash('非法的文件夹名称', 'error')
-        return redirect(url_for('setting.manage_gallery'))
-    
-    # 3. 创建目录
-    folder_path = os.path.join(GALLERY_PATH, folder_name)
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)  # 会自动创建多层目录 Google: [Python os.makedirs](https://www.google.com/search?q=Python+os.makedirs)
-        flash(f'文件夹 "{folder_name}" 创建成功', 'success')
-    else:
-        flash(f'文件夹 "{folder_name}" 已存在', 'warning')
-    
-    return redirect(url_for('setting.manage_gallery'))
-
-@setting_bp.route('/manage_gallery/delete/<folder_name>', methods=['POST'])
-@login_required
-def delete_folder(folder_name):
-    # 1. 安全校验同上
-    if '..' in folder_name or '/' in folder_name:
-        flash('非法的文件夹名称', 'error')
-        return redirect(url_for('setting.manage_gallery'))
-
-    """新增规则仅超级管理员"""
-    if current_user.id != 1:
-        flash("无权限访问", "error")
-        return redirect(url_for('setting.index'))
-
-    # 2. 删除目录及其所有内容
-    folder_path = os.path.join(GALLERY_PATH, folder_name)
-    if os.path.isdir(folder_path):
-        shutil.rmtree(folder_path)  # 递归删除目录 Google: [Python shutil.rmtree](https://www.google.com/search?q=Python+shutil.rmtree)
-        flash(f'文件夹 "{folder_name}" 已删除', 'success')
-    else:
-        flash(f'文件夹 "{folder_name}" 不存在', 'error')
-    
-    return redirect(url_for('setting.manage_gallery'))
 
 
 
@@ -650,3 +590,60 @@ def manage_friend_links():
         return redirect(url_for('setting.manage_friend_links'))  # Redirect to avoid resubmission
 
     return render_template('manage_friend_links.html', friend_links=friend_links)
+
+
+
+
+
+
+
+
+
+
+
+
+
+from flask import render_template, request, redirect, url_for, flash
+from flask_login import login_required
+from datetime import datetime
+from . import setting_bp
+from Gallery.oss_utils import _get_bucket, list_objects, delete_object
+from werkzeug.utils import secure_filename
+
+
+@setting_bp.route('/gallery', methods=['GET', 'POST'])
+@login_required
+def manage_gallery():
+    bucket = _get_bucket()
+
+    # 上传逻辑
+    if request.method == 'POST':
+        files = request.files.getlist('photos')
+        today_prefix = datetime.today().strftime('%Y-%m-%d') + "/"
+        for file in files:
+            if file.filename:
+                filename = secure_filename(file.filename)
+                key = today_prefix + filename  # 存入日期路径
+                bucket.put_object(key, file.stream)
+        flash(f"成功上传 {len(files)} 张图片", "success")
+        return redirect(url_for('setting.manage_gallery'))
+
+    # 获取所有图片（包括子路径）
+    keys, _ = list_objects(prefix='', max_keys=1000)
+    images = []
+    for key in keys:
+        if key.endswith('/'):
+            continue  # 忽略文件夹
+        if key.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp')):
+            url = bucket.sign_url('GET', key, 3600)
+            images.append({'key': key, 'url': url})
+
+    return render_template('manage_gallery.html', images=images)
+
+
+@setting_bp.route('/gallery/delete/<path:key>', methods=['POST'])
+@login_required
+def gallery_delete(key):
+    delete_object(key)
+    flash("删除成功", "warning")
+    return redirect(url_for('setting.manage_gallery'))
