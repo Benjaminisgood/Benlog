@@ -107,7 +107,11 @@ def index():
             'is_image': is_img,
             'is_video': is_video
         })
-
+    audio_url = None
+    for f in files:
+        if f['key'].lower().endswith(('.mp3', '.m4a', '.ogg')):
+            audio_url = f['url']
+            break
     # 渲染 gallery_index.html，传递分页和文件数据
     return render_template(
         'gallery_index.html',
@@ -115,7 +119,8 @@ def index():
         prefix=prefix,
         marker=marker,
         next_marker=next_marker,
-        limit=limit
+        limit=limit,
+        bg_audio_url=audio_url
     )
 
 
