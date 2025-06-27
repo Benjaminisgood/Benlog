@@ -18,13 +18,13 @@ DATA_PATHS=(
   "Benlog/static"
   "Blog/posts"
   "Edu/notes"
-  "Gallery/galleries"
   "Index/dynamic_links"
   "Index/dynamic_pages"
   "instance/site.db"
   "migarations"
   "myenv"
   "Neibr/neibr"
+  "instance/config.py"
 )
 
 # 临时备份目录
