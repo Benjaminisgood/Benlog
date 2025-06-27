@@ -1,14 +1,27 @@
-<!-- Gallery/templates/gallery_index_stream.html -->
 {% extends "base.html" %}
 {% block content %}
   <style>
-    /* 瀑布流式照片流样式 */
     .photo-stream {
       column-count: 4;
       column-gap: 1rem;
       padding: 0;
       margin: 1rem 0;
       list-style: none;
+    }
+    @media (max-width: 1200px) {
+      .photo-stream {
+        column-count: 3;
+      }
+    }
+    @media (max-width: 768px) {
+      .photo-stream {
+        column-count: 2;
+      }
+    }
+    @media (max-width: 480px) {
+      .photo-stream {
+        column-count: 1;
+      }
     }
     .photo-item {
       break-inside: avoid;
@@ -48,8 +61,13 @@
   <h2>Photo Stream{% if prefix %} - {{ prefix.rstrip('/') }}{% endif %}</h2>
   <ul class="photo-stream">
     {% for f in files %}
-      <li class="photo-item" onclick="basicLightbox.create('<img src=\'{{ f.url }}\' style=\'max-width:90vw; max-height:90vh;\' />').show();">
-        <img src="{{ f.url }}" alt="{{ f.key }}">
+      <li class="photo-item">
+        <img
+          data-src="{{ f.url }}"
+          alt="{{ f.key }}"
+          class="lazy-img"
+          loading="lazy"
+        >
         <div class="photo-desc">{{ f.key }}</div>
       </li>
     {% else %}
@@ -57,7 +75,42 @@
     {% endfor %}
   </ul>
 
-  <!-- Lightbox Script -->
+  <!-- Lightbox (点击图片放大) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/basiclightbox@5/dist/basicLightbox.min.css">
   <script src="https://cdn.jsdelivr.net/npm/basiclightbox@5/dist/basicLightbox.min.js"></script>
+
+  <!-- 懒加载脚本 -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const lazyImages = document.querySelectorAll('img.lazy-img');
+
+      if ('IntersectionObserver' in window) {
+        let observer = new IntersectionObserver(function (entries, observer) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              const img = entry.target;
+              img.src = img.dataset.src;
+              img.classList.remove("lazy-img");
+              observer.unobserve(img);
+            }
+          });
+        });
+        lazyImages.forEach(img => observer.observe(img));
+      } else {
+        // Fallback: load all images immediately
+        lazyImages.forEach(img => {
+          img.src = img.dataset.src;
+          img.classList.remove("lazy-img");
+        });
+      }
+    });
+
+    // Lightbox click handler
+    document.addEventListener('click', function (e) {
+      if (e.target.matches('.photo-item img')) {
+        const src = e.target.src;
+        basicLightbox.create(`<img src='${src}' style='max-width:90vw; max-height:90vh;'>`).show();
+      }
+    });
+  </script>
 {% endblock %}
