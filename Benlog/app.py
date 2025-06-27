@@ -20,11 +20,11 @@ def create_app():
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         DEBUG=False,
         DOC_CREATION_PASSWORD='0715',
-        REMEMBER_COOKIE_DURATION=timedelta(days=30)
-        OSS_ACCESS_KEY_ID     = ''
-        OSS_ACCESS_KEY_SECRET = ''
-        OSS_ENDPOINT          = 'oss-cn-shanghai-internal.aliyuncs.com'
-        OSS_BUCKET_NAME       = ''
+        REMEMBER_COOKIE_DURATION=timedelta(days=30),
+        OSS_ACCESS_KEY_ID     = '',
+        OSS_ACCESS_KEY_SECRET = '',
+        OSS_ENDPOINT          = 'oss-cn-shanghai-internal.aliyuncs.com',
+        OSS_BUCKET_NAME       = '',
 
 
 
