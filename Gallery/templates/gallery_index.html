@@ -74,6 +74,18 @@
       <li style="color: var(--meta-text-color); font-style: italic;">No photos available.</li>
     {% endfor %}
   </ul>
+  {% if bg_audio_url %}
+  <audio id="bg-music" src="{{ bg_audio_url }}" autoplay loop muted></audio>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const audio = document.getElementById("bg-music");
+      // 解锁静音（多数浏览器需要交互后才允许播放）
+      setTimeout(() => {
+        audio.muted = false;
+      }, 1000);
+    });
+  </script>
+{% endif %}
 
   <!-- Lightbox (点击图片放大) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/basiclightbox@5/dist/basicLightbox.min.css">
