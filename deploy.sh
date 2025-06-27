@@ -7,7 +7,7 @@ set -e
 IFS=$'\n\t'
 
 # ➤ 请修改为你的项目根目录路径
-PROJECT_DIR="/Benlogmain"
+PROJECT_DIR="/home/Benlogmain.tar/Benlogmain"
 # ➤ 使用 HTTPS 克隆（带或不带 Token）
 REMOTE_URL="https://github.com/Benjaminisgood/Benlog.git"
 # ➤ 要部署的分支
@@ -33,7 +33,7 @@ BACKUP_DIR="$(mktemp -d)"
 echo "🔄 开始部署..."
 
 # 1️⃣ 进入项目目录并配置 Git
-# cd "$PROJECT_DIR"
+cd "$PROJECT_DIR"
 if [ ! -d ".git" ]; then
   echo "→ 初始化 Git 仓库..."
   git init
