@@ -11,4 +11,4 @@ openai
 python-slugify
 Pillow
 oss2
-unidecode
+Unidecode
