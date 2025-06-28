@@ -17,7 +17,7 @@
     {% endfor %}
   </div>
 
-  <div class="content-text">{{ post_text }}</div>
+  <div class="content-text">{{ post_text | safe }}</div>
 
   <div class="media-container">
     {% for file in media_files %}
@@ -35,6 +35,9 @@
             alt="image">
         </div>
   
+      {% elif file.endswith('.pdf') %}
+      <iframe class="inline-pdf" src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}"></iframe>
+
       {% elif ext in ['mp4','webm','mov'] %}
         <video controls>
           <source 
@@ -46,14 +49,35 @@
         </video>
   
       {% elif ext in ['mp3','wav'] %}
-        <audio controls>
-          <source 
-            src="{{ url_for('neibr.media_file',
-                             user_id=post.user_id,
-                             post_id=post.id,
-                             filename=file) }}"
-            type="audio/mpeg">
-        </audio>
+        <div class="audio-player-container">
+          <audio controls>
+            <source 
+              src="{{ url_for('neibr.media_file',
+                              user_id=post.user_id,
+                              post_id=post.id,
+                              filename=file) }}"
+              type="audio/mpeg">
+          </audio>
+        </div>
+
+      {% elif ext in ['txt','md'] %}
+        <div class="media-title">{{ file }}</div>
+        <pre>{{ post_text | safe }}</pre>
+
+      {% else %}
+        <div class="media-title">{{ file }}</div>
+        <p>不支持的文件类型：{{ ext }}</p>
+      {% endif %}
+  
+      {# 处理图片预览 #}
+      {% if ext in ['jpg', 'png', 'gif', 'nef', 'jpeg'] %}
+        <script>
+          document.querySelectorAll('.thumbnail-box img').forEach(img => {
+            img.addEventListener('click', function() {
+              showFullImage(this.src);
+            });
+          });
+        </script>
       {% endif %}
     {% endfor %}
   </div>
@@ -242,6 +266,37 @@
   color: #555;
 }
 
+
+.audio-player-container {
+  margin: 10px 0;
+  padding: 10px;
+  background: var(--quick-card-bg);
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+.audio-player-container audio {
+  width: 100%;
+}
+
+.link-card {
+  display: inline-block;
+  padding: 5px 8px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: var(--quick-card-bg);
+  color: #2e6ad5;
+  font-size: 14px;
+  word-break: break-word;
+  text-decoration: none;
+}
+.link-card:hover {
+  background-color: #f5f5f5;
+  color: #1a4cb3;
+}
+
+
+
 .nav-links {
   display: flex;
   justify-content: space-between;
@@ -325,6 +380,65 @@
   color: #444;
   margin-bottom: 10px;
 }
+
+
+
+.inline-img {
+  max-width: 100%;
+  border-radius: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.inline-video {
+  max-width: 100%;
+  margin: 1rem 0;
+  border-radius: 0.5rem;
+}
+
+.hashtag {
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+.mention {
+  color: var(--link-color);
+  font-weight: bold;
+}
+
+
+
+
+  .inline-img {
+    max-width: 100%;
+    margin: 1rem 0;
+    border-radius: 0.5rem;
+  }
+
+  .inline-video {
+    width: 100%;
+    max-height: 360px;
+    margin: 1rem 0;
+  }
+
+  .inline-pdf {
+    width: 100%;
+    height: 600px;
+    margin: 1rem 0;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+  }
+
+  .mention {
+    color: #007bff;
+    font-weight: bold;
+  }
+
+  .hashtag {
+    background-color: #f2f2f2;
+    padding: 0 0.4em;
+    border-radius: 4px;
+  }
+
 </style>
 
 <!-- 评论提交弹窗 -->
