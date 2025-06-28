@@ -1,111 +1,176 @@
 {% extends "base.html" %}
 {% block content %}
-  <style>
-    /* 瀑布流布局 */
-    .album-list {
-      column-count: 4;
-      column-gap: 1rem;
-      padding: 0;
-      margin: 1rem 0;
-      list-style: none;
-    }
+<style>
+  .album-stream {
+    max-width: 1200px;
+    margin: 1.5rem auto;
+  }
 
-    @media (max-width: 1200px) {
-      .album-list {
-        column-count: 3;
-      }
-    }
+  .grid-sizer {
+    width: 25%;
+  }
 
-    @media (max-width: 768px) {
-      .album-list {
-        column-count: 2;
-      }
-    }
+  .album-item {
+    width: 25%;
+    box-sizing: border-box;
+    padding: 0.6rem;
+  }
 
-    @media (max-width: 480px) {
-      .album-list {
-        column-count: 1;
-      }
-    }
-
+  @media (max-width: 992px) {
+    .grid-sizer,
     .album-item {
-      break-inside: avoid;
-      margin-bottom: 1rem;
-      position: relative;
-      overflow: hidden;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      transition: transform 0.2s;
+      width: 33.33%;
     }
+  }
 
-    .album-item:hover {
-      transform: translateY(-5px);
+  @media (max-width: 768px) {
+    .grid-sizer,
+    .album-item {
+      width: 50%;
     }
+  }
 
-    .album-item img {
+  @media (max-width: 480px) {
+    .grid-sizer,
+    .album-item {
       width: 100%;
-      display: block;
-      border-radius: 0.5rem;
     }
+  }
 
-    .album-title {
-      position: absolute;
-      bottom: 0;
-      background: rgba(0,0,0,0.6);
-      color: white;
-      width: 100%;
-      text-align: center;
-      font-weight: bold;
-      padding: 0.3rem;
-      font-size: 0.9rem;
-    }
+  .album-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+    transition: transform 0.3s ease;
+  }
 
-    .album-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.4);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.2s;
-      font-size: 1.1rem;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
-    }
+  .album-item:hover .album-card {
+    transform: scale(1.02);
+  }
 
-    .album-item:hover .album-overlay {
-      opacity: 1;
-    }
+  .album-card img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 1rem;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+    transition: filter 0.3s ease;
+    filter: blur(10px);
+  }
 
-    /* 可选：无封面占位样式 */
-    .no-cover {
-      width: 100%;
-      padding-top: 66%;
-      background: #ccc;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #666;
-      font-size: 0.9rem;
-    }
-  </style>
+  .album-title {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    padding: 0.4rem 0.6rem;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #fff;
+    backdrop-filter: blur(6px);
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 0 0 1rem 1rem;
+    z-index: 2;
+  }
 
-  <ul class="album-list">
-    {% for album in albums %}
-      <li class="album-item">
-        <a href="{{ url_for('gallery.index', prefix=album.prefix) }}">
+  .album-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: radial-gradient(circle at center, rgba(0,0,0,0) 60%, rgba(0,0,0,0.2));
+    transition: opacity 0.3s;
+    opacity: 0;
+    z-index: 1;
+  }
+
+  .album-item:hover .album-card::before {
+    opacity: 1;
+  }
+
+  .no-cover {
+    width: 100%;
+    padding-top: 66%;
+    background: #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-size: 0.9rem;
+    border-radius: 1rem;
+  }
+</style>
+
+<div class="album-stream">
+  <div class="grid-sizer"></div>
+  {% for album in albums %}
+    <div class="album-item">
+      <a href="{{ url_for('gallery.index', prefix=album.prefix) }}">
+        <div class="album-card">
           {% if album.cover_url %}
-            <img src="{{ album.cover_url }}" alt="{{ album.name }}" />
+            <img
+              class="lazy-img"
+              src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+              data-src="{{ album.cover_url }}"
+              alt="{{ album.name }}"
+            />
           {% else %}
             <div class="no-cover">No Cover</div>
           {% endif %}
           <div class="album-title">{{ album.name }}</div>
-        </a>
-      </li>
-    {% endfor %}
-  </ul>
+        </div>
+      </a>
+    </div>
+  {% endfor %}
+</div>
+
+<!-- 必要依赖 -->
+<script src="https://unpkg.com/imagesloaded@5/imagesloaded.pkgd.min.js"></script>
+<script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const grid = document.querySelector('.album-stream');
+
+    const msnry = new Masonry(grid, {
+      itemSelector: '.album-item',
+      columnWidth: '.grid-sizer',
+      percentPosition: true,
+      gutter: 0
+    });
+
+    // 懒加载处理
+    const lazyImages = document.querySelectorAll('img.lazy-img');
+
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            img.src = img.dataset.src;
+            img.onload = () => {
+              img.style.filter = 'none';
+              imagesLoaded(grid, () => msnry.layout());
+            };
+            observer.unobserve(img);
+          }
+        });
+      });
+
+      lazyImages.forEach(img => observer.observe(img));
+    } else {
+      // fallback: 不支持懒加载的浏览器
+      lazyImages.forEach(img => {
+        img.src = img.dataset.src;
+        img.onload = () => {
+          img.style.filter = 'none';
+          imagesLoaded(grid, () => msnry.layout());
+        };
+      });
+    }
+
+    // 初始布局
+    imagesLoaded(grid, () => msnry.layout());
+  });
+</script>
 {% endblock %}

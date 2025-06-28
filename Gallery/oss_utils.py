@@ -57,3 +57,12 @@ def generate_signed_url(key: str, expires: int = 3600) -> str:
     bucket = _get_bucket()
     return bucket.sign_url('GET', key, expires)
 
+def generate_signed_url(key: str, expires: int = 3600, style: str = None) -> str:
+    bucket = _get_bucket()
+    params = None
+    if style == 'thumb':
+        # 推荐的缩略图处理方式 + 模糊占位图
+        params = {
+            'x-oss-process': 'image/resize,w_300/quality,q_70/format,jpg/blur,r_5,s_2'
+        }
+    return bucket.sign_url('GET', key, expires, params=params)
