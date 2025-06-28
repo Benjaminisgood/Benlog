@@ -83,9 +83,9 @@ def index():
     # 有 prefix：列出该相册下的文件，支持分页参数 marker 和 limit
     marker = request.args.get('marker')
     try:
-        limit = int(request.args.get('limit', 50))
+        limit = int(request.args.get('limit', 20))  # 改为 20
     except ValueError:
-        limit = 50
+        limit = 20
 
     # 通过 OSS 查询文件列表和下页游标
     # 获取原始 key 列表
@@ -95,18 +95,27 @@ def index():
     keys = [k for k in raw_keys if not k.endswith('/')]
 
 
-    # 构造前端需要的 files 列表
     files = []
     for key in keys:
         lower_key = key.lower()
-        is_img = lower_key.endswith(('.png', '.jpg', '.jpeg', '.gif'))
+        is_img = lower_key.endswith(('.png', '.jpg', '.jpeg', '.gif', '.nef', '.raw'))
         is_video = lower_key.endswith(('.mp4', '.mov', '.webm'))
-        files.append({
-            'key': key,
-            'url': generate_signed_url(key),
-            'is_image': is_img,
-            'is_video': is_video
-        })
+        if is_img:
+            files.append({
+                'key': key,
+                'thumb_url': generate_signed_url(key, style='thumb'),
+                'full_url': generate_signed_url(key),
+                'is_image': True,
+                'is_video': False
+            })
+        elif is_video:
+            files.append({
+                'key': key,
+                'thumb_url': None,
+                'full_url': generate_signed_url(key),
+                'is_image': False,
+                'is_video': True
+            })
     audio_url = None
     for f in files:
         if f['key'].lower().endswith(('.mp3', '.m4a', '.ogg')):

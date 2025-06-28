@@ -2,127 +2,155 @@
 {% block content %}
   <style>
     .photo-stream {
-      column-count: 4;
-      column-gap: 1rem;
-      padding: 0;
-      margin: 1rem 0;
-      list-style: none;
+      max-width: 1200px;
+      margin: 1rem auto;
     }
-    @media (max-width: 1200px) {
-      .photo-stream {
-        column-count: 3;
-      }
+
+    /* 关键 Masonry 结构：用 grid-sizer 设定列宽 */
+    .grid-sizer {
+      width: 25%;
     }
-    @media (max-width: 768px) {
-      .photo-stream {
-        column-count: 2;
-      }
-    }
-    @media (max-width: 480px) {
-      .photo-stream {
-        column-count: 1;
-      }
-    }
+
     .photo-item {
-      break-inside: avoid;
-      position: relative;
-      margin-bottom: 1rem;
-      cursor: pointer;
-      transition: transform 0.2s;
+      width: 25%;
+      padding: 0.5rem;
+      box-sizing: border-box;
     }
-    .photo-item:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+
+    @media (max-width: 992px) {
+      .grid-sizer,
+      .photo-item {
+        width: 33.33%;
+      }
     }
+
+    @media (max-width: 768px) {
+      .grid-sizer,
+      .photo-item {
+        width: 50%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .grid-sizer,
+      .photo-item {
+        width: 100%;
+      }
+    }
+
     .photo-item img {
       width: 100%;
+      height: auto;
       display: block;
       border-radius: 0.5rem;
+      background: #f0f0f0;
     }
+
     .photo-desc {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
       background: rgba(0, 0, 0, 0.5);
-      color: #fff;
-      padding: 0.5rem;
+      color: white;
+      padding: 0.4rem;
+      font-size: 0.9rem;
+      position: relative;
+      border-radius: 0 0 0.5rem 0.5rem;
       opacity: 0;
       transition: opacity 0.2s;
-      font-size: 0.9rem;
-      border-bottom-left-radius: 0.5rem;
-      border-bottom-right-radius: 0.5rem;
+      margin-top: -2.2rem;
     }
+
     .photo-item:hover .photo-desc {
       opacity: 1;
     }
   </style>
 
   <h2>Photo Stream{% if prefix %} - {{ prefix.rstrip('/') }}{% endif %}</h2>
-  <ul class="photo-stream">
+  <div class="photo-stream">
+    <div class="grid-sizer"></div> <!-- Masonry column baseline -->
     {% for f in files %}
-      <li class="photo-item">
+      <div class="photo-item">
         <img
-          data-src="{{ f.url }}"
-          alt="{{ f.key }}"
-          class="lazy-img"
-          loading="lazy"
-        >
+          src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" 
+          data-src="{{ f.thumb_url }}" 
+          data-full="{{ f.full_url }}" 
+          alt="{{ f.key }}" 
+          class="lazy-img" 
+          loading="lazy" 
+        />
         <div class="photo-desc">{{ f.key }}</div>
-      </li>
+      </div>
     {% else %}
-      <li style="color: var(--meta-text-color); font-style: italic;">No photos available.</li>
+      <div style="color: var(--meta-text-color); font-style: italic;">No photos available.</div>
     {% endfor %}
-  </ul>
-  {% if bg_audio_url %}
-  <audio id="bg-music" src="{{ bg_audio_url }}" autoplay loop muted></audio>
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const audio = document.getElementById("bg-music");
-      // 解锁静音（多数浏览器需要交互后才允许播放）
-      setTimeout(() => {
-        audio.muted = false;
-      }, 1000);
-    });
-  </script>
-{% endif %}
+  </div>
 
-  <!-- Lightbox (点击图片放大) -->
+  {% if bg_audio_url %}
+    <audio id="bg-music" src="{{ bg_audio_url }}" autoplay loop muted></audio>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const audio = document.getElementById("bg-music");
+        setTimeout(() => { audio.muted = false; }, 1000);
+      });
+    </script>
+  {% endif %}
+
+  <!-- Lightbox -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/basiclightbox@5/dist/basicLightbox.min.css">
   <script src="https://cdn.jsdelivr.net/npm/basiclightbox@5/dist/basicLightbox.min.js"></script>
 
-  <!-- 懒加载脚本 -->
+
+  <!-- Masonry + imagesLoaded -->
+  <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+  <script src="https://unpkg.com/imagesloaded@5/imagesloaded.pkgd.min.js"></script>
+
   <script>
     document.addEventListener("DOMContentLoaded", function () {
+      const grid = document.querySelector('.photo-stream');
       const lazyImages = document.querySelectorAll('img.lazy-img');
 
+      const msnry = new Masonry(grid, {
+        itemSelector: '.photo-item',
+        columnWidth: '.grid-sizer',
+        percentPosition: true,
+        gutter: 0
+      });
+
+      // 使用 IntersectionObserver 懒加载
       if ('IntersectionObserver' in window) {
-        let observer = new IntersectionObserver(function (entries, observer) {
-          entries.forEach(function (entry) {
+        const observer = new IntersectionObserver(function (entries) {
+          entries.forEach(entry => {
             if (entry.isIntersecting) {
               const img = entry.target;
               img.src = img.dataset.src;
-              img.classList.remove("lazy-img");
+              img.onload = () => {
+                imagesLoaded(grid, () => msnry.layout());
+              };
               observer.unobserve(img);
             }
           });
         });
+
         lazyImages.forEach(img => observer.observe(img));
       } else {
-        // Fallback: load all images immediately
+        // fallback: 立即加载所有图
         lazyImages.forEach(img => {
           img.src = img.dataset.src;
-          img.classList.remove("lazy-img");
+          img.onload = () => {
+            imagesLoaded(grid, () => msnry.layout());
+          };
         });
       }
-    });
 
-    // Lightbox click handler
-    document.addEventListener('click', function (e) {
-      if (e.target.matches('.photo-item img')) {
-        const src = e.target.src;
-        basicLightbox.create(`<img src='${src}' style='max-width:90vw; max-height:90vh;'>`).show();
-      }
+  // 点击图片放大：优先使用 data-full，再回退到当前 src
+  document.addEventListener('click', function (e) {
+    if (e.target.matches('.photo-item img')) {
+      const fullSrc = e.target.dataset.full || e.target.src;
+      basicLightbox
+        .create(
+          `<img src="${fullSrc}" style="max-width:90vw; max-height:90vh;">`
+        )
+        .show();
+        }
+      });
     });
   </script>
 {% endblock %}
