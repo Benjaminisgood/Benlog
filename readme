@@ -52,7 +52,6 @@ flask --app Benlog/app.py db upgrade
 # 运行本地开发服务器
 flask --app "Benlog.app:create_app" run --host=0.0.0.0 --port=80
 # 或者
-pkill -f gunicorn
 gunicorn -w 3 --threads 6 -b 0.0.0.0:80 "Benlog.app:create_app()"
 
 ```
@@ -66,25 +65,16 @@ source myenv/bin/activate
 chmod +x deploy.sh
 ./deploy.sh
 # 随后再继续一键启动即可。
+pkill -f gunicorn
 gunicorn -w 3 --threads 6 -b 0.0.0.0:80 "Benlog.app:create_app()"
 # setup、manifest也可以帮助你先将程序打包，小白可以直接忽略。
 
----
+# 测试代码
+export FLASK_ENV=development
+export FLASK_DEBUG=1
+flask --app "Benlog.app:create_app" run --host=0.0.0.0 --port=80
 
-### 🖼 示例截图  
-
-<img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/admin.png" alt="admin.png" />
-<img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/gallery.png" alt="gallery.png" />
-<img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/quicklinks.png" alt="quicklinks.png" />
-<img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/gallerymanage.png" alt="gallerymanage.png" />
-<img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/index.png" alt="index.png" />
-<img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/menu.png" alt="menu.png" />
-<img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/aboutme.png" alt="aboutme.png" />
-<img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/setting.png" alt="setting.png" />
-<img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/blog.png" alt="blog.png" />
-<img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/edunotes.png" alt="edunotes.png" />
-<img src="https://raw.githubusercontent.com/Benjaminisgood/Benlog/main/Benlog/static/images/neibr.png" alt="neibr.png" />
-
+cd /home/Benlogmain.tar/Benlogmain
 ---
 
 ## 🔒 配置说明（可选）
@@ -99,9 +89,25 @@ touch instance/config.py
 在 `instance/config.py` 中写入：
 
 ```python
-SECRET_KEY = 'your-production-key'
+# instance/config.py
+
+DEBUG = True
+SECRET_KEY = 'your-secret-key'
+
+# 数据库路径（SQLite 示例）
 SQLALCHEMY_DATABASE_URI = 'sqlite:///benlog.db'
-DEBUG = False
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+# 登录管理相关
+REMEMBER_COOKIE_DURATION = 3600 * 24 * 7  # 一周自动登录
+
+
+# OSS 云存储（如果使用）
+OSS_ACCESS_KEY_ID = 'your-access-key-id'
+OSS_ACCESS_KEY_SECRET = 'your-access-key-secret'
+OSS_BUCKET_NAME = 'your-bucket-name'
+OSS_ENDPOINT = 'oss-cn-your-region.aliyuncs.com'
+
 ```
 
 ---
@@ -124,9 +130,5 @@ git push origin feature/xxx
 
 4. 📬 反馈 & 建议欢迎通过 issue 或 email 提出！
 
-5. 
-export FLASK_ENV=development
-export FLASK_DEBUG=1
-flask --app "Benlog.app:create_app" run --host=0.0.0.0 --port=80
 
 ---
