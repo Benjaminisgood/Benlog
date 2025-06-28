@@ -14,6 +14,43 @@ from flask import send_from_directory, abort # type: ignore
 from flask import session
 from flask import jsonify, request
 from math import ceil
+from markupsafe import Markup, escape  # 新增此行
+import re
+from unidecode import unidecode
+
+
+def convert_rich_text(text):
+    """
+    多功能富文本转换器（先处理，后包装为 Markup）：
+    - URL => 链接
+    - 图片链接 => <img>
+    - 视频链接 => <video>
+    - @user => 用户链接
+    - #tag => 标签高亮
+    - 邮箱 => mailto:
+    """
+
+    # 👉 不转义，直接处理富文本（text 已经是纯文本了）
+    # 若数据库存储有恶意 HTML，请预处理
+    text = re.sub(r'(https?://[^\s]+\.(?:png|jpg|jpeg|gif|webp))',
+                  r'<img src="\1" class="inline-img" loading="lazy">', text)
+
+    text = re.sub(r'(https?://[^\s]+\.(?:mp4|webm|mov))',
+                  r'<video src="\1" class="inline-video" controls></video>', text)
+
+    text = re.sub(r'(https?://[^\s]+)',
+                  lambda m: f'<a class="link-card" href="{m.group(0)}" target="_blank" rel="noopener">{m.group(0)}</a>', text)
+
+    text = re.sub(r'\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b',
+                  r'<a href="mailto:\1">\1</a>', text)
+
+    text = re.sub(r'@(\w+)',
+                  r'<a href="/user/\1" class="mention">@\1</a>', text)
+
+    text = re.sub(r'#(\w+)',
+                  r'<span class="hashtag">#\1</span>', text)
+
+    return Markup(text)  # 👈 标记为“安全 HTML”
 
 # 项目根目录下的 static/neibr 路径
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -21,7 +58,10 @@ UPLOAD_BASE_PATH = os.path.join(BASE_DIR, 'Neibr', 'neibr')
 IMAGE_QUALITY = 22
 
 def allowed_file(filename):
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'webm', 'mp3', 'wav', 'nef','mov','MOV'}
+    ALLOWED_EXTENSIONS = {
+    'png', 'jpg', 'jpeg', 'gif', 'mp4', 'webm', 'mp3', 'wav',
+    'nef', 'mov', 'MOV', 'pdf', 'docx', 'xlsx', 'pptx'
+}
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def compress_and_save_image(file_storage, save_path):
@@ -47,6 +87,25 @@ def compress_and_save_image(file_storage, save_path):
     with open(save_path, 'wb') as out_f:
         out_f.write(img_io.read())
         
+
+
+def sanitize_filename(file):
+    """
+    安全化上传文件名：
+    - 处理中文和特殊字符
+    - 防止仅有扩展名或空名情况
+    """
+    original_name = file.filename
+    filename = secure_filename(unidecode(original_name))
+
+    # 修复空或只包含扩展名的情况
+    if not filename or filename.startswith('.'):
+        ext = original_name.rsplit('.', 1)[-1].lower() if '.' in original_name else 'bin'
+        filename = f"file_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.{ext}"
+
+    return filename
+
+
 @neibr_bp.route('/')
 def index():
     """
@@ -109,10 +168,15 @@ def create_post():
         folder_path = os.path.join(UPLOAD_BASE_PATH, str(current_user.id), str(post.id))
         os.makedirs(folder_path, exist_ok=True)
 
-        # 保存上传的媒体文件
         for file in files:
             if file and file.filename:
-                filename = secure_filename(file.filename)
+                filename = sanitize_filename(file)
+
+                # 判断后缀是否合法
+                if not allowed_file(filename):
+                    flash(f'文件类型不允许：{file.filename}', 'warning')
+                    continue
+
                 ext = filename.rsplit('.', 1)[1].lower()
                 file_path = os.path.join(folder_path, filename)
 
@@ -149,8 +213,11 @@ def post_detail(title):
     folder_path = os.path.join(UPLOAD_BASE_PATH, str(user_id), str(post.id))
 
     # 读取帖子文案
+    # 正确读取文件内容
     with open(os.path.join(folder_path, 'post.txt'), 'r') as f:
-        post_text = f.read()
+        post_text_raw = f.read()
+        post_text = convert_rich_text(post_text_raw)
+
 
     # 获取媒体文件列表，排除 post.txt 和 comments.yaml
     media_files = [f for f in os.listdir(folder_path) if f not in ['post.txt', 'comments.yaml']]
@@ -242,15 +309,23 @@ def edit_post(title):
 
         # 更新帖子文案
         folder_path = os.path.join(UPLOAD_BASE_PATH, str(current_user.id), str(post.id))
+        
+        post_text = request.form['post_text']  # ✅ 这是用户提交的新内容
+
         with open(os.path.join(folder_path, 'post.txt'), 'w') as f:
-            f.write(post_text)
+            f.write(post_text)  # ✅ 写入原始文本，不渲染
 
         # 处理媒体文件上传
         if 'media_files' in request.files:
             for file in request.files.getlist('media_files'):
-                if file and allowed_file(file.filename): # type: ignore
-                    filename = secure_filename(file.filename)
-                    ext = filename.rsplit('.', 1)[1].lower()
+                if file and file.filename:
+                    filename = sanitize_filename(file)
+
+                    if not allowed_file(filename):
+                        flash(f'文件类型不允许：{file.filename}', 'warning')
+                        continue
+
+                    ext = filename.rsplit('.', 1)[-1].lower()
                     file_path = os.path.join(folder_path, filename)
 
                     if ext in {'png', 'jpg', 'jpeg', 'gif'}:
@@ -272,8 +347,9 @@ def edit_post(title):
     # 读取帖子文案
     folder_path = os.path.join(UPLOAD_BASE_PATH, str(current_user.id), str(post.id))
     with open(os.path.join(folder_path, 'post.txt'), 'r') as f:
-        post_text = f.read()
+        post_text = f.read()  # ✅ 原样读取，不调用 convert_rich_text
 
+        
     # 获取媒体文件列表
     media_files = [f for f in os.listdir(folder_path) if f != 'post.txt']
 
