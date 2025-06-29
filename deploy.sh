@@ -1,19 +1,23 @@
 #!/usr/bin/env bash
-# deploy.sh — 极简一键更新脚本（不含服务重启）
-# 使用 HTTPS 克隆/更新代码、更新依赖，并保留指定数据目录
-# 解决 HTTP/2 报错，通过 HTTP/1.1 及浅克隆降低传输量
+# === 🧠 一键部署脚本 deploy.sh（含重启服务） ===
 
-set -e
+set -euo pipefail
 IFS=$'\n\t'
 
-# ➤ 请修改为你的项目根目录路径
+# ➤ 项目路径
 PROJECT_DIR="/home/Benlogmain.tar/Benlogmain"
-# ➤ 使用 HTTPS 克隆（带或不带 Token）
-REMOTE_URL="https://github.com/Benjaminisgood/Benlog.git"
-# ➤ 要部署的分支
-BRANCH="benlog_base"
+cd "$PROJECT_DIR"
 
-# ➤ 更新前需保留的目录/文件列表（相对于 PROJECT_DIR）
+# ➤ Git 仓库信息
+REPO_OWNER="Benjaminisgood"
+REPO_NAME="Benlog"
+BRANCH="benlog_base"
+REMOTE_SSH="git@github.com:${REPO_OWNER}/${REPO_NAME}.git"
+REMOTE_HTTPS="https://github.com/${REPO_OWNER}/${REPO_NAME}.git"
+ZIP_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}/archive/refs/heads/${BRANCH}.zip"
+GITHUB_TOKEN="${GITHUB_TOKEN:-}"  # 可选 GitHub token
+
+# ➤ 用户数据需保留路径（相对于项目根目录）
 DATA_PATHS=(
   "Benlog/static"
   "Blog/posts"
@@ -27,61 +31,84 @@ DATA_PATHS=(
   "instance/config.py"
 )
 
-# 临时备份目录
 BACKUP_DIR="$(mktemp -d)"
+TEMP_CLONE="$(mktemp -d)"
+CLONE_SUCCESS=false
 
-echo "🔄 开始部署..."
+echo "🔄 正在部署分支: $BRANCH"
 
-# 1️⃣ 进入项目目录并配置 Git
-cd "$PROJECT_DIR"
-if [ ! -d ".git" ]; then
-  echo "→ 初始化 Git 仓库..."
-  git init
-  git remote add origin "$REMOTE_URL"
-fi
-# 强制使用 HTTP/1.1 避免 HTTP/2 报错
-git config http.version HTTP/1.1
-# 可根据需要增加 buffer 大小
-git config http.postBuffer 524288000
-# 确保 remote URL
-git remote set-url origin "$REMOTE_URL" || true
-
-# 2️⃣ 备份用户数据
+# 🔸1️⃣ 数据备份
 for path in "${DATA_PATHS[@]}"; do
   if [ -e "$path" ]; then
-    echo "  → 备份 $path"
+    echo "→ 备份: $path"
     mkdir -p "$BACKUP_DIR/$(dirname "$path")"
     cp -a "$path" "$BACKUP_DIR/$path"
   fi
 done
 
-# 3️⃣ 浅克隆/拉取并切换分支
-echo "→ 拉取最新代码 (分支: $BRANCH) ..."
-# 尝试浅拉取指定分支
-git fetch --depth=1 origin "$BRANCH" || true
-# 重置到远程分支最新状态
-git reset --hard "origin/$BRANCH"
+# 🔸2️⃣ 拉取代码
+echo "🚀 尝试 SSH 拉取..."
+if ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
+  git clone --depth=1 --branch "$BRANCH" "$REMOTE_SSH" "$TEMP_CLONE" && CLONE_SUCCESS=true
+fi
 
-# 4️⃣ 更新 Python 依赖
-echo "→ 更新依赖..."
+if ! $CLONE_SUCCESS && [[ -n "$GITHUB_TOKEN" ]]; then
+  echo "🚀 尝试 Token 拉取..."
+  TOKEN_URL="https://${GITHUB_TOKEN}:x-oauth-basic@github.com/${REPO_OWNER}/${REPO_NAME}.git"
+  git clone --depth=1 --branch "$BRANCH" "$TOKEN_URL" "$TEMP_CLONE" && CLONE_SUCCESS=true
+fi
+
+if ! $CLONE_SUCCESS; then
+  echo "🚀 尝试 HTTPS 拉取..."
+  git clone --depth=1 --branch "$BRANCH" "$REMOTE_HTTPS" "$TEMP_CLONE" && CLONE_SUCCESS=true
+fi
+
+if ! $CLONE_SUCCESS; then
+  echo "🚀 尝试 Zip 下载方式..."
+  ZIP_PATH="$(mktemp)"
+  curl -L "$ZIP_URL" -o "$ZIP_PATH"
+  unzip "$ZIP_PATH" -d "$TEMP_CLONE"
+  TEMP_CLONE="${TEMP_CLONE}/${REPO_NAME}-${BRANCH}"
+  [ -d "$TEMP_CLONE" ] && CLONE_SUCCESS=true
+fi
+
+if ! $CLONE_SUCCESS; then
+  echo "❌ 所有拉取方式失败，请检查网络/GitHub 设置"
+  exit 1
+fi
+
+# 🔸3️⃣ 清除旧代码（保留虚拟环境、数据库、配置等）
+echo "🧹 清空旧代码..."
+find . -mindepth 1 -maxdepth 1 ! -name "myenv" ! -name ".git" -exec rm -rf {} +
+
+# 🔸4️⃣ 拷贝新代码
+echo "📥 拷贝新代码..."
+cp -a "$TEMP_CLONE/." .
+
+# 🔸5️⃣ 激活虚拟环境 + 安装依赖
+echo "🐍 激活虚拟环境 & 安装依赖..."
+source myenv/bin/activate
+pip install --upgrade pip
 if [ -f "requirements.txt" ]; then
-  pip install --upgrade pip
   pip install -r requirements.txt
 fi
 
-# 5️⃣ 恢复用户数据
-echo "→ 恢复备份的数据..."
+# 🔸6️⃣ 恢复数据
+echo "🔁 恢复备份数据..."
 for path in "${DATA_PATHS[@]}"; do
   if [ -e "$BACKUP_DIR/$path" ]; then
-    echo "  → 恢复 $path"
+    echo "→ 恢复: $path"
     rm -rf "$path"
     mkdir -p "$(dirname "$path")"
     mv "$BACKUP_DIR/$path" "$path"
   fi
 done
 
-# 6️⃣ 清理临时备份
-echo "→ 清理临时文件..."
-rm -rf "$BACKUP_DIR"
+# 🔸7️⃣ 启动服务
+echo "🚀 重启 Gunicorn 服务..."
+pkill -f gunicorn || true
+gunicorn -w 3 --threads 6 -b 0.0.0.0:80 "Benlog.app:create_app()"
 
-echo "✅ 代码已更新完成，数据已保留。请手动重启你的服务或进程。"
+# 🔚 清理
+rm -rf "$BACKUP_DIR" "$TEMP_CLONE"
+echo "✅ 部署完成！服务已自动重启。"
