@@ -26,10 +26,10 @@
 
 
     <div class="media-card" title="{{ file }}">
-      {% if ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}
+      {% if ext in ['jpg', 'jpeg', 'png', 'gif', 'webp', 'NEF', 'nef'] %}
         <img class="media-preview" src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}" onclick="showFullImage(this.src)" alt="image">
 
-      {% elif ext in ['mp4', 'webm', 'mov'] %}
+      {% elif ext in ['mp4', 'webm', 'mov', 'MOV'] %}
         <video class="media-preview" controls>
           <source src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}" type="video/mp4">
         </video>
