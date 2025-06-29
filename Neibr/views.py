@@ -7,6 +7,7 @@ from werkzeug.security import generate_password_hash, check_password_hash  # typ
 import os
 import io
 from PIL import Image
+from PIL import UnidentifiedImageError
 from werkzeug.utils import secure_filename # type: ignore
 import yaml
 from datetime import datetime
@@ -64,44 +65,35 @@ def allowed_file(filename):
 }
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
 def compress_and_save_image(file_storage, save_path):
-    """
-    使用 Pillow 压缩并保存图片到磁盘
-    - file_storage: Flask 的 FileStorage 对象
-    - save_path: 最终保存路径
-    """
-    img = Image.open(file_storage.stream)
-    # 如果有透明通道或调色板模式，先转为 RGB
-    if img.mode in ("RGBA", "P"):
-        img = img.convert("RGB")
-    # 将压缩后的二进制写入内存
-    img_io = io.BytesIO()
-    img.save(
-        img_io,
-        format='JPEG',        # 统一保存为 JPEG
-        quality=IMAGE_QUALITY,
-        optimize=True
-    )
-    img_io.seek(0)
-    # 写入磁盘
-    with open(save_path, 'wb') as out_f:
-        out_f.write(img_io.read())
+    try:
+        img = Image.open(file_storage.stream)
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+
+        img_io = io.BytesIO()
+        img.save(img_io, format='JPEG', quality=IMAGE_QUALITY, optimize=True)
+        img_io.seek(0)
+
+        with open(save_path, 'wb') as out_f:
+            out_f.write(img_io.read())
+    except UnidentifiedImageError:
+        raise  # 交由上层处理（或你可以 flash 一句）
         
 
 
 def sanitize_filename(file):
-    """
-    安全化上传文件名：
-    - 处理中文和特殊字符
-    - 防止仅有扩展名或空名情况
-    """
     original_name = file.filename
     filename = secure_filename(unidecode(original_name))
 
-    # 修复空或只包含扩展名的情况
     if not filename or filename.startswith('.'):
         ext = original_name.rsplit('.', 1)[-1].lower() if '.' in original_name else 'bin'
         filename = f"file_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.{ext}"
+    else:
+        ext = filename.rsplit('.', 1)[-1].lower()
+        name = filename.rsplit('.', 1)[0]
+        filename = f"{name}_{datetime.utcnow().strftime('%H%M%S')}.{ext}"
 
     return filename
 
@@ -180,7 +172,7 @@ def create_post():
                 ext = filename.rsplit('.', 1)[1].lower()
                 file_path = os.path.join(folder_path, filename)
 
-                if ext in {'png', 'jpg', 'jpeg', 'gif'}:
+                if ext in {'png', 'jpg', 'jpeg', 'gif', 'JPG', 'JPEG', 'PNG', 'GIF'}:
                     compress_and_save_image(file, file_path)
                 else:
                     file.save(file_path)
@@ -329,7 +321,11 @@ def edit_post(title):
                     file_path = os.path.join(folder_path, filename)
 
                     if ext in {'png', 'jpg', 'jpeg', 'gif'}:
-                        compress_and_save_image(file, file_path)
+                        try:
+                            compress_and_save_image(file, file_path)
+                        except UnidentifiedImageError:
+                            flash(f'图片文件无法识别：{file.filename}，请上传有效图片', 'danger')
+                            continue
                     else:
                         file.save(file_path)
 

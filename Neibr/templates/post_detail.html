@@ -19,68 +19,43 @@
 
   <div class="content-text">{{ post_text | safe }}</div>
 
-  <div class="media-container">
-    {% for file in media_files %}
-      {# 小写后缀匹配，避免大小写问题 #}
-      {% set ext = file.lower().rsplit('.', 1)[-1] %}
-  
-      {% if ext in ['jpg','png','gif','nef','jpeg'] %}
-        <div class="thumbnail-box">
-          <img 
-            src="{{ url_for('neibr.media_file',
-                             user_id=post.user_id,
-                             post_id=post.id,
-                             filename=file) }}"
-            onclick="showFullImage(this.src)"
-            alt="image">
-        </div>
-  
-      {% elif file.endswith('.pdf') %}
-      <iframe class="inline-pdf" src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}"></iframe>
+  <!-- ✅ 媒体卡片区域：HTML + JS + CSS 整合版 -->
+<div class="media-masonry">
+  {% for file in media_files %}
+    {% set ext = file.lower().rsplit('.', 1)[-1] %}
 
-      {% elif ext in ['mp4','webm','mov'] %}
-        <video controls>
-          <source 
-            src="{{ url_for('neibr.media_file',
-                             user_id=post.user_id,
-                             post_id=post.id,
-                             filename=file) }}"
-            type="video/mp4">
+
+    <div class="media-card" title="{{ file }}">
+      {% if ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}
+        <img class="media-preview" src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}" onclick="showFullImage(this.src)" alt="image">
+
+      {% elif ext in ['mp4', 'webm', 'mov'] %}
+        <video class="media-preview" controls>
+          <source src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}" type="video/mp4">
         </video>
-  
-      {% elif ext in ['mp3','wav'] %}
-        <div class="audio-player-container">
+
+      {% elif ext in ['mp3', 'wav', 'flac'] %}
+        <div class="media-preview audio-card">
           <audio controls>
-            <source 
-              src="{{ url_for('neibr.media_file',
-                              user_id=post.user_id,
-                              post_id=post.id,
-                              filename=file) }}"
-              type="audio/mpeg">
+            <source src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}" type="audio/mpeg">
           </audio>
         </div>
 
-      {% elif ext in ['txt','md'] %}
-        <div class="media-title">{{ file }}</div>
-        <pre>{{ post_text | safe }}</pre>
+      {% elif ext == 'pdf' %}
+        <div class="media-preview pdf-card" onclick="window.open('{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}', '_blank')">
+          <div class="pdf-icon">📄</div>
+        </div>
 
       {% else %}
-        <div class="media-title">{{ file }}</div>
-        <p>不支持的文件类型：{{ ext }}</p>
+        <div class="media-preview unknown-card">
+          <span>📁 {{ file }}</span>
+        </div>
       {% endif %}
-  
-      {# 处理图片预览 #}
-      {% if ext in ['jpg', 'png', 'gif', 'nef', 'jpeg'] %}
-        <script>
-          document.querySelectorAll('.thumbnail-box img').forEach(img => {
-            img.addEventListener('click', function() {
-              showFullImage(this.src);
-            });
-          });
-        </script>
-      {% endif %}
-    {% endfor %}
-  </div>
+
+      <div class="media-filename">{{ file }}</div>
+    </div>
+  {% endfor %}
+</div>
   
   
 
@@ -129,33 +104,107 @@
 </div>
 
 <style>
-  /* 初始隐藏，并为“活动”状态预留样式 */
-  #image-preview-overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8);
-    display: none;           /* 先隐藏 */
-    justify-content: center; /* 仅在 display:flex 有效 */
-    align-items: center;
-    z-index: 9999;           /* 确保在最上层 */
-  }
-  #image-preview-overlay.active {
-    display: flex;           /* 切换类名即可显示 */
-  }
-  #image-preview-overlay img {
-    max-width: 90%;
-    max-height: 90%;
-    border-radius: 8px;
-  }
+.media-masonry {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  margin-top: 1rem;
+}
+
+.media-card {
+  position: relative;
+  background: var(--card-bg-color);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s;
+  cursor: pointer;
+}
+
+.media-card:hover {
+  transform: translateY(-5px);
+}
+
+.media-preview {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  display: block;
+}
+
+.audio-card, .pdf-card, .unknown-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 160px;
+  font-size: 2rem;
+  background: linear-gradient(135deg, #eee, #ccc);
+  color: #333;
+}
+
+[data-theme="dark"] .audio-card,
+[data-theme="dark"] .pdf-card,
+[data-theme="dark"] .unknown-card {
+  background: linear-gradient(135deg, #333, #444);
+  color: #eee;
+}
+
+.media-filename {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-size: 0.75rem;
+  text-align: center;
+  padding: 2px 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.media-card:hover .media-filename {
+  opacity: 1;
+}
 </style>
 
-<!-- 预览容器 -->
+<script>
+function showFullImage(src) {
+  const overlay = document.getElementById('image-preview-overlay');
+  const img = document.getElementById('image-preview');
+  img.src = src;
+  overlay.classList.add('active');
+}
+function closeImagePreview() {
+  document.getElementById('image-preview-overlay').classList.remove('active');
+}
+</script>
+
+<!-- 全屏图像预览容器 -->
 <div id="image-preview-overlay" onclick="closeImagePreview()">
-  <img id="image-preview" src="" alt="preview">
+  <img id="image-preview" src="" alt="preview" />
 </div>
 
 <style>
+#image-preview-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 9999;
+}
+#image-preview-overlay.active {
+  display: flex;
+}
+#image-preview {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 12px;
+  box-shadow: 0 0 20px #000;
+}
+
 
 .posts-container .card {
   background: var(--quick-card-bg);
@@ -319,28 +368,35 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: var(--quick-card-bg);
-  border: 1px solid #692727;
+  background: var(--card-bg-color);           /* ✅ 亮暗模式自适应 */
+  color: var(--text-color);                   /* ✅ 文字颜色自适应 */
+  border: 1px solid var(--card-border-color); /* ✅ 边框颜色自适应 */
   border-radius: 10px;
   padding: 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   width: 80%;
   max-width: 500px;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
+
 .comment-box textarea {
   width: 100%;
   height: 100px;
   margin-bottom: 10px;
   padding: 10px;
-  border: 1px solid #672626;
+  background-color: var(--input-bg-color);         /* ✅ 输入背景自适应 */
+  color: var(--text-color);                        /* ✅ 输入文字色适应 */
+  border: 1px solid var(--input-border-color);     /* ✅ 自适应边框色 */
   border-radius: 5px;
   resize: none;
+  transition: background-color 0.3s, border-color 0.3s;
 }
+
 .comment-box .submit-comment,
 .comment-box .close-comment {
-  background-color: #ff2442;
-  color: var(--card-bg-color);
+  background-color: var(--btn-bg-color);     /* ✅ 亮暗统一按钮背景 */
+  color: var(--btn-text-color);              /* ✅ 统一按钮文字色 */
   border: none;
   padding: 10px 20px;
   border-radius: 5px;
@@ -348,9 +404,10 @@
   margin-right: 10px;
   transition: background-color 0.3s, transform 0.3s;
 }
+
 .comment-box .submit-comment:hover,
 .comment-box .close-comment:hover {
-  background-color: #d81e36;
+  background-color: var(--btn-hover-bg-color); /* ✅ 亮暗统一按钮悬停色 */
   transform: scale(1.05);
 }
 
