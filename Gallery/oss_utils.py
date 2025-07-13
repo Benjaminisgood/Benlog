@@ -66,3 +66,24 @@ def generate_signed_url(key: str, expires: int = 3600, style: str = None) -> str
             'x-oss-process': 'image/resize,w_300/quality,q_70/format,jpg/blur,r_5,s_2'
         }
     return bucket.sign_url('GET', key, expires, params=params)
+
+
+import os
+import json
+
+VISIBLE_JSON_PATH = os.path.join(os.path.dirname(__file__), '..', 'Settings', 'visible_albums.json')
+
+def load_visible_albums():
+    path = os.path.join(os.path.dirname(__file__), '..', 'Settings', 'visible_albums.json')
+    path = os.path.abspath(path)
+    if not os.path.exists(path):
+        with open(path, 'w') as f:
+            json.dump({}, f)
+    with open(path, 'r') as f:
+        return json.load(f)
+    
+    
+def save_visible_albums(data):
+    os.makedirs(os.path.dirname(VISIBLE_JSON_PATH), exist_ok=True)
+    with open(VISIBLE_JSON_PATH, 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)

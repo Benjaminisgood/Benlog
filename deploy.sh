@@ -29,6 +29,7 @@ DATA_PATHS=(
   "myenv"
   "Neibr/neibr"
   "instance/config.py"
+  "Settings/visible_albums.json"
 )
 
 BACKUP_DIR="$(mktemp -d)"
