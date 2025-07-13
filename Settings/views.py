@@ -605,45 +605,54 @@ def manage_friend_links():
 
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_required
-from datetime import datetime
 from . import setting_bp
-from Gallery.oss_utils import _get_bucket, list_objects, delete_object
-from werkzeug.utils import secure_filename
+from Gallery.oss_utils import list_objects, load_visible_albums, save_visible_albums
 
-
-@setting_bp.route('/gallery', methods=['GET', 'POST'])
+@setting_bp.route('/gallery/visibility', methods=['GET', 'POST'])
 @login_required
-def manage_gallery():
-    bucket = _get_bucket()
+def manage_gallery_visibility():
+    from Gallery.oss_utils import list_objects, load_visible_albums, save_visible_albums
 
-    # 上传逻辑
-    if request.method == 'POST':
-        files = request.files.getlist('photos')
-        today_prefix = datetime.today().strftime('%Y-%m-%d') + "/"
-        for file in files:
-            if file.filename:
-                filename = secure_filename(file.filename)
-                key = today_prefix + filename  # 存入日期路径
-                bucket.put_object(key, file.stream)
-        flash(f"成功上传 {len(files)} 张图片", "success")
-        return redirect(url_for('setting.manage_gallery'))
-
-    # 获取所有图片（包括子路径）
+    # 获取 OSS 所有路径前缀
     keys, _ = list_objects(prefix='', max_keys=1000)
-    images = []
-    for key in keys:
-        if key.endswith('/'):
-            continue  # 忽略文件夹
-        if key.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp')):
-            url = bucket.sign_url('GET', key, 3600)
-            images.append({'key': key, 'url': url})
+    albums = sorted({key.split('/')[0] + '/' for key in keys if '/' in key})
 
-    return render_template('manage_gallery.html', images=images)
+    # 加载已保存的显示配置
+    current_visibility = load_visible_albums()
 
+    # ---- 处理 POST 表单提交 ----
+    if request.method == 'POST':
+        form = request.form
+        selected_albums = form.getlist('visible_albums')
 
-@setting_bp.route('/gallery/delete/<path:key>', methods=['POST'])
-@login_required
-def gallery_delete(key):
-    delete_object(key)
-    flash("删除成功", "warning")
-    return redirect(url_for('setting.manage_gallery'))
+        new_config = {}
+        for album in albums:
+            is_visible = album in selected_albums
+            note_key = f"note_{album.strip('/')}"
+            note = form.get(note_key, '').strip()
+            new_config[album] = {
+                "visible": is_visible,
+                "note": note
+            }
+
+        save_visible_albums(new_config)
+        flash("路径显示设置已保存 ✅", "success")
+        return redirect(url_for('setting.manage_gallery_visibility'))
+
+    # ---- 构建前端显示数据 ----
+    visible_albums = {
+        album: (
+            {"visible": info, "note": ""} if isinstance(info, bool)
+            else {
+                "visible": info.get("visible", False),
+                "note": info.get("note", "")
+            }
+        )
+        for album, info in current_visibility.items()
+    }
+
+    return render_template(
+        'manage_gallery.html',
+        all_albums=albums,
+        visible_albums=visible_albums
+    )

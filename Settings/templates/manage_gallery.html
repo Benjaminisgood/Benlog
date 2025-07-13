@@ -2,147 +2,174 @@
 {% block content %}
 
 <style>
-.gallery-grid {
-  column-count: 4;
-  column-gap: 1rem;
-}
-@media (max-width: 1200px) {
-  .gallery-grid {
-    column-count: 3;
-  }
-}
-@media (max-width: 768px) {
-  .gallery-grid {
-    column-count: 2;
-  }
-}
-@media (max-width: 480px) {
-  .gallery-grid {
-    column-count: 1;
-  }
-}
-
-.photo-card {
-  break-inside: avoid;
-  margin-bottom: 1rem;
-  position: relative;
-  background-color: var(--card-bg-color);
-  border-radius: 0.5rem;
-  overflow: hidden;
-}
-
-.photo-card img {
-  width: 100%;
-  display: block;
-  border-radius: 0.5rem;
-}
-
-.photo-card form {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-}
-
-/* 拖拽上传区域样式 */
-#drop-area {
-  border: 2px dashed #ccc;
-  border-radius: 8px;
+.gallery-visibility-container {
+  max-width: 720px;
+  margin: auto;
+  background: var(--card-bg-color);
+  border: 1px solid var(--card-border-color);
+  border-radius: 12px;
   padding: 2rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+  transition: background 0.3s, color 0.3s;
+}
+
+.gallery-visibility-container h2 {
+  color: var(--heading-color);
   text-align: center;
-  margin-bottom: 2rem;
-  background-color: rgba(255,255,255,0.05);
-  transition: border-color 0.3s ease;
+  margin-bottom: 1rem;
 }
-#drop-area.highlight {
-  border-color: var(--primary-color);
+
+.album-search {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
 }
-#drop-area input {
-  display: none;
+
+.album-search input[type="text"] {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--input-border-color);
+  border-radius: 6px;
+  width: 100%;
+  max-width: 400px;
+  background-color: var(--input-bg-color);
+  color: var(--text-color);
+  font-size: 1rem;
 }
-#gallery-upload-btn {
-  margin-top: 1rem;
+
+.album-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.album-list li {
+  background: var(--quick-card-bg);
+  border: 1px solid var(--card-border-color);
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  transition: background 0.3s, transform 0.3s;
+}
+
+.album-list li:hover {
+  background: var(--quick-card-hover-bg);
+  transform: translateY(-1px);
+}
+
+.album-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.album-list input[type="checkbox"] {
+  margin-right: 0.75rem;
+  transform: scale(1.2);
+  accent-color: var(--btn-bg-color);
+}
+
+.album-list label {
+  flex-grow: 1;
+  color: var(--text-color);
+  font-size: 1rem;
+  word-break: break-all;
+}
+
+.album-note-input {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--input-border-color);
+  border-radius: 6px;
+  background-color: var(--input-bg-color);
+  color: var(--text-color);
+  width: 100%;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.album-note-input:focus {
+  outline: none;
+  border-color: var(--input-focus-border-color);
+  box-shadow: 0 0 0 2px rgba(51, 102, 204, 0.2);
+}
+
+.save-btn {
+  display: block;
+  width: 100%;
+  margin-top: 2rem;
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-weight: bold;
+  background-color: var(--btn-bg-color);
+  color: var(--btn-text-color);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.save-btn:hover {
+  background-color: var(--btn-hover-bg-color);
+}
+
+@media (max-width: 600px) {
+  .gallery-visibility-container {
+    padding: 1rem;
+  }
+
+  .album-note-input {
+    font-size: 0.9rem;
+  }
 }
 </style>
 
-<div id="drop-area">
-  <form id="upload-form" method="POST" enctype="multipart/form-data">
-    <p>拖拽图片到这里，或点击选择</p>
-    <input type="file" id="fileElem" name="photos" multiple accept="image/*">
-    <label class="button" for="fileElem" style="cursor: pointer; padding: 0.5rem 1rem; border-radius: 5px; background: var(--button-bg);">选择图片</label>
-    <br>
-    <button type="submit" id="gallery-upload-btn">上传</button>
+<div class="gallery-visibility-container">
+  <h2>📁 相册路径显示控制</h2>
+  <p>✅ 勾选的路径将在首页显示；未勾选将被隐藏。</p>
+
+  <form method="post">
+    <div class="album-search">
+      <input type="text" id="searchInput" placeholder="🔍 搜索路径..." onkeyup="filterAlbums()">
+    </div>
+
+    <ul class="album-list" id="albumList">
+      {% for album in all_albums %}
+        <li>
+          <div class="album-top">
+            <input type="checkbox" name="visible_albums" value="{{ album }}"
+                  id="album_{{ loop.index }}"
+                  {% if visible_albums.get(album, {}).get('visible', False) %}checked{% endif %}>
+            <label for="album_{{ loop.index }}">{{ album }}</label>
+          </div>
+          <input type="text"
+                class="album-note-input"
+                name="note_{{ album.strip('/') }}"
+                value="{{ visible_albums[album].note if album in visible_albums else '' }}"
+                placeholder="✏️ 添加备注（如 婚礼、旅行...）" />
+        </li>
+      {% endfor %}
+    </ul>
+
+    <button type="submit" class="save-btn">💾 保存设置</button>
   </form>
 </div>
 
-<hr>
-
-<div class="gallery-grid">
-  {% for image in images %}
-    <div class="photo-card">
-      <form method="post" action="{{ url_for('setting.gallery_delete', key=image.key) }}">
-        <input type="hidden" name="key" value="{{ image.key }}">
-        <button type="submit">🗑</button>
-      </form>
-      <img data-src="{{ image.url }}" alt="{{ image.key }}" class="lazy-img" loading="lazy">
-    </div>
-  {% else %}
-    <p>暂无图片。</p>
-  {% endfor %}
-</div>
-
-<!-- 拖拽上传脚本 -->
 <script>
-const dropArea = document.getElementById("drop-area");
-const fileInput = document.getElementById("fileElem");
-const form = document.getElementById("upload-form");
+function filterAlbums() {
+  const input = document.getElementById('searchInput');
+  const filter = input.value.toLowerCase();
+  const albumList = document.getElementById('albumList');
+  const items = albumList.getElementsByTagName('li');
 
-['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-  dropArea.addEventListener(eventName, e => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, false);
-});
-
-['dragenter', 'dragover'].forEach(eventName => {
-  dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false);
-});
-
-['dragleave', 'drop'].forEach(eventName => {
-  dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false);
-});
-
-dropArea.addEventListener('drop', function(e) {
-  const dt = e.dataTransfer;
-  const files = dt.files;
-  fileInput.files = files;
-});
-</script>
-
-<!-- 懒加载脚本 -->
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  const lazyImages = document.querySelectorAll('img.lazy-img');
-
-  if ('IntersectionObserver' in window) {
-    const observer = new IntersectionObserver((entries, obs) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const img = entry.target;
-          img.src = img.dataset.src;
-          img.classList.remove('lazy-img');
-          obs.unobserve(img);
-        }
-      });
-    });
-    lazyImages.forEach(img => observer.observe(img));
-  } else {
-    // fallback：立即加载所有图片
-    lazyImages.forEach(img => {
-      img.src = img.dataset.src;
-      img.classList.remove('lazy-img');
-    });
+  for (let i = 0; i < items.length; i++) {
+    const label = items[i].getElementsByTagName("label")[0];
+    const text = label.textContent || label.innerText;
+    items[i].style.display = text.toLowerCase().includes(filter) ? "" : "none";
   }
-});
+}
 </script>
 
 {% endblock %}

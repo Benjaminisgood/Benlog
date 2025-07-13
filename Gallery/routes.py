@@ -13,6 +13,9 @@ from .oss_utils import (
     _get_bucket        # 获取已配置的 Bucket 实例
 )
 from . import gallery_bp
+from Gallery.oss_utils import load_visible_albums, save_visible_albums
+
+
 
 
 def _handle_upload(prefix: str):
@@ -50,6 +53,7 @@ def index():
         * 处理上传，自动识别是否在某个相册下
     """
     prefix = request.args.get('prefix', '') or ''
+    visible_config = load_visible_albums()
 
     # --- POST：处理文件上传 ---
     if request.method == 'POST':
@@ -68,6 +72,8 @@ def index():
         # ✅ 为每个相册选取首张图片作为封面
         album_infos = []
         for album in albums:
+            if not visible_config.get(album, {}).get("visible", False):
+                continue
             keys, _ = list_objects(prefix=album, max_keys=20)  # 限定只取少量即可
             image_key = next((k for k in keys if k.lower().endswith(('.png', '.jpg', '.jpeg', '.webp', '.gif'))), None)
             cover_url = generate_signed_url(image_key) if image_key else None
