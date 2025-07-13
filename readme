@@ -63,6 +63,10 @@ cd /home/Benlogmain.tar/Benlogmain
 chmod +x deploy.sh
 ./deploy.sh
 
+
+
+
+
 # 如果需要进行版本更新也非常简单，只需在服务器中依次：
 cd /Benlogmain
 source myenv/bin/activate
@@ -72,7 +76,6 @@ chmod +x deploy.sh
 pkill -f gunicorn
 gunicorn -w 3 --threads 6 -b 0.0.0.0:80 "Benlog.app:create_app()"
 # setup、manifest也可以帮助你先将程序打包，小白可以直接忽略。
-
 # 测试代码
 export FLASK_ENV=development
 export FLASK_DEBUG=1
