@@ -16,9 +16,12 @@ dist/
 updatelog.md
 *.log
 *.tmp
+*.zip
+
 #*.txt
 # macOS 系统文件
 .DS_Store
+
 # instance
 instance/
 
