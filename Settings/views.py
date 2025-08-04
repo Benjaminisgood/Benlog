@@ -22,6 +22,7 @@ from pathlib import Path
 
 # --------------- 视图文件顶部新增导入 ---------------
 from pathlib import Path
+from Gallery.oss_utils import load_visible_albums
 # --------------------------------------------------
 
 @setting_bp.route('/')
@@ -41,7 +42,7 @@ def index():
     blog_posts_dir  = project_root / "Blog"    / "posts"
     edu_notes_dir   = project_root / "Edu"     / "notes"
     neibr_dir       = project_root / "Neibr"   / "neibr"
-    gallery_dir     = project_root / "Gallery" / "galleries"
+    # gallery_dir     = project_root / "Gallery" / "galleries"
 
     # ------- 统计工具 -------
     def count_files(path: Path, exts: tuple | None = None) -> int:
@@ -62,7 +63,12 @@ def index():
     notes_count       = count_files(edu_notes_dir,  ('.md', '.markdown', '.html'))
     posts_count       = count_files(blog_posts_dir, ('.md', '.markdown', '.html'))
     users_count = count_dirs(neibr_dir, depth=1)
-    media_files_count = count_dirs(gallery_dir, depth=1)  # 统计所有媒体文件
+    # media_files_count = count_dirs(gallery_dir, depth=1)  # 统计所有媒体文件
+
+    # ✅ 改为统计 visible_albums 数量
+    visible_albums_config = load_visible_albums()
+    media_files_count = sum(1 for v in visible_albums_config.values()
+                            if isinstance(v, dict) and v.get("visible"))
 
     return render_template(
         'setting_index.html',
