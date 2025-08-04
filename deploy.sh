@@ -108,7 +108,8 @@ done
 # 🔸7️⃣ 启动服务
 echo "🚀 重启 Gunicorn 服务..."
 pkill -f gunicorn || true
-gunicorn -w 3 --threads 6 -b 0.0.0.0:80 "Benlog.app:create_app()"
+# gunicorn -w 3 --threads 6 -b 0.0.0.0:80 "Benlog.app:create_app()"
+gunicorn -w 3 --threads 6 -b 0.0.0.0:5000 "Benlog.app:create_app()"
 
 # 🔚 清理
 rm -rf "$BACKUP_DIR" "$TEMP_CLONE"
