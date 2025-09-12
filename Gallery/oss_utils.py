@@ -79,8 +79,22 @@ def load_visible_albums():
     if not os.path.exists(path):
         with open(path, 'w') as f:
             json.dump({}, f)
-    with open(path, 'r') as f:
-        return json.load(f)
+    # 修复空文件导致的JSONDecodeError
+    with open(path, 'r+') as f:
+        content = f.read().strip()
+        if not content:
+            f.seek(0)
+            json.dump({}, f)
+            f.truncate()
+            return {}
+        try:
+            return json.loads(content)
+        except Exception:
+            # 如果内容无效，重置为空对象
+            f.seek(0)
+            json.dump({}, f)
+            f.truncate()
+            return {}
     
     
 def save_visible_albums(data):

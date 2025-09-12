@@ -7,6 +7,13 @@
     <p>欢迎来到Neighbor，这里是一个邻里社区，你可以在这里发布帖子，与邻居们交流。</p>
   </div>
 
+    <!-- 检索功能 -->
+    <div class="search-bar" style="text-align:center; margin-bottom: 20px;">
+      <input id="search-input" class="form-control" type="text" placeholder="搜索帖子标题或标签..." style="max-width:350px; display:inline-block;">
+      <button id="search-btn" class="btn btn-primary" style="margin-left:8px;">检索</button>
+      <button id="clear-search-btn" class="btn btn-secondary" style="margin-left:4px;">清除</button>
+    </div>
+
   <div class="user-auth">
     {% if current_user.is_authenticated %}
       <span>👋 欢迎你，{{ current_user.username }}！</span>
@@ -52,6 +59,7 @@
   <div id="random-posts" class="posts-container" style="display:none;">
     {% for post in random_posts %}
       <div class="card" data-href="{{ url_for('neibr.post_detail', title=post.title, src='random', idx=loop.index0) }}">
+
         <h3>{{ post.title }}</h3>
         <div class="post-meta">
           <span class="author">作者：{{ user_map[post.user_id] }}</span>
@@ -332,6 +340,7 @@
     });
   });
 
+
   // 加载更多
 document.addEventListener('DOMContentLoaded', () => {
   const sections = {
@@ -381,6 +390,60 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
+// 检索功能
+function filterPosts(containerId, keyword) {
+  const cards = document.querySelectorAll(`#${containerId} .card`);
+  let hasVisible = false;
+  cards.forEach(card => {
+    const title = card.querySelector('h3').innerText.toLowerCase();
+    const tags = Array.from(card.querySelectorAll('.tags span')).map(t => t.innerText.toLowerCase()).join(' ');
+    if (title.includes(keyword) || tags.includes(keyword)) {
+      card.style.display = '';
+      hasVisible = true;
+    } else {
+      card.style.display = 'none';
+    }
+  });
+  // 隐藏/显示“加载更多”按钮
+  const wrapper = document.querySelector(`#${containerId} .load-more-wrapper`);
+  if (wrapper) wrapper.style.display = keyword ? 'none' : '';
+  // 若无结果可加提示
+  let noResult = document.querySelector(`#${containerId} .no-result`);
+  if (!hasVisible) {
+    if (!noResult) {
+      noResult = document.createElement('div');
+      noResult.className = 'no-result';
+      noResult.style.textAlign = 'center';
+      noResult.style.color = '#888';
+      noResult.innerText = '未找到相关帖子';
+      document.getElementById(containerId).appendChild(noResult);
+    }
+  } else {
+    if (noResult) noResult.remove();
+  }
+}
+
+document.getElementById('search-btn').onclick = function() {
+  const keyword = document.getElementById('search-input').value.trim().toLowerCase();
+  if (!keyword) return;
+  if (latestPosts.style.display !== 'none') filterPosts('latest-posts', keyword);
+  if (randomPosts.style.display !== 'none') filterPosts('random-posts', keyword);
+  if (myPosts.style.display !== 'none') filterPosts('my-posts', keyword);
+};
+document.getElementById('clear-search-btn').onclick = function() {
+  document.getElementById('search-input').value = '';
+  ['latest-posts','random-posts','my-posts'].forEach(cid => {
+    document.querySelectorAll(`#${cid} .card`).forEach(card => card.style.display = '');
+    const wrapper = document.querySelector(`#${cid} .load-more-wrapper`);
+    if (wrapper) wrapper.style.display = '';
+    const noResult = document.querySelector(`#${cid} .no-result`);
+    if (noResult) noResult.remove();
+  });
+};
+document.getElementById('search-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') document.getElementById('search-btn').click();
+});
+
 </script>
 
 {% endblock %}
