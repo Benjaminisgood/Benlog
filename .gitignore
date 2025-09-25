@@ -1,5 +1,6 @@
 # Python 缓存文件
 __pycache__/
+__pycache__ 12.18.20/
 *.py[cod]
 
 # 构建生成文件（例如 whl 包可能位于 dist/ 目录）
