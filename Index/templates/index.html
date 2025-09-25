@@ -25,8 +25,8 @@
 
 
   <div class="search-bar">
-    <form action="{{ url_for('index.llm_query') }}" method="post">
-      <input type="text" name="query" placeholder="支持 LLM 聊天和站内搜索..." required>
+    <form action="{{ url_for('index.search') }}" method="get">
+      <input type="text" name="q" value="{{ request.args.get('q', '') }}" placeholder="支持站内搜索，暂不支持AGI和LLM聊天" required>
     </form>
   </div>
   
@@ -82,27 +82,34 @@
 
 <style>
   .search-bar {
-  max-width: 600px;
-  margin: 40px auto 20px;
-  padding: 10px 20px;
-  display: flex;
-  align-items: center;
-  border-radius: 12px;
-  background: var(--quick-card-bg);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid var(--card-border-color);
-}
+    max-width: 600px;
+    margin: 40px auto 20px;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    border-radius: 12px;
+    background: var(--quick-card-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--card-border-color);
+  }
 
-/* 输入框 */
+  .search-bar form {
+    flex: 1;
+    display: flex;
+    align-items: center;
+  }
+
+  /* 输入框 */
   .search-bar input[type="text"] {
-  flex: 1;
-  padding: 10px;
-  font-size: 1rem;
-  border: none;
-  background-color: transparent;
-  color: var(--text-color);
-  outline: none;
+    flex: 1;
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border: none;
+    background-color: transparent;
+    color: var(--text-color);
+    outline: none;
   }
 
   .search-bar input[type="text"]::placeholder {

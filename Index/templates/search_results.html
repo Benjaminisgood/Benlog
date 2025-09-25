@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="search-page">
+    <div class="search-header">
+      <h1>检索「{{ query }}」</h1>
+      {% if total_matches %}
+        <p>共找到 {{ total_matches }} 条内容。</p>
+      {% else %}
+        <p>没有找到相关内容，试试其他关键词？</p>
+      {% endif %}
+      <form class="search-bar" action="{{ url_for('index.search') }}" method="get">
+        <input type="text" name="q" value="{{ query }}" placeholder="支持 LLM 聊天和站内搜索..." required>
+      </form>
+    </div>
+
+    {% if grouped_results %}
+      {% for group in grouped_results %}
+        <section class="search-section">
+          <h2>{{ group.module }}</h2>
+          <ul class="search-list">
+            {% for item in group.matches %}
+              <li class="search-item">
+                <a href="{{ item.url }}" class="search-card">
+                  <div class="search-card-header">
+                    <h3>{{ item.title }}</h3>
+                    <span class="search-module-tag">{{ item.module }}</span>
+                  </div>
+                  {% if item.snippet %}
+                    <p class="search-snippet">{{ item.snippet }}</p>
+                  {% endif %}
+                  <p class="search-meta">
+                    {% if item.author %}<span>作者：{{ item.author }}</span>{% endif %}
+                    {% if item.tags %}<span>标签：{{ item.tags }}</span>{% endif %}
+                    {% if item.timestamp %}<span>{{ item.timestamp.strftime('%Y-%m-%d') }}</span>{% endif %}
+                  </p>
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
+      {% endfor %}
+    {% else %}
+      <p class="search-empty">暂时没有数据匹配这个关键词。</p>
+    {% endif %}
+  </div>
+
+  <style>
+    .search-page {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px 80px;
+    }
+    .search-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .search-header .search-bar {
+      max-width: 600px;
+      margin: 20px auto 0;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      border-radius: 16px;
+      background: var(--quick-card-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border-color);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    }
+    .search-header .search-bar input[type="text"] {
+      flex: 1;
+      padding: 8px 4px;
+      font-size: 1rem;
+      border: none;
+      background-color: transparent;
+      color: var(--text-color);
+      outline: none;
+    }
+    .search-header .search-bar input[type="text"]::placeholder {
+      color: var(--meta-text-color);
+    }
+    .search-section + .search-section {
+      margin-top: 40px;
+    }
+    .search-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .search-item {
+      list-style: none;
+    }
+    .search-card {
+      display: block;
+      padding: 22px;
+      border: 1px solid var(--card-border-color);
+      border-radius: 20px;
+      background: var(--card-bg-color);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+      text-decoration: none;
+      color: var(--text-color);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .search-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 18px 36px rgba(0, 0, 0, 0.14);
+      border-color: rgba(255, 36, 66, 0.4);
+    }
+    .search-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 10px;
+    }
+    .search-card-header h3 {
+      margin: 0;
+      font-size: 1.2rem;
+      color: var(--text-color);
+    }
+    .search-module-tag {
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #ffe4e9;
+      color: #ff2442;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .search-snippet {
+      margin: 0 0 12px;
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+    .search-snippet mark {
+      background-color: #fff4a3;
+      padding: 0 2px;
+      border-radius: 4px;
+    }
+    .search-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.9rem;
+      color: var(--meta-text-color);
+      margin: 0;
+    }
+    .search-empty {
+      text-align: center;
+      margin-top: 60px;
+      color: var(--meta-text-color);
+    }
+  </style>
+{% endblock %}

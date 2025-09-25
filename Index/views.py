@@ -12,9 +12,314 @@ import logging
 import json
 from flask_login import login_required, current_user
 import re
+import frontmatter
+import markdown
+from datetime import datetime
+from html.parser import HTMLParser
+from markupsafe import Markup, escape
+from Neibr.models import Post as NeibrPost
+from Settings.models import User
 
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+BLOG_POSTS_DIR = os.path.join(BASE_DIR, 'Blog', 'posts')
+EDU_NOTES_DIR = os.path.join(BASE_DIR, 'Edu', 'notes')
+NEIBR_STORAGE_DIR = os.path.join(BASE_DIR, 'Neibr', 'neibr')
+
+
+class _HTMLStripper(HTMLParser):
+    """Utility helper to strip HTML tags and retrieve text content."""
+
+    def __init__(self):
+        super().__init__()
+        self._chunks = []
+
+    def handle_data(self, data):  # pragma: no cover - trivial
+        self._chunks.append(data)
+
+    def get_data(self):
+        return ''.join(self._chunks)
+
+
+def strip_html(text: str) -> str:
+    parser = _HTMLStripper()
+    parser.feed(text)
+    parser.close()
+    return parser.get_data()
+
+
+def condense_text(text: str) -> str:
+    return re.sub(r'\s+', ' ', text).strip()
+
+
+def build_snippet(source_text: str, query: str, radius: int = 80) -> Markup:
+    """Return a short snippet containing the query, wrapped with <mark> tags."""
+    cleaned = condense_text(source_text)
+    if not cleaned:
+        return Markup('')
+
+    lowered = cleaned.lower()
+    query_lower = query.lower()
+    match_index = lowered.find(query_lower)
+
+    if match_index == -1:
+        truncated = cleaned[: radius * 2]
+        suffix = '...' if len(cleaned) > len(truncated) else ''
+        return Markup(escape(truncated)) + Markup(suffix)
+
+    start = max(0, match_index - radius)
+    end = min(len(cleaned), match_index + len(query) + radius)
+
+    prefix = '...' if start > 0 else ''
+    suffix = '...' if end < len(cleaned) else ''
+
+    before = cleaned[start:match_index]
+    match = cleaned[match_index:match_index + len(query)]
+    after = cleaned[match_index + len(query):end]
+
+    return (
+        Markup(prefix)
+        + Markup(escape(before))
+        + Markup(f"<mark>{escape(match)}</mark>")
+        + Markup(escape(after))
+        + Markup(suffix)
+    )
+
+
+def metadata_to_blob(metadata) -> str:
+    if not isinstance(metadata, dict):
+        return ''
+
+    tokens = []
+    for value in metadata.values():
+        if isinstance(value, (list, tuple, set)):
+            tokens.extend(str(item) for item in value)
+        elif isinstance(value, (str, int, float)):
+            tokens.append(str(value))
+
+    return ' '.join(tokens)
+
+
+def search_blog_posts(query: str):
+    results = []
+    query_lower = query.lower()
+
+    if not os.path.isdir(BLOG_POSTS_DIR):
+        return results
+
+    for filename in os.listdir(BLOG_POSTS_DIR):
+        if not filename.endswith(('.md', '.html')):
+            continue
+
+        filepath = os.path.join(BLOG_POSTS_DIR, filename)
+        slug = filename.rsplit('.', 1)[0]
+
+        try:
+            if filename.endswith('.md'):
+                post_data = frontmatter.load(filepath)
+                title = post_data.get('title') or slug
+                body_markdown = post_data.content or ''
+                html_content = markdown.markdown(body_markdown)
+                plain_text = strip_html(html_content)
+                tags = post_data.get('tags')
+                metadata_blob = metadata_to_blob(post_data.metadata)
+                search_blob = ' '.join(filter(None, [title, plain_text, metadata_blob]))
+            else:
+                with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+                    raw_html = f.read()
+                title_match = re.search(r'<title>(.*?)</title>', raw_html, re.IGNORECASE | re.DOTALL)
+                title = title_match.group(1).strip() if title_match else slug
+                plain_text = strip_html(raw_html)
+                tags = None
+                search_blob = ' '.join(filter(None, [title, plain_text]))
+        except Exception:
+            continue
+
+        if query_lower not in search_blob.lower():
+            continue
+
+        last_modified = datetime.fromtimestamp(os.path.getmtime(filepath))
+        snippet_source = plain_text or search_blob
+        if plain_text and query_lower not in plain_text.lower():
+            snippet_source = search_blob
+        snippet = build_snippet(snippet_source, query)
+
+        if tags:
+            if isinstance(tags, (list, tuple, set)):
+                tags_text = ', '.join(str(tag) for tag in tags)
+            else:
+                tags_text = str(tags)
+        else:
+            tags_text = None
+
+        results.append({
+            'module': 'Blog',
+            'title': title,
+            'slug': slug,
+            'url': url_for('blog.show_post', slug=slug),
+            'snippet': snippet,
+            'timestamp': last_modified,
+            'tags': tags_text,
+        })
+
+    results.sort(key=lambda item: item['timestamp'], reverse=True)
+    return results
+
+
+def search_edu_notes(query: str):
+    results = []
+    query_lower = query.lower()
+
+    if not os.path.isdir(EDU_NOTES_DIR):
+        return results
+
+    for filename in os.listdir(EDU_NOTES_DIR):
+        if not filename.endswith(('.md', '.html')):
+            continue
+
+        filepath = os.path.join(EDU_NOTES_DIR, filename)
+        slug = filename.rsplit('.', 1)[0]
+
+        try:
+            if filename.endswith('.md'):
+                note_data = frontmatter.load(filepath)
+                title = note_data.get('title') or slug
+                body_markdown = note_data.content or ''
+                html_content = markdown.markdown(body_markdown)
+                plain_text = strip_html(html_content)
+                tags = note_data.get('tags')
+                metadata_blob = metadata_to_blob(note_data.metadata)
+                search_blob = ' '.join(filter(None, [title, plain_text, metadata_blob]))
+            else:
+                with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+                    raw_html = f.read()
+                title_match = re.search(r'<title>(.*?)</title>', raw_html, re.IGNORECASE | re.DOTALL)
+                title = title_match.group(1).strip() if title_match else slug
+                plain_text = strip_html(raw_html)
+                tags = None
+                search_blob = ' '.join(filter(None, [title, plain_text]))
+        except Exception:
+            continue
+
+        if query_lower not in search_blob.lower():
+            continue
+
+        last_modified = datetime.fromtimestamp(os.path.getmtime(filepath))
+        snippet_source = plain_text or search_blob
+        if plain_text and query_lower not in plain_text.lower():
+            snippet_source = search_blob
+        snippet = build_snippet(snippet_source, query)
+
+        if tags:
+            if isinstance(tags, (list, tuple, set)):
+                tags_text = ', '.join(str(tag) for tag in tags)
+            else:
+                tags_text = str(tags)
+        else:
+            tags_text = None
+
+        results.append({
+            'module': 'Edu',
+            'title': title,
+            'slug': slug,
+            'url': url_for('edu.show_note', slug=slug),
+            'snippet': snippet,
+            'timestamp': last_modified,
+            'tags': tags_text,
+        })
+
+    results.sort(key=lambda item: item['timestamp'], reverse=True)
+    return results
+
+
+def _load_neibr_post_body(post: NeibrPost) -> str:
+    folder_path = os.path.join(NEIBR_STORAGE_DIR, str(post.user_id), str(post.id))
+    text_path = os.path.join(folder_path, 'post.txt')
+    if not os.path.exists(text_path):
+        return ''
+    try:
+        with open(text_path, 'r', encoding='utf-8', errors='ignore') as f:
+            return f.read()
+    except OSError:
+        return ''
+
+
+def search_neibr_posts(query: str):
+    results = []
+    query_lower = query.lower()
+
+    posts = (
+        NeibrPost.query
+        .filter_by(is_hidden=False)
+        .order_by(NeibrPost.creation_time.desc())
+        .all()
+    )
+
+    if not posts:
+        return results
+
+    user_cache = {}
+
+    for post in posts:
+        body = _load_neibr_post_body(post)
+        components = [post.title or '', post.tags or '', body]
+        search_blob = ' '.join(filter(None, components))
+
+        if query_lower not in search_blob.lower():
+            continue
+
+        if post.user_id not in user_cache:
+            user_cache[post.user_id] = User.query.get(post.user_id)
+
+        author = user_cache[post.user_id].username if user_cache[post.user_id] else '匿名'
+        snippet = build_snippet(search_blob, query)
+
+        tags_text = post.tags or None
+
+        results.append({
+            'module': 'Neibr',
+            'title': post.title,
+            'url': url_for('neibr.post_detail', title=post.title),
+            'snippet': snippet,
+            'timestamp': post.creation_time,
+            'tags': tags_text,
+            'author': author,
+        })
+
+    return results
+
+
+@index_bp.route('/search')
+def search():
+    query = (request.args.get('q') or '').strip()
+
+    if not query:
+        flash('请输入检索关键词。', 'warning')
+        return redirect(url_for('index.home'))
+
+    blog_results = search_blog_posts(query)
+    edu_results = search_edu_notes(query)
+    neibr_results = search_neibr_posts(query)
+
+    grouped_results = [
+        {'module': 'Blog', 'matches': blog_results},
+        {'module': 'Edu', 'matches': edu_results},
+        {'module': 'Neibr', 'matches': neibr_results},
+    ]
+
+    total_matches = sum(len(group['matches']) for group in grouped_results)
+
+    # 仅保留有结果的模块，便于模板渲染
+    grouped_results = [group for group in grouped_results if group['matches']]
+
+    return render_template(
+        'search_results.html',
+        query=query,
+        grouped_results=grouped_results,
+        total_matches=total_matches,
+        title='检索结果'
+    )
 
 
 
@@ -264,13 +569,6 @@ def home():
         friend_links=friend_links,
         title="首页"
     )
-
-
-
-
-
-
-
 
 
 

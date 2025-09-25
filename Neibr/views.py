@@ -144,7 +144,7 @@ def create_post():
     if request.method == 'POST':
         title = request.form['title']
         tags = request.form['tags']
-        post_text = request.form['post_text']
+        post_text = request.form.get('post_text', '')
         files = request.files.getlist('files')
 
         is_hidden = request.form.get('is_hidden')
@@ -178,8 +178,12 @@ def create_post():
                     file.save(file_path)
 
         # 保存帖子文案到 post.txt
-        with open(os.path.join(folder_path, 'post.txt'), 'w') as f:
-            f.write(post_text)
+        text_path = os.path.join(folder_path, 'post.txt')
+        if post_text.strip():
+            with open(text_path, 'w') as f:
+                f.write(post_text)
+        elif os.path.exists(text_path):
+            os.remove(text_path)
 
         db.session.commit()
         flash('帖子创建成功。', 'create_post')
@@ -204,11 +208,15 @@ def post_detail(title):
     # 构建帖子文件夹路径：static/neibr/user_id/post_id
     folder_path = os.path.join(UPLOAD_BASE_PATH, str(user_id), str(post.id))
 
-    # 读取帖子文案
-    # 正确读取文件内容
-    with open(os.path.join(folder_path, 'post.txt'), 'r') as f:
-        post_text_raw = f.read()
-        post_text = convert_rich_text(post_text_raw)
+    # 读取帖子文案（允许文案缺失）
+    text_path = os.path.join(folder_path, 'post.txt')
+    if os.path.exists(text_path):
+        with open(text_path, 'r') as f:
+            post_text_raw = f.read()
+    else:
+        post_text_raw = ''
+
+    post_text = convert_rich_text(post_text_raw) if post_text_raw else Markup('')
 
 
     # 获取媒体文件列表，排除 post.txt 和 comments.yaml
@@ -342,8 +350,12 @@ def edit_post(title):
 
     # 读取帖子文案
     folder_path = os.path.join(UPLOAD_BASE_PATH, str(current_user.id), str(post.id))
-    with open(os.path.join(folder_path, 'post.txt'), 'r') as f:
-        post_text = f.read()  # ✅ 原样读取，不调用 convert_rich_text
+    text_path = os.path.join(folder_path, 'post.txt')
+    if os.path.exists(text_path):
+        with open(text_path, 'r') as f:
+            post_text = f.read()  # ✅ 原样读取，不调用 convert_rich_text
+    else:
+        post_text = ''
 
         
     # 获取媒体文件列表
