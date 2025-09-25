@@ -27,6 +27,7 @@ instance/
 
 # 我的配置文件
 Settings/visible_albums.json
+version_log.md
 
 #migration
 migrations/
