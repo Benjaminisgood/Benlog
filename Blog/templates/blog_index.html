@@ -75,18 +75,19 @@
   background: var(--card-bg-color, #fff);
   border: 1px solid var(--card-border-color, #ddd);
   border-radius: 12px;
-  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .post-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
 }
 .post-link {
   display: flex;
   flex-direction: column;
+  gap: 12px;
   height: 100%;
-  padding: 20px;
+  padding: 22px 20px;
   color: inherit;
   text-decoration: none;
 }
@@ -97,10 +98,11 @@
   word-break: break-word;
 }
 .post-meta {
-  margin-top: auto;
+  margin: auto 0 0;
   font-size: 0.9rem;
   color: var(--meta-text-color, #555);
   word-break: break-word;
+  line-height: 1.5;
 }
 .pagination {
   display: flex;
