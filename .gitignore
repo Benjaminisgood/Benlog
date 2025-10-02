@@ -1,42 +1,54 @@
-# Python 缓存文件
-__pycache__/
-__pycache__ 12.18.20/
-*.py[cod]
+# 默认忽略所有内容，按需添加白名单
+/*
 
-# 构建生成文件（例如 whl 包可能位于 dist/ 目录）
-myenv/
-build/
-dist/
-*.egg-info/
-*.whl
+# 保留根目录中的必要文件
+!.gitignore
+!/benlog.sh
+!/readme
+!/requirements.txt
 
-# 编辑器相关设置
-.vscode/
+# 保留的业务目录，仅上传 Python 与模板文件
+!/Benlog/
+Benlog/*
+!Benlog/*.py
+!Benlog/templates/
+!Benlog/templates/**
+!Benlog/static/
+!Benlog/static/**
 
-# 日志和临时文件
-updatelog.md
-*.log
-*.tmp
-*.zip
+!/Blog/
+Blog/*
+!Blog/*.py
+!Blog/templates/
+!Blog/templates/**
 
-#*.txt
-# macOS 系统文件
-.DS_Store
+!/Edu/
+Edu/*
+!Edu/*.py
+!Edu/templates/
+!Edu/templates/**
 
-# instance
-instance/
+!/Gallery/
+Gallery/*
+!Gallery/*.py
+!Gallery/templates/
+!Gallery/templates/**
 
-# 我的配置文件
-Settings/visible_albums.json
-version_log.md
+!/Index/
+Index/*
+!Index/*.py
+!Index/templates/
+!Index/templates/**
 
-#migration
-migrations/
+!/Neibr/
+Neibr/*
+!Neibr/*.py
+!Neibr/templates/
+!Neibr/templates/**
 
-#开发附件
-Neibr/neibr/*
-Blog/posts/*
-Edu/notes/*
-Gallery/galleries/**/*
-Index/dynamic_pages/*
-#deploy.sh
+!/Settings/
+Settings/*
+!Settings/*.py
+!Settings/templates/
+!Settings/templates/**
+
