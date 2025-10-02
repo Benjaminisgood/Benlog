@@ -163,7 +163,10 @@ header nav a:hover::after {
 
 /* 内容区域避免被导航栏遮挡 */
 main.container {
-  padding-top: 80px;
+  margin: 0 auto;
+  width: min(100%, 1180px);
+  padding: 80px clamp(20px, 6vw, 72px) 64px;
+  box-sizing: border-box;
 }
 
 /* 手机及其他窄屏幕适配 */
@@ -188,6 +191,7 @@ main.container {
   }
 
   main.container {
-    padding-top: 100px;
+    padding: 100px 20px 48px;
+    width: 100%;
   }
 }

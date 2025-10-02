@@ -32,9 +32,17 @@
 </div>
 
 {% if posts %}
-<div class="post-list">
+<div class="manage-toolbar">
+  <input type="search"
+         id="post-filter"
+         class="filter-input"
+         placeholder="🔍 输入关键词快速筛选"
+         aria-label="筛选博客文章">
+</div>
+
+<div class="post-list" data-filter-target="post">
   {% for post in posts %}
-  <div class="post-card">
+  <div class="post-card" data-filter-text="{{ post.slug }} {{ post.filename }}">
     <div class="post-info">
       <a href="{{ url_for('blog.show_post', slug=post.slug) }}"
          target="_blank" rel="noopener noreferrer">
@@ -61,6 +69,28 @@
 {% endif %}
 
 <style>
+.manage-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 18px;
+}
+
+.filter-input {
+  width: min(320px, 100%);
+  padding: 10px 14px;
+  border: 1px solid var(--card-border-color);
+  border-radius: 999px;
+  background: var(--card-bg-color);
+  color: var(--text-color);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.filter-input:focus {
+  outline: none;
+  border-color: var(--btn-bg-color);
+  box-shadow: 0 0 0 3px rgba(51, 102, 204, 0.15);
+}
+
 /* 页面标题 */
 .page-header {
   text-align: center;
@@ -199,7 +229,25 @@
     flex-direction: column;
     gap: 6px;
   }
+  .manage-toolbar {
+    justify-content: center;
+  }
 }
 </style>
+
+<script>
+  const postFilterInput = document.getElementById('post-filter');
+  if (postFilterInput) {
+    const cards = document.querySelectorAll('[data-filter-target="post"] .post-card');
+    postFilterInput.addEventListener('input', () => {
+      const keyword = postFilterInput.value.trim().toLowerCase();
+      cards.forEach(card => {
+        const haystack = card.dataset.filterText || '';
+        const matched = haystack.toLowerCase().includes(keyword);
+        card.style.display = matched ? '' : 'none';
+      });
+    });
+  }
+</script>
 
 {% endblock %}

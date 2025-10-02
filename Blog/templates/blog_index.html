@@ -1,112 +1,132 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="page-header">
-  <h1>Blog Posts</h1>
-</div>
+<section class="page-wrapper">
+  <header class="page-header">
+    <h1>Blog Posts</h1>
+  </header>
 
-{% if posts %}
-<ul class="post-list">
-  {% for post in posts %}
-  <li class="post-card">
-    <a href="{{ url_for('blog.show_post', slug=post.slug) }}"
-       class="post-link"
-       target="_blank" rel="noopener noreferrer">
-      <h3>{{ post.slug }}</h3>
-      <p class="post-meta">
-        Last Modified: {{ post.last_modified.strftime("%Y-%m-%d %H:%M:%S") }}
-      </p>
-    </a>
-  </li>
-  {% endfor %}
-</ul>
+  {% if posts %}
+    <ul class="post-list">
+      {% for post in posts %}
+      <li class="post-card">
+        <a href="{{ url_for('blog.show_post', slug=post.slug) }}"
+           class="post-link"
+           target="_blank" rel="noopener noreferrer">
+          <h3>{{ post.slug }}</h3>
+          <p class="post-meta">
+            Last Modified: {{ post.last_modified.strftime("%Y-%m-%d %H:%M:%S") }}
+          </p>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
 
-<nav class="pagination">
-  {% if page > 1 %}
-    <a href="{{ url_for('blog.list_posts', page=page-1) }}">« Prev</a>
+    <nav class="pagination">
+      {% if page > 1 %}
+        <a href="{{ url_for('blog.list_posts', page=page-1) }}">« Prev</a>
+      {% else %}
+        <span class="disabled">« Prev</span>
+      {% endif %}
+
+      {% for p in range(1, total_pages + 1) %}
+        {% if p == page %}
+          <span class="current">{{ p }}</span>
+        {% else %}
+          <a href="{{ url_for('blog.list_posts', page=p) }}">{{ p }}</a>
+        {% endif %}
+      {% endfor %}
+
+      {% if page < total_pages %}
+        <a href="{{ url_for('blog.list_posts', page=page+1) }}">Next »</a>
+      {% else %}
+        <span class="disabled">Next »</span>
+      {% endif %}
+    </nav>
   {% else %}
-    <span class="disabled">« Prev</span>
+    <p class="no-posts"><em>No posts available.</em></p>
   {% endif %}
-
-  {% for p in range(1, total_pages + 1) %}
-    {% if p == page %}
-      <span class="current">{{ p }}</span>
-    {% else %}
-      <a href="{{ url_for('blog.list_posts', page=p) }}">{{ p }}</a>
-    {% endif %}
-  {% endfor %}
-
-  {% if page < total_pages %}
-    <a href="{{ url_for('blog.list_posts', page=page+1) }}">Next »</a>
-  {% else %}
-    <span class="disabled">Next »</span>
-  {% endif %}
-</nav>
-
-{% else %}
-  <p class="no-posts"><em>No posts available.</em></p>
-{% endif %}
+</section>
 
 <style>
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
 .page-header {
-  text-align: center;
-  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--card-border-color, #ddd);
+}
+.page-header h1 {
+  margin: 0;
+  font-size: clamp(1.8rem, 2vw + 1rem, 2.6rem);
+  color: var(--heading-color, var(--text-color));
 }
 .post-list {
   list-style: none;
   padding: 0;
   margin: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
 }
 .post-card {
   background: var(--card-bg-color, #fff);
   border: 1px solid var(--card-border-color, #ddd);
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .post-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.12);
 }
 .post-link {
-  display: block;
-  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px;
   color: inherit;
   text-decoration: none;
 }
 .post-link h3 {
-  margin: 0;
+  margin: 0 0 12px;
+  font-size: 1.1rem;
   color: var(--link-color, #007bff);
 }
-.post-link p {
-  margin: 8px 0 0;
+.post-meta {
+  margin-top: auto;
   font-size: 0.9rem;
   color: var(--meta-text-color, #555);
 }
 .pagination {
   display: flex;
+  align-items: center;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 5px;
-  margin: 30px 0;
+  gap: 8px;
+  margin: 12px 0 0;
 }
 .pagination a,
 .pagination span {
-  padding: 6px 10px;
+  padding: 8px 12px;
   border: 1px solid var(--card-border-color, #ddd);
-  border-radius: 4px;
+  border-radius: 999px;
   text-decoration: none;
   color: var(--link-color, #007bff);
-  transition: background-color 0.2s;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
-.pagination a:hover { background-color: var(--btn-hover-bg-color, #e9ecef); }
+.pagination a:hover,
+.pagination a:focus-visible {
+  background-color: var(--btn-hover-bg-color, #e9ecef);
+  transform: translateY(-1px);
+}
 .pagination .current {
   background-color: var(--btn-bg-color, #007bff);
   color: #fff;
   border-color: var(--btn-bg-color, #007bff);
+  cursor: default;
 }
 .pagination .disabled {
   color: #ccc;
@@ -118,8 +138,23 @@
   color: var(--meta-text-color, #555);
   margin-top: 40px;
 }
-@media (max-width: 600px) {
-  .post-list { grid-template-columns: 1fr; }
+@media (max-width: 768px) {
+  .page-wrapper {
+    gap: 24px;
+  }
+
+  .page-header {
+    padding-bottom: 8px;
+  }
+
+  .post-link {
+    padding: 18px;
+  }
+}
+@media (max-width: 480px) {
+  .post-link {
+    padding: 16px;
+  }
 }
 </style>
 

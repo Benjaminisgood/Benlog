@@ -249,12 +249,21 @@ def search_neibr_posts(query: str):
     results = []
     query_lower = query.lower()
 
-    posts = (
-        NeibrPost.query
-        .filter_by(is_hidden=False)
-        .order_by(NeibrPost.creation_time.desc())
-        .all()
-    )
+    base_query = NeibrPost.query
+    if current_user.is_authenticated:
+        posts = (
+            base_query
+            .filter((NeibrPost.is_hidden == False) | (NeibrPost.user_id == current_user.id))  # noqa: E712
+            .order_by(NeibrPost.creation_time.desc())
+            .all()
+        )
+    else:
+        posts = (
+            base_query
+            .filter_by(is_hidden=False)
+            .order_by(NeibrPost.creation_time.desc())
+            .all()
+        )
 
     if not posts:
         return results
@@ -285,6 +294,7 @@ def search_neibr_posts(query: str):
             'timestamp': post.creation_time,
             'tags': tags_text,
             'author': author,
+            'owner_id': post.user_id,
         })
 
     return results
@@ -569,7 +579,6 @@ def home():
         friend_links=friend_links,
         title="首页"
     )
-
 
 
 

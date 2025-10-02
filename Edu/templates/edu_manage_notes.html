@@ -32,9 +32,17 @@
 </div>
 
 {% if notes %}
-<div class="note-list">
+<div class="manage-toolbar">
+  <input type="search"
+         id="note-filter"
+         class="filter-input"
+         placeholder="🔍 输入关键词快速筛选"
+         aria-label="筛选笔记">
+</div>
+
+<div class="note-list" data-filter-target="note">
   {% for note in notes %}
-  <div class="note-card">
+  <div class="note-card" data-filter-text="{{ note.slug }} {{ note.filename }}">
     <div class="note-info">
       <a href="{{ url_for('edu.show_note', slug=note.slug) }}"
          target="_blank" rel="noopener noreferrer">
@@ -61,6 +69,28 @@
 {% endif %}
 
 <style>
+.manage-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 18px;
+}
+
+.filter-input {
+  width: min(320px, 100%);
+  padding: 10px 14px;
+  border: 1px solid var(--card-border-color);
+  border-radius: 999px;
+  background: var(--card-bg-color);
+  color: var(--text-color);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.filter-input:focus {
+  outline: none;
+  border-color: var(--btn-bg-color);
+  box-shadow: 0 0 0 3px rgba(51, 102, 204, 0.15);
+}
+
 /* 页面标题 */
 .page-header {
   text-align: center;
@@ -203,7 +233,25 @@
     flex-direction: column;
     gap: 6px;
   }
+  .manage-toolbar {
+    justify-content: center;
+  }
 }
 </style>
+
+<script>
+  const noteFilterInput = document.getElementById('note-filter');
+  if (noteFilterInput) {
+    const cards = document.querySelectorAll('[data-filter-target="note"] .note-card');
+    noteFilterInput.addEventListener('input', () => {
+      const keyword = noteFilterInput.value.trim().toLowerCase();
+      cards.forEach(card => {
+        const haystack = card.dataset.filterText || '';
+        const matched = haystack.toLowerCase().includes(keyword);
+        card.style.display = matched ? '' : 'none';
+      });
+    });
+  }
+</script>
 
 {% endblock %}

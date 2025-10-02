@@ -33,6 +33,17 @@
                     {% if item.tags %}<span>标签：{{ item.tags }}</span>{% endif %}
                     {% if item.timestamp %}<span>{{ item.timestamp.strftime('%Y-%m-%d') }}</span>{% endif %}
                   </p>
+                  {% if current_user.is_authenticated %}
+                  <div class="search-actions">
+                    {% if group.module == 'Blog' and (current_user.is_admin or current_user.id == 1) and item.slug %}
+                      <a class="search-edit-link" href="{{ url_for('blog.edit_post', slug=item.slug) }}">✎ 编辑</a>
+                    {% elif group.module == 'Edu' and (current_user.is_admin or current_user.id == 1) and item.slug %}
+                      <a class="search-edit-link" href="{{ url_for('edu.edit_note', slug=item.slug) }}">✎ 编辑</a>
+                    {% elif group.module == 'Neibr' and item.owner_id is defined and item.owner_id == current_user.id %}
+                      <a class="search-edit-link" href="{{ url_for('neibr.edit_post', title=item.title) }}">✎ 编辑</a>
+                    {% endif %}
+                  </div>
+                  {% endif %}
                 </a>
               </li>
             {% endfor %}
@@ -146,6 +157,28 @@
       font-size: 0.9rem;
       color: var(--meta-text-color);
       margin: 0;
+    }
+    .search-actions {
+      margin-top: 12px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .search-edit-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      color: #fff;
+      background: #ff2442;
+      text-decoration: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 8px 18px rgba(255, 36, 66, 0.35);
+    }
+    .search-edit-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 22px rgba(255, 36, 66, 0.38);
     }
     .search-empty {
       text-align: center;
