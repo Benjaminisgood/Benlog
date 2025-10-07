@@ -1,123 +1,50 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="card register-card">
-  <h1>注册</h1>
-  {% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    {% for category, message in messages %}
-      {% if category == 'login' %}
-        <p class="flash-message {{ category }}">{{ message }}</p>
+<section class="auth-wrapper">
+  <article class="auth-card glass-card">
+    <header>
+      <p class="auth-badge">注册账户</p>
+      <h1>加入后台团队</h1>
+      <p class="auth-sub">创建新用户以便参与内容创作或站点维护。</p>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-stack">
+        {% for category, message in messages %}
+          {% if category == 'login' %}
+            <p class="flash-item">{{ message }}</p>
+          {% endif %}
+        {% endfor %}
+        </div>
       {% endif %}
-    {% endfor %}
-  {% endif %}
-  {% endwith %}
-  
-  <form method="POST">
-    <div class="form-group">
-      <label for="email">邮箱:</label>
-      <input type="email" name="email" id="email" class="form-control" required>
-    </div>
-    <div class="form-group">
-      <label for="username">用户名:</label>
-      <input type="text" name="username" id="username" class="form-control" required>
-    </div>
-    <div class="form-group">
-      <label for="password">密码:</label>
-      <input type="password" name="password" id="password" class="form-control" required>
-    </div>
-    <div class="form-group">
-      <label for="confirm_password">确认密码:</label>
-      <input type="password" name="confirm_password" id="confirm_password" class="form-control" required>
-    </div>
-    <button type="submit" class="btn btn-primary">注册</button>
-  </form>
-  
-  <p class="login-link">已有账户？ <a href="{{ url_for('setting.login') }}">登录</a></p>
-</div>
+    {% endwith %}
 
-<!-- 局部CSS样式 -->
+    <form method="POST" class="auth-form">
+      <label for="email">邮箱</label>
+      <input type="email" name="email" id="email" required placeholder="name@example.com">
+
+      <label for="username">用户名</label>
+      <input type="text" name="username" id="username" required placeholder="昵称 / 登录名">
+
+      <label for="password">密码</label>
+      <input type="password" name="password" id="password" required placeholder="设置登录密码">
+
+      <label for="confirm_password">确认密码</label>
+      <input type="password" name="confirm_password" id="confirm_password" required placeholder="再次输入密码">
+
+      <button type="submit" class="primary-btn full">注册</button>
+    </form>
+
+    <footer class="auth-footer">
+      <span>已有账户？</span>
+      <a href="{{ url_for('setting.login') }}">直接登录</a>
+    </footer>
+  </article>
+</section>
+
+<!-- 复用 login 样式 -->
 <style>
-  .register-card {
-    max-width: 400px;
-    margin: 60px auto;
-    padding: 30px;
-    border-radius: 12px;
-    background-color: var(--card-bg-color); /* 使用全局卡片背景色 */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  .register-card h1 {
-    text-align: center;
-    margin-bottom: 20px;
-    color: var(--text-color); /* 使用全局文本颜色 */
-    font-size: 2rem;
-  }
-
-  .form-group {
-    margin-bottom: 20px;
-  }
-
-  .form-group label {
-    display: block;
-    font-size: 1rem;
-    margin-bottom: 8px;
-    color: var(--text-color); /* 使用全局文本颜色 */
-  }
-
-  .form-control {
-    width: 100%;
-    padding: 10px 15px;
-    font-size: 1rem;
-    border: 1px solid var(--card-border-color); /* 使用全局边框颜色 */
-    border-radius: 8px;
-    outline: none;
-    transition: border-color 0.3s;
-    background-color: var(--card-bg-color); /* 使用全局卡片背景色 */
-    color: var(--text-color); /* 使用全局文本颜色 */
-  }
-
-  .form-control:focus {
-    border-color: #ff4d67; /* 固定颜色，用于聚焦时边框颜色 */
-  }
-
-  .btn {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    font-size: 1rem;
-    border: none;
-    border-radius: 8px;
-    background-color: var(--btn-bg-color); /* 使用全局按钮背景色 */
-    color: var(--btn-text-color); /* 使用全局按钮文本颜色 */
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-
-  .btn:hover {
-    background-color: var(--btn-hover-bg-color); /* 使用全局按钮悬停背景色 */
-  }
-
-  .login-link {
-    text-align: center;
-    margin-top: 15px;
-    font-size: 0.9rem;
-    color: var(--text-color); /* 使用全局文本颜色 */
-  }
-
-  .login-link a {
-    color: var(--link-color); /* 使用全局链接颜色 */
-    text-decoration: none;
-  }
-
-  .login-link a:hover {
-    text-decoration: underline;
-  }
-
-  @media (max-width: 768px) {
-    .register-card {
-      margin: 40px auto;
-      padding: 20px;
-    }
-  }
+{% include '_auth_styles.css' %}
 </style>
 {% endblock %}

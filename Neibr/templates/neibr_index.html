@@ -1,388 +1,478 @@
 {% extends "base.html" %}
 {% block content %}
-
-<div class="container">
-  <div class="header">
-    <h1>Neighbor</h1>
-    <p>欢迎来到Neighbor，这里是一个邻里社区，你可以在这里发布帖子，与邻居们交流。</p>
-  </div>
-  <div class="user-auth">
-    {% if current_user.is_authenticated %}
-      <span>👋 欢迎你，{{ current_user.username }}！</span>
-    {% else %}
-      <a href="{{ url_for('setting.login') }}">登录 / 注册</a>
-    {% endif %}
-  </div>
-
-  {% if current_user.is_authenticated %}
-  <div class="create-post">
-    <a href="{{ url_for('neibr.create_post') }}">创建新帖子</a>
-  </div>
-  {% endif %}
-
-  <div class="toggle-buttons">
-    <button id="btn-latest" class="active">最新帖子</button>
-    <button id="btn-random">随机帖子</button>
-    <button id="btn-my-posts">我的帖子</button>
-  </div>
-
-  <!-- 最新帖子 -->
-  <div id="latest-posts" class="posts-container">
-    {% for post in latest_posts %}
-      <div class="card" data-href="{{ url_for('neibr.post_detail', title=post.title, src='latest', idx=loop.index0) }}">
-        <h3>{{ post.title }}</h3>
-        <div class="post-meta">
-          <span class="author">作者：{{ user_map[post.user_id] }}</span>
-          <span class="date">发表于：{{ post.creation_time.strftime('%Y-%m-%d %H:%M') }}</span>
-        </div>
-        <div class="tags">
-          {% for tag in post.tags.split(',') %}
-            <span>{{ tag.strip() }}</span>
-          {% endfor %}
-        </div>
+<div class="neibr-page">
+  <section class="neibr-hero card">
+    <div class="hero-left">
+      <h1>Neighbor 社区</h1>
+      <p>灵感分享、邻里互动。像逛 Instagram / 小红书 一样，随心浏览最新动态。</p>
+      <div class="hero-tabs">
+        <button class="feed-tab active" data-feed-tab="latest">最新</button>
+        <button class="feed-tab" data-feed-tab="random">探索</button>
+        <button class="feed-tab" data-feed-tab="my">我的</button>
       </div>
-    {% endfor %}
-    <div class="load-more-wrapper">
-      <button id="load-more-latest" class="btn-load-more">加载更多</button>
     </div>
-  </div>
-
-  <!-- 随机帖子 -->
-  <div id="random-posts" class="posts-container" style="display:none;">
-    {% for post in random_posts %}
-      <div class="card" data-href="{{ url_for('neibr.post_detail', title=post.title, src='random', idx=loop.index0) }}">
-
-        <h3>{{ post.title }}</h3>
-        <div class="post-meta">
-          <span class="author">作者：{{ user_map[post.user_id] }}</span>
-          <span class="date">发表于：{{ post.creation_time.strftime('%Y-%m-%d %H:%M') }}</span>
-        </div>
-        <div class="tags">
-          {% for tag in post.tags.split(',') %}
-            <span>{{ tag.strip() }}</span>
-          {% endfor %}
-        </div>
-      </div>
-    {% endfor %}
-    <div class="load-more-wrapper">
-      <button id="load-more-random" class="btn-load-more">加载更多</button>
+    <div class="hero-right">
+      {% if current_user.is_authenticated %}
+        <a class="cta-btn" href="{{ url_for('neibr.create_post') }}">+ 发布新内容</a>
+      {% else %}
+        <a class="cta-btn ghost" href="{{ url_for('setting.login') }}">登录后开始探索</a>
+      {% endif %}
     </div>
-  </div>
+  </section>
 
-  <!-- 我的帖子 -->
-  <div id="my-posts" class="posts-container" style="display:none;">
-    {% for post in my_posts %}
-      <div class="card" data-href="{{ url_for('neibr.edit_post', title=post.title) }}">
-        <h3>{{ post.title }}</h3>
-        <div class="post-meta">
-          <span class="date">发表于：{{ post.creation_time.strftime('%Y-%m-%d %H:%M') }}</span>
-        </div>
-        <div class="tags">
-          {% for tag in post.tags.split(',') %}
-            <span>{{ tag.strip() }}</span>
-          {% endfor %}
-        </div>
-      </div>
-    {% else %}
-      <p>你还没有发布任何帖子。</p>
-    {% endfor %}
-    <div class="load-more-wrapper">
-      <button id="load-more-my" class="btn-load-more">加载更多</button>
+  <section class="feed-panel active" data-feed="latest">
+    <div class="feed-grid">
+      {% for card in latest_cards %}
+        {% include 'partials/feed_card.html' %}
+      {% endfor %}
     </div>
-  </div>
+    <div class="load-more-wrapper">
+      <button class="load-more-btn" data-src="latest">加载更多</button>
+    </div>
+  </section>
+
+  <section class="feed-panel" data-feed="random">
+    <div class="feed-grid">
+      {% for card in random_cards %}
+        {% include 'partials/feed_card.html' %}
+      {% endfor %}
+    </div>
+    <div class="load-more-wrapper">
+      <button class="load-more-btn" data-src="random">换一批</button>
+    </div>
+  </section>
+
+  <section class="feed-panel" data-feed="my">
+    <div class="feed-grid">
+      {% if my_cards %}
+        {% for card in my_cards %}
+          {% include 'partials/feed_card.html' %}
+        {% endfor %}
+      {% else %}
+        <p class="empty-hint">你还没有发布内容，先去记录一条吧！</p>
+      {% endif %}
+    </div>
+    <div class="load-more-wrapper">
+      <button class="load-more-btn" data-src="my">查看更多</button>
+    </div>
+  </section>
 </div>
 
-
 <style>
-.btn-load-more {
-  display: inline-block;
-  margin: 20px auto;
-  padding: 10px 24px;
-  background-color: #ff2442;
-  color: #fff;
-  border: none;
+.neibr-page {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  gap: 28px;
+}
+
+.card {
+  background: var(--card-bg-color);
+  border: 1px solid var(--card-border-color);
   border-radius: 24px;
-  cursor: pointer;
-  transition: background-color 0.3s, transform 0.2s;
-}
-.btn-load-more:hover {
-  background-color: #d81e36;
-  transform: translateY(-2px);
-}
-.load-more-wrapper {
-  text-align: center;
-}
-  .card {
-    max-width: 700px;
-    margin: 20px auto;
-    padding: 25px;
-    background: var(--card-bg-color);
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  .card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-  }
-    .post-meta {
-    font-size: 0.9rem;
-    color: var(--text-secondary-color, #666);
-    margin: 8px 0;
-    display: flex;
-    gap: 12px;
-  }
-  .post-meta .author::before { content: "👤 "; }
-  .post-meta .date::before   { content: "📅 "; }
-  .tags span {
-    display: inline-block;
-    background: var(--card-bg-color);
-    color: #ff2442;
-    border-radius: 20px;
-    padding: 4px 10px;
-    font-size: 12px;
-    margin-right: 6px;
-    margin-bottom: 6px;
-  }
-  .posts-container { padding: 0; }
-
-    .load-more-wrapper {
-    text-align: center;
-    margin: 20px 0;
-  }
-  .btn-load-more {
-    display: inline-block;
-    padding: 10px 24px;
-    background-color: #ff2442;
-    color: #fff;
-    border: none;
-    border-radius: 24px;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.2s;
-  }
-  .btn-load-more:hover {
-    background-color: #d81e36;
-    transform: translateY(-2px);
-  }
-  
-.form-group {
-  margin-bottom: 20px;
-}
-.form-group label {
-  font-weight: bold;
-  display: block;
-  margin-bottom: 8px;
-}
-.form-control {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-}
-.form-control-file {
-  margin-top: 10px;
+  padding: clamp(20px, 4vw, 32px);
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.08);
 }
 
-.btn {
-  padding: 10px 20px;
-  border-radius: 5px;
-  text-decoration: none;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s, transform 0.3s; /* 添加缩放过渡 */
-}
-.btn-primary {
-  background-color: #007bff;
-  color: white;
-}
-.btn-primary:hover {
-  background-color: #0056b3;
-  transform: scale(1.05); /* 悬停时缩放 */
-}
-.btn-secondary {
-  background-color: #6c757d;
-  color: white;
-}
-.btn-secondary:hover {
-  background-color: #5a6268;
-  transform: scale(1.05); /* 悬停时缩放 */
-}
-.post-meta {
-    font-size: 0.9rem;
-    color: var(--text-secondary-color, #666);
-    margin: 8px 0;
-    display: flex;
-    gap: 12px;
-  }
-  .post-meta .author::before { content: "👤 "; }
-  .post-meta .date::before   { content: "📅 "; }
-.media-container img,
-.media-container video,
-.media-container audio {
-  max-width: 100%;
-  border-radius: 8px;
-  margin-bottom: 15px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* 添加统一阴影 */
+.neibr-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg, rgba(255, 77, 103, 0.12), rgba(248, 198, 220, 0.18));
 }
 
-.container {
-  max-width: 800px;
-  margin: 30px auto;
-  font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Noto Sans SC', sans-serif;
+.hero-left {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.header {
-  text-align: center;
-  margin-bottom: 20px;
-}
-.header h1 {
-  color: #333;
-}
-.header p {
-  color: #666;
+.hero-left h1 {
+  margin: 0 0 12px;
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
 }
 
-.create-post,
-.user-auth {
-  text-align: center;
-  margin-bottom: 25px;
+.hero-left p {
+  margin: 0;
+  color: var(--meta-text-color);
+  font-size: 1rem;
 }
-.create-post a,
-.user-auth a,
-.user-auth button {
-  display: inline-block;
-  padding: 8px 16px;
-  background-color: #ff2442;
+
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff2442, #ff7a85);
   color: #fff;
+  font-weight: 600;
   text-decoration: none;
+  box-shadow: 0 12px 20px rgba(255, 118, 140, 0.25);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 26px rgba(255, 118, 140, 0.3);
+}
+
+.cta-btn.ghost {
+  background: transparent;
+  border: 1px solid rgba(255, 77, 103, 0.3);
+  color: #ff2442;
+  box-shadow: none;
+}
+
+.hero-tabs {
+  display: inline-flex;
+  gap: 12px;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.05);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.feed-tab {
   border: none;
-  border-radius: 20px;
+  background: transparent;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s, transform 0.3s;
+  color: var(--meta-text-color);
+  transition: background 0.25s ease, color 0.25s ease;
 }
-.create-post a:hover,
-.user-auth a:hover,
-.user-auth button:hover {
-  background-color: #d81e36;
-  transform: scale(1.05);
+
+.feed-tab.active {
+  background: linear-gradient(135deg, #ff2442, #ff7a85);
+  color: #fff;
 }
-.toggle-buttons {
+
+.feed-panel {
+  display: none;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.feed-panel.active {
+  display: flex;
+}
+
+.feed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.feed-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--card-bg-color);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feed-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 36px rgba(15, 23, 42, 0.12);
+}
+
+.feed-thumb {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: rgba(15, 23, 42, 0.08);
+  position: relative;
+}
+
+.feed-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.feed-thumb .hidden-tag {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+}
+
+.feed-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px 18px;
+}
+
+.feed-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.feed-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #36d1dc, #5b86e5);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.feed-card-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.feed-card-title h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.feed-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 0.8rem;
+  color: var(--meta-text-color);
+}
+
+.feed-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.feed-tags span {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 77, 103, 0.12);
+  color: #ff2442;
+  font-size: 0.75rem;
+}
+
+.feed-summary {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-color);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.load-more-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.load-more-btn {
+  border: none;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--text-color);
+  padding: 10px 22px;
+  cursor: pointer;
+  transition: background 0.25s ease;
+}
+
+.load-more-btn:hover {
+  background: rgba(255, 77, 103, 0.18);
+  color: #ff2442;
+}
+
+.empty-hint {
+  text-align: center;
+  color: var(--meta-text-color);
+  padding: 40px 0;
+}
+
+@media (max-width: 768px) {
+  .neibr-hero {
+    flex-direction: column;
     text-align: center;
-    margin-bottom: 20px;
+    align-items: stretch;
+    gap: 16px;
   }
 
-  .toggle-buttons button {
-    padding: 6px 14px;
-    margin: 0 8px;
-    border: none;
-    background-color: #ffe4e9;
-    color: #ff2442;
-    border-radius: 18px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+  .hero-left {
+    align-items: center;
   }
 
-  .toggle-buttons button.active,
-  .toggle-buttons button:hover {
-    background-color: #ff2442;
-    color: #fff;
+  .hero-tabs {
+    justify-content: center;
   }
+
+  .feed-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-right {
+    align-self: center;
+  }
+}
+
+[data-theme="dark"] .card {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .feed-card {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
 </style>
 
-
-
-
 <script>
-  // 切换区块
-  const btnLatest = document.getElementById('btn-latest');
-  const btnRandom = document.getElementById('btn-random');
-  const btnMyPosts = document.getElementById('btn-my-posts');
-  const latestPosts = document.getElementById('latest-posts');
-  const randomPosts = document.getElementById('random-posts');
-  const myPosts = document.getElementById('my-posts');
-  btnLatest.onclick = () => {
-    latestPosts.style.display = 'block';
-    randomPosts.style.display = 'none';
-    myPosts.style.display = 'none';
-    btnLatest.classList.add('active');
-    btnRandom.classList.remove('active');
-    btnMyPosts.classList.remove('active');
-  };
-  btnRandom.onclick = () => {
-    randomPosts.style.display = 'block';
-    latestPosts.style.display = 'none';
-    myPosts.style.display = 'none';
-    btnRandom.classList.add('active');
-    btnLatest.classList.remove('active');
-    btnMyPosts.classList.remove('active');
-  };
-  btnMyPosts.onclick = () => {
-    myPosts.style.display = 'block';
-    latestPosts.style.display = 'none';
-    randomPosts.style.display = 'none';
-    btnMyPosts.classList.add('active');
-    btnLatest.classList.remove('active');
-    btnRandom.classList.remove('active');
-  };
+const tabButtons = document.querySelectorAll('[data-feed-tab]');
+const panels = document.querySelectorAll('.feed-panel');
+const apiBase = "{{ url_for('neibr.api_posts') }}";
+const feedState = {
+  latest: { page: 1 },
+  random: { token: 0 },
+  my: { page: 1 }
+};
 
-  // 卡片点击跳转
-  document.querySelectorAll('.card').forEach(card => {
-    card.addEventListener('click', () => {
-      window.location.href = card.dataset.href;
-    });
-  });
-
-
-  // 加载更多
-document.addEventListener('DOMContentLoaded', () => {
-  const sections = {
-    latest:  { btnId:'load-more-latest', contId:'latest-posts', page:1, src:'latest' },
-    random:  { btnId:'load-more-random', contId:'random-posts', page:1, src:'random' },
-    my:      { btnId:'load-more-my',     contId:'my-posts',     page:1, src:'my' }
-  };
-
-  Object.values(sections).forEach(sec => {
-    const btn = document.getElementById(sec.btnId);
-    btn.addEventListener('click', () => {
-      sec.page += 1;
-      fetch(`{{ url_for('neibr.api_posts') }}?src=${sec.src}&page=${sec.page}`)
-        .then(res => res.json())
-        .then(data => {
-          const container = document.getElementById(sec.contId);
-          // 找到“加载更多”按钮的外层 wrapper
-          const wrapper = container.querySelector('.load-more-wrapper');
-
-          data.posts.forEach(p => {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.dataset.href = sec.src === 'my' ? p.edit_url : p.url;
-            card.innerHTML = `
-              <h3>${p.title}</h3>
-              <div class="post-meta">
-                ${sec.src!=='my' ? `<span class="author">作者：${p.author}</span>` : ''}
-                <span class="date">发表于：${p.date}</span>
-              </div>
-              <div class="tags">
-                ${p.tags.map(t => `<span>${t}</span>`).join('')}
-              </div>
-            `;
-            card.addEventListener('click', () => {
-              window.location.href = card.dataset.href;
-            });
-
-            // 插入到按钮 wrapper 之前
-            container.insertBefore(card, wrapper);
-          });
-
-          // 如果没有更多，隐藏整个 wrapper
-          if (!data.has_more) {
-            wrapper.style.display = 'none';
-          }
-        });
+tabButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.feedTab;
+    tabButtons.forEach(b => b.classList.toggle('active', b === btn));
+    panels.forEach(panel => {
+      panel.classList.toggle('active', panel.dataset.feed === target);
     });
   });
 });
-</script>
 
+function createCardElement(data, src) {
+  const article = document.createElement('article');
+  article.className = 'feed-card';
+  article.dataset.url = data.url;
+
+  const avatarInitial = data.author ? data.author.charAt(0).toUpperCase() : 'N';
+  const thumb = data.thumbnail
+    ? `<div class="feed-thumb">
+        <img src="${data.thumbnail}" alt="${data.title}">
+        ${data.is_hidden ? '<span class="hidden-tag">仅自己可见</span>' : ''}
+      </div>`
+    : `<div class="feed-thumb">
+         ${data.is_hidden ? '<span class="hidden-tag">仅自己可见</span>' : ''}
+       </div>`;
+
+  const tagsHtml = data.tags && data.tags.length
+    ? `<div class="feed-tags">${data.tags.map(t => `<span>#${t}</span>`).join('')}</div>`
+    : '';
+
+  const summary = data.summary || '这个帖子还没有添加文案摘要。';
+
+  article.innerHTML = `
+    ${thumb}
+    <div class="feed-card-body">
+      <div class="feed-card-header">
+        <div class="feed-avatar">${avatarInitial}</div>
+        <div class="feed-card-title">
+          <h3>${data.title}</h3>
+          <div class="feed-meta">
+            <span>${data.author}</span>
+            <span>${data.date}</span>
+          </div>
+        </div>
+      </div>
+      ${tagsHtml}
+      <p class="feed-summary">${summary}</p>
+    </div>
+  `;
+
+  article.addEventListener('click', () => {
+    window.location.href = data.url;
+  });
+
+  return article;
+}
+
+document.querySelectorAll('.feed-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const url = card.dataset.url;
+    if (url) {
+      window.location.href = url;
+    }
+  });
+});
+
+function appendCards(panel, posts, src) {
+  posts.forEach(item => {
+    const node = createCardElement(item, src);
+    panel.appendChild(node);
+  });
+}
+
+document.querySelectorAll('.load-more-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const src = btn.dataset.src;
+    const panel = document.querySelector(`.feed-panel[data-feed="${src}"] .feed-grid`);
+    if (!panel) {
+      return;
+    }
+    const originalText = btn.dataset.originalText || btn.textContent;
+    btn.dataset.originalText = originalText;
+    if (src !== 'random') {
+      btn.textContent = originalText;
+    }
+
+    if (src === 'random') {
+      btn.disabled = true;
+      btn.textContent = '换一批中...';
+      const token = Date.now();
+      feedState.random.token = token;
+
+      fetch(`${apiBase}?src=random&page=1&nonce=${token}`)
+        .then(res => res.json())
+        .then(data => {
+          if (feedState.random.token !== token) return;
+          panel.innerHTML = '';
+          appendCards(panel, data.posts, src);
+          btn.textContent = originalText;
+          btn.disabled = false;
+        })
+        .catch(() => {
+          if (feedState.random.token !== token) return;
+          btn.textContent = '加载失败，重试';
+          btn.disabled = false;
+        });
+      return;
+    }
+
+    const state = feedState[src];
+    const nextPage = (state.page || 1) + 1;
+
+    fetch(`${apiBase}?src=${src}&page=${nextPage}`)
+      .then(res => res.json())
+      .then(data => {
+        appendCards(panel, data.posts, src);
+        state.page = nextPage;
+        if (!data.has_more) {
+          btn.style.display = 'none';
+        }
+      })
+      .catch(() => {
+        btn.textContent = '加载失败，重试';
+      });
+  });
+});
+</script>
 {% endblock %}

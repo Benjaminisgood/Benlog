@@ -1,28 +1,34 @@
 {% extends "base.html" %}
 {% block content %}
 
-<section class="page-wrapper">
-  <header class="page-header">
-    <h1>Blog Posts</h1>
+<section class="content-page">
+  <header class="content-hero">
+    <div class="hero-headline">
+      <h1>Blog Posts</h1>
+      <p>记录每日的思考与灵感，精选文章以全新卡片视图呈现。</p>
+    </div>
+    <div class="hero-actions">
+      {% if can_edit %}
+        <form class="hero-action" method="post" action="{{ url_for('blog.new_post') }}">
+          <button type="submit" class="hero-btn">+ 新建文章</button>
+        </form>
+      {% elif random_url %}
+        <a class="hero-btn ghost" href="{{ random_url }}">随机看看</a>
+      {% endif %}
+    </div>
+    <div class="hero-glow"></div>
   </header>
 
-  {% if posts %}
-    <ul class="post-list">
-      {% for post in posts %}
-      <li class="post-card">
-        <a href="{{ url_for('blog.show_post', slug=post.slug) }}"
-           class="post-link"
-           target="_blank" rel="noopener noreferrer">
-          <h3>{{ post.slug }}</h3>
-          <p class="post-meta">
-            Last Modified: {{ post.last_modified.strftime("%Y-%m-%d %H:%M:%S") }}
-          </p>
-        </a>
-      </li>
+  {% if cards %}
+    <div class="content-grid">
+      {% for card in cards %}
+        {% with item=card %}
+          {% include 'partials/content_card.html' %}
+        {% endwith %}
       {% endfor %}
-    </ul>
+    </div>
 
-    <nav class="pagination">
+    <nav class="content-pagination">
       {% if page > 1 %}
         <a href="{{ url_for('blog.list_posts', page=page-1) }}">« Prev</a>
       {% else %}
@@ -44,122 +50,309 @@
       {% endif %}
     </nav>
   {% else %}
-    <p class="no-posts"><em>No posts available.</em></p>
+    <p class="content-empty">还没有文章，快来写下第一篇吧。</p>
   {% endif %}
 </section>
 
 <style>
-.page-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-}
-.page-header {
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--card-border-color, #ddd);
-}
-.page-header h1 {
-  margin: 0;
-  font-size: clamp(1.8rem, 2vw + 1rem, 2.6rem);
-  color: var(--heading-color, var(--text-color));
-}
-.post-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.content-page {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
+  gap: 32px;
 }
-.post-card {
-  display: flex;
-  background: var(--card-bg-color, #fff);
-  border: 1px solid var(--card-border-color, #ddd);
-  border-radius: 12px;
+
+.content-hero {
+  position: relative;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  border-radius: 24px;
+  padding: clamp(24px, 6vw, 40px);
+  background: radial-gradient(circle at top left, rgba(99, 102, 241, 0.16), transparent 45%),
+              linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(13, 148, 136, 0.08));
+  border: 1px solid rgba(59, 130, 246, 0.18);
+  box-shadow: 0 30px 60px rgba(37, 99, 235, 0.15);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(16px, 3vw, 32px);
+}
+
+.hero-headline {
+  max-width: 640px;
+}
+
+.content-hero h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  color: #0f172a;
+}
+
+[data-theme="dark"] .content-hero h1 {
+  color: #e2e8f0;
+}
+
+.content-hero p {
+  margin: 12px 0 0;
+  max-width: 640px;
+  color: rgba(15, 23, 42, 0.78);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+[data-theme="dark"] .content-hero p {
+  color: rgba(226, 232, 240, 0.78);
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.hero-action {
+  margin: 0;
+  display: inline-block;
+}
+
+.hero-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 16px 28px rgba(37, 99, 235, 0.25);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.post-card:hover {
+
+.hero-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 22px 34px rgba(37, 99, 235, 0.3);
 }
-.post-link {
+
+.hero-btn.ghost {
+  background: transparent;
+  border: 1px solid rgba(37, 99, 235, 0.4);
+  color: #1d4ed8;
+  box-shadow: none;
+}
+
+[data-theme="dark"] .hero-btn.ghost {
+  color: #bfdbfe;
+  border-color: rgba(147, 197, 253, 0.5);
+}
+
+.hero-btn.ghost:hover {
+  background: rgba(37, 99, 235, 0.14);
+  transform: translateY(-2px);
+}
+
+.hero-glow {
+  position: absolute;
+  top: -40%;
+  right: -10%;
+  width: 360px;
+  height: 360px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.35), transparent 60%);
+  filter: blur(12px);
+  pointer-events: none;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 28px;
+}
+
+.content-card {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  flex: 1;
-  padding: 24px 22px;
-  color: inherit;
-  text-decoration: none;
+  height: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.1);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  cursor: pointer;
 }
-.post-link h3 {
-  margin: 0 0 12px;
-  font-size: 1.1rem;
-  color: var(--link-color, #007bff);
-  word-break: break-word;
+
+.content-card:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.8);
+  outline-offset: 4px;
 }
-.post-meta {
-  margin-top: auto;
-  font-size: 0.9rem;
-  color: var(--meta-text-color, #555);
-  word-break: break-word;
-  line-height: 1.5;
+
+.content-card:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 30px 60px rgba(30, 64, 175, 0.18);
 }
-.pagination {
+
+.content-card__media {
+  position: relative;
+  padding-top: 56%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: saturate(108%);
+}
+
+.content-card__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(30, 58, 138, 0.0), rgba(15, 23, 42, 0.3));
+}
+
+.content-card__badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.9);
+  color: #fff;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  z-index: 2;
+  text-transform: uppercase;
+}
+
+.content-card__body {
+  padding: 20px 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.content-card__meta {
+  display: flex;
+  justify-content: flex-end;
+  font-size: 0.8rem;
+  color: rgba(15, 23, 42, 0.6);
+}
+
+[data-theme="dark"] .content-card {
+  background: rgba(15, 23, 42, 0.92);
+  border-color: rgba(59, 130, 246, 0.25);
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.6);
+}
+
+[data-theme="dark"] .content-card__meta {
+  color: rgba(226, 232, 240, 0.65);
+}
+
+.content-card__title {
+  margin: 0;
+  font-size: 1.15rem;
+  color: #0f172a;
+  line-height: 1.4;
+}
+
+[data-theme="dark"] .content-card__title {
+  color: #e2e8f0;
+}
+
+.content-card__summary {
+  margin: 0;
+  font-size: 0.95rem;
+  color: rgba(15, 23, 42, 0.72);
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .content-card__summary {
+  color: rgba(226, 232, 240, 0.7);
+}
+
+.content-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.content-card__tags li {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+}
+
+[data-theme="dark"] .content-card__tags li {
+  background: rgba(96, 165, 250, 0.18);
+  color: #bfdbfe;
+}
+
+.content-pagination {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 10px;
   flex-wrap: wrap;
-  gap: 8px;
-  margin: 12px 0 0;
 }
-.pagination a,
-.pagination span {
-  padding: 8px 12px;
-  border: 1px solid var(--card-border-color, #ddd);
+
+.content-pagination a,
+.content-pagination span {
+  padding: 8px 14px;
   border-radius: 999px;
+  border: 1px solid rgba(59, 130, 246, 0.35);
   text-decoration: none;
-  color: var(--link-color, #007bff);
+  color: #1d4ed8;
   transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
-.pagination a:hover,
-.pagination a:focus-visible {
-  background-color: var(--btn-hover-bg-color, #e9ecef);
+
+.content-pagination a:hover,
+.content-pagination a:focus-visible {
+  background-color: rgba(59, 130, 246, 0.12);
   transform: translateY(-1px);
 }
-.pagination .current {
-  background-color: var(--btn-bg-color, #007bff);
+
+.content-pagination .current {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: #fff;
-  border-color: var(--btn-bg-color, #007bff);
+  border-color: transparent;
   cursor: default;
 }
-.pagination .disabled {
-  color: #ccc;
-  border-color: #ccc;
+
+.content-pagination .disabled {
+  color: rgba(148, 163, 184, 0.7);
+  border-color: rgba(148, 163, 184, 0.4);
   cursor: default;
 }
-.no-posts {
+
+.content-empty {
   text-align: center;
-  color: var(--meta-text-color, #555);
-  margin-top: 40px;
+  color: rgba(15, 23, 42, 0.6);
+  margin-top: 24px;
 }
+
+[data-theme="dark"] .content-empty {
+  color: rgba(226, 232, 240, 0.6);
+}
+
 @media (max-width: 768px) {
-  .page-wrapper {
-    gap: 24px;
-  }
-
-  .page-header {
-    padding-bottom: 8px;
-  }
-
-  .post-link {
-    padding: 18px;
+  .content-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
   }
 }
-@media (max-width: 480px) {
-  .post-link {
-    padding: 16px;
+
+@media (max-width: 560px) {
+  .content-hero {
+    padding: 22px;
+  }
+  .content-card__body {
+    padding: 18px 20px 22px;
   }
 }
 </style>

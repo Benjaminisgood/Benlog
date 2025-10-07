@@ -1,5 +1,6 @@
 import os, math
 import re
+import random
 from flask import request, redirect, flash, render_template, abort, current_app, url_for
 import frontmatter, markdown
 from datetime import datetime
@@ -10,6 +11,117 @@ from flask_login import login_required, current_user
 POSTS_DIR = os.path.join(os.path.dirname(__file__), 'posts')
 ALLOWED_EXTENSIONS = {'md', 'html'}
 PER_PAGE = 10  # 每页显示条数
+
+COVER_KEYS = ('cover', 'image', 'banner', 'thumbnail', 'hero')
+BLUE_GRADIENTS = [
+    ('#60a5fa', '#2563eb'),
+    ('#38bdf8', '#0ea5e9'),
+    ('#818cf8', '#3730a3'),
+    ('#22d3ee', '#0ea5e9'),
+    ('#93c5fd', '#3b82f6')
+]
+
+
+def hex_to_rgba(hex_color: str, alpha: float = 0.85) -> str:
+    """将 HEX 颜色转换为带透明度的 rgba 字符串。"""
+    hex_color = hex_color.lstrip('#')
+    if len(hex_color) == 3:
+        hex_color = ''.join(c * 2 for c in hex_color)
+    r = int(hex_color[0:2], 16)
+    g = int(hex_color[2:4], 16)
+    b = int(hex_color[4:6], 16)
+    return f'rgba({r}, {g}, {b}, {alpha})'
+
+
+def pick_gradient(key: str) -> str:
+    """根据 key 选择一个渐变背景。"""
+    colors = BLUE_GRADIENTS[hash(key) % len(BLUE_GRADIENTS)]
+    return f"linear-gradient(135deg, {hex_to_rgba(colors[0], 0.92)}, {hex_to_rgba(colors[1], 0.82)})"
+
+
+def normalize_tags(raw_tags):
+    if not raw_tags:
+        return []
+    if isinstance(raw_tags, str):
+        return [tag.strip() for tag in raw_tags.split(',') if tag.strip()]
+    if isinstance(raw_tags, (list, tuple, set)):
+        return [str(tag).strip() for tag in raw_tags if str(tag).strip()]
+    return []
+
+
+def strip_markup(text: str) -> str:
+    """移除 Markdown / HTML 标记，提取纯文本。"""
+    if not text:
+        return ''
+    text = re.sub(r'```.*?```', ' ', text, flags=re.S)
+    text = re.sub(r'`[^`]+`', ' ', text)
+    text = re.sub(r'!\[[^\]]*\]\([^\)]+\)', ' ', text)
+    text = re.sub(r'\[[^\]]*\]\([^\)]+\)', ' ', text)
+    text = re.sub(r'<[^>]+>', ' ', text)
+    text = re.sub(r'[#>*_~\-]', ' ', text)
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
+
+
+def create_excerpt(text: str, limit: int = 140) -> str:
+    cleaned = strip_markup(text)
+    if not cleaned:
+        return ''
+    if len(cleaned) <= limit:
+        return cleaned
+    return cleaned[:limit].rstrip() + '…'
+
+
+def select_cover(metadata: dict) -> str | None:
+    for key in COVER_KEYS:
+        value = metadata.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return None
+
+
+def load_post_card(slug: str, last_modified: datetime):
+    """加载单篇文章的 Frontmatter 和摘要信息。"""
+    md_path = os.path.join(POSTS_DIR, f"{slug}.md")
+    html_path = os.path.join(POSTS_DIR, f"{slug}.html")
+
+    title = slug
+    summary = ''
+    cover = None
+    tags = []
+    published = None
+
+    if os.path.exists(md_path):
+        try:
+            post_data = frontmatter.load(md_path)
+            metadata = post_data.metadata or {}
+            title = metadata.get('title') or title
+            summary = metadata.get('description') or metadata.get('summary') or create_excerpt(post_data.content)
+            cover = select_cover(metadata)
+            tags = normalize_tags(metadata.get('tags'))
+            published = metadata.get('date')
+        except Exception:
+            with open(md_path, 'r', encoding='utf-8') as f:
+                summary = create_excerpt(f.read())
+    elif os.path.exists(html_path):
+        with open(html_path, 'r', encoding='utf-8') as f:
+            html_content = f.read()
+        summary = create_excerpt(html_content)
+    else:
+        return None
+
+    display_meta = published if isinstance(published, str) and published.strip() else last_modified.strftime("%Y-%m-%d %H:%M")
+
+    return {
+        'slug': slug,
+        'title': title,
+        'summary': summary,
+        'cover': cover,
+        'tags': tags,
+        'meta': display_meta,
+        'last_modified': last_modified,
+        'gradient': pick_gradient(slug)
+    }
 
 def get_all_posts():
     """返回按时间倒序排列的所有文章元信息列表"""
@@ -76,6 +188,7 @@ def list_posts():
 
     # 2. 拿到所有文章
     all_posts = get_all_posts()  # 之前定义的函数
+    random_slug = random.choice(all_posts)['slug'] if all_posts else None
 
     # 3. 计算总页数，并确保 page 在合理范围
     total = len(all_posts)
@@ -85,15 +198,35 @@ def list_posts():
     # 4. 切片出当前页的文章
     start = (page - 1) * PER_PAGE
     end   = start + PER_PAGE
-    page_posts = all_posts[start:end]
+    page_entries = all_posts[start:end]
+    card_items = []
+    for entry in page_entries:
+        card = load_post_card(entry['slug'], entry['last_modified'])
+        if not card:
+            card = {
+                'slug': entry['slug'],
+                'title': entry['slug'],
+                'summary': '',
+                'cover': None,
+                'tags': [],
+                'meta': entry['last_modified'].strftime("%Y-%m-%d %H:%M"),
+                'last_modified': entry['last_modified'],
+                'gradient': pick_gradient(entry['slug'])
+            }
+        card['url'] = url_for('blog.show_post', slug=entry['slug'])
+        card_items.append(card)
 
-    # 5. 渲染，传入 page 和 total_pages
+    can_edit = current_user.is_authenticated and (getattr(current_user, 'is_admin', False) or current_user.id == 1)
+    random_url = url_for('blog.show_post', slug=random_slug) if (random_slug and not can_edit) else None
+
     return render_template(
         'blog_index.html',
         title="Blog",
-        posts=page_posts,
+        cards=card_items,
         page=page,
-        total_pages=total_pages
+        total_pages=total_pages,
+        can_edit=can_edit,
+        random_url=random_url
     )
 
 @blog_bp.route('/<slug>')
@@ -183,7 +316,11 @@ def new_post():
     # 定义默认 frontmatter 与内容 %H:%M:%S
     default_frontmatter = {
         'title': 'New Post',
-        'date': datetime.now().strftime("%Y-%m-%d")
+        'date': datetime.now().strftime("%Y-%m-%d"),
+        'tags': ['life', 'note'],
+        'cover': 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d',
+        'summary': '写下你的想法……',
+        'status': 'draft'
     }
     default_content = "在此处编辑内容..."
     post_data = frontmatter.Post(default_content, **default_frontmatter)

@@ -1,4 +1,5 @@
 import os
+import random
 from flask import request, redirect, flash, render_template, abort, current_app, url_for
 import frontmatter, markdown
 from datetime import datetime
@@ -10,6 +11,112 @@ from math import ceil
 NOTES_DIR = os.path.join(os.path.dirname(__file__), 'notes')
 PER_PAGE = 10  # 每页显示条目数
 ALLOWED_EXTENSIONS = {'md', 'html'}
+
+COVER_KEYS = ('cover', 'image', 'banner', 'thumbnail', 'hero')
+BLUE_GRADIENTS = [
+    ('#22d3ee', '#0ea5e9'),
+    ('#38bdf8', '#2563eb'),
+    ('#60a5fa', '#2563eb'),
+    ('#818cf8', '#3730a3'),
+    ('#5eead4', '#14b8a6')
+]
+
+
+def hex_to_rgba(hex_color: str, alpha: float = 0.85) -> str:
+    hex_color = hex_color.lstrip('#')
+    if len(hex_color) == 3:
+        hex_color = ''.join(c * 2 for c in hex_color)
+    r = int(hex_color[0:2], 16)
+    g = int(hex_color[2:4], 16)
+    b = int(hex_color[4:6], 16)
+    return f'rgba({r}, {g}, {b}, {alpha})'
+
+
+def pick_gradient(key: str) -> str:
+    colors = BLUE_GRADIENTS[hash(key) % len(BLUE_GRADIENTS)]
+    return f"linear-gradient(135deg, {hex_to_rgba(colors[0], 0.92)}, {hex_to_rgba(colors[1], 0.82)})"
+
+
+def normalize_tags(raw_tags):
+    if not raw_tags:
+        return []
+    if isinstance(raw_tags, str):
+        return [tag.strip() for tag in raw_tags.split(',') if tag.strip()]
+    if isinstance(raw_tags, (list, tuple, set)):
+        return [str(tag).strip() for tag in raw_tags if str(tag).strip()]
+    return []
+
+
+def strip_markup(text: str) -> str:
+    if not text:
+        return ''
+    text = re.sub(r'```.*?```', ' ', text, flags=re.S)
+    text = re.sub(r'`[^`]+`', ' ', text)
+    text = re.sub(r'!\[[^\]]*\]\([^\)]+\)', ' ', text)
+    text = re.sub(r'\[[^\]]*\]\([^\)]+\)', ' ', text)
+    text = re.sub(r'<[^>]+>', ' ', text)
+    text = re.sub(r'[#>*_~\-]', ' ', text)
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
+
+
+def create_excerpt(text: str, limit: int = 140) -> str:
+    cleaned = strip_markup(text)
+    if not cleaned:
+        return ''
+    if len(cleaned) <= limit:
+        return cleaned
+    return cleaned[:limit].rstrip() + '…'
+
+
+def select_cover(metadata: dict) -> str | None:
+    for key in COVER_KEYS:
+        value = metadata.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return None
+
+
+def load_note_card(slug: str, last_modified: datetime):
+    md_path = os.path.join(NOTES_DIR, f"{slug}.md")
+    html_path = os.path.join(NOTES_DIR, f"{slug}.html")
+
+    title = slug
+    summary = ''
+    cover = None
+    tags = []
+    published = None
+
+    if os.path.exists(md_path):
+        try:
+            note_data = frontmatter.load(md_path)
+            metadata = note_data.metadata or {}
+            title = metadata.get('title') or title
+            summary = metadata.get('description') or metadata.get('summary') or create_excerpt(note_data.content)
+            cover = select_cover(metadata)
+            tags = normalize_tags(metadata.get('tags'))
+            published = metadata.get('date')
+        except Exception:
+            with open(md_path, 'r', encoding='utf-8') as f:
+                summary = create_excerpt(f.read())
+    elif os.path.exists(html_path):
+        with open(html_path, 'r', encoding='utf-8') as f:
+            summary = create_excerpt(f.read())
+    else:
+        return None
+
+    display_meta = published if isinstance(published, str) and published.strip() else last_modified.strftime("%Y-%m-%d %H:%M")
+
+    return {
+        'slug': slug,
+        'title': title,
+        'summary': summary,
+        'cover': cover,
+        'tags': tags,
+        'meta': display_meta,
+        'last_modified': last_modified,
+        'gradient': pick_gradient(slug)
+    }
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -75,6 +182,7 @@ def list_notes():
             slug, ext = filename.rsplit('.', 1)
             all_notes.append({'slug': slug, 'last_modified': lm})
     all_notes.sort(key=lambda x: x['last_modified'], reverse=True)
+    random_slug = random.choice(all_notes)['slug'] if all_notes else None
 
     # 计算分页
     total = len(all_notes)
@@ -82,14 +190,35 @@ def list_notes():
     page = max(1, min(page, total_pages))
     start = (page - 1) * PER_PAGE
     end = start + PER_PAGE
-    page_notes = all_notes[start:end]
+    page_entries = all_notes[start:end]
+    card_items = []
+    for entry in page_entries:
+        card = load_note_card(entry['slug'], entry['last_modified'])
+        if not card:
+            card = {
+                'slug': entry['slug'],
+                'title': entry['slug'],
+                'summary': '',
+                'cover': None,
+                'tags': [],
+                'meta': entry['last_modified'].strftime("%Y-%m-%d %H:%M"),
+                'last_modified': entry['last_modified'],
+                'gradient': pick_gradient(entry['slug'])
+            }
+        card['url'] = url_for('edu.show_note', slug=entry['slug'])
+        card_items.append(card)
+
+    can_edit = current_user.is_authenticated and (getattr(current_user, 'is_admin', False) or current_user.id == 1)
+    random_url = url_for('edu.show_note', slug=random_slug) if (random_slug and not can_edit) else None
 
     return render_template(
         'edu_index.html',
         title="Education Notes",
-        notes=page_notes,
+        cards=card_items,
         page=page,
-        total_pages=total_pages
+        total_pages=total_pages,
+        can_edit=can_edit,
+        random_url=random_url
     )
 
 
@@ -179,7 +308,11 @@ def new_note():
     # 定义默认 frontmatter 与内容 %H:%M:%S
     default_frontmatter = {
         'title': 'New Note',
-        'date': datetime.now().strftime("%Y-%m-%d")
+        'date': datetime.now().strftime("%Y-%m-%d"),
+        'tags': ['study', 'note'],
+        'cover': 'https://images.unsplash.com/photo-1498050108023-c5249f4df085',
+        'summary': '记录你的学习收获……',
+        'status': 'draft'
     }
     default_content = "在此处编辑内容..."
     note_data = frontmatter.Post(default_content, **default_frontmatter)

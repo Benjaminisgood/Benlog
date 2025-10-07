@@ -1,0 +1,32 @@
+<article class="content-card"
+         onclick="window.location.href='{{ item.url }}'"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.location.href='{{ item.url }}';}"
+         role="button"
+         tabindex="0"
+         aria-label="{{ item.title }}">
+  <div class="content-card__media" style="background-image: {{ item.gradient|safe }}{% if item.cover %}, url('{{ item.cover }}'){% endif %};">
+    {% if item.badge %}
+      <span class="content-card__badge">{{ item.badge }}</span>
+    {% endif %}
+  </div>
+
+  <div class="content-card__body">
+    <div class="content-card__meta">
+      <span class="content-card__meta-text">{{ item.meta }}</span>
+    </div>
+
+    <h3 class="content-card__title">{{ item.title }}</h3>
+
+    {% if item.summary %}
+      <p class="content-card__summary">{{ item.summary }}</p>
+    {% endif %}
+
+    {% if item.tags %}
+      <ul class="content-card__tags">
+        {% for tag in item.tags %}
+          <li>#{{ tag }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+</article>

@@ -1,130 +1,220 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>编辑用户信息：{{ user.username }}</h1>
+<section class="settings-form-container">
+  <article class="glass-card form-card">
+    <header>
+      <p class="form-badge">编辑用户</p>
+      <h1>调整账户数据 · {{ user.username }}</h1>
+      <p class="form-sub">修改基础信息或重置密码，及时同步权限状态。</p>
+    </header>
 
-<form method="POST" class="user-form">
-    <label for="username">用户名：</label>
-    <input type="text" name="username" id="username" value="{{ user.username }}" required><br>
-  
-    <label for="email">邮箱：</label>
-    <input type="email" name="email" id="email" value="{{ user.email }}" required><br>
-  
-    <label for="is_admin">是否为管理员：</label>
-    <input type="checkbox" name="is_admin" id="is_admin" {% if user.is_admin %}checked{% endif %}><br>
-  
-    <hr>
-    <label for="password">修改密码（可选）：</label>
-    <input type="password" name="password" id="password"><br>
-    <small>留空则不修改</small><br><br>
-  
-    <button type="submit" class="submit-btn">保存修改</button>
-</form>
+    <form method="POST" class="modern-form">
+      <label for="username">用户名</label>
+      <input type="text" name="username" id="username" value="{{ user.username }}" required>
 
-<form action="{{ url_for('setting.delete_user', user_id=user.id) }}" method="POST" onsubmit="return confirm('确认删除此用户吗？');">
-    <button type="submit" class="delete-btn">删除用户</button>
-</form>
+      <label for="email">邮箱</label>
+      <input type="email" name="email" id="email" value="{{ user.email }}" required>
 
-<a href="{{ url_for('setting.manage_users') }}" class="back-link">返回用户管理</a>
+      <label class="checkbox-field">
+        <input type="checkbox" name="is_admin" id="is_admin" {% if user.is_admin %}checked{% endif %}>
+        <span>管理员权限</span>
+      </label>
 
-<!-- 局部CSS样式 -->
+      <div class="form-divider"></div>
+
+      <label for="password">修改密码（可选）</label>
+      <input type="password" name="password" id="password" placeholder="留空表示保持不变">
+
+      <div class="form-actions">
+        <a href="{{ url_for('setting.manage_users') }}" class="ghost-btn">取消</a>
+        <button type="submit" class="primary-btn">保存修改</button>
+      </div>
+    </form>
+  </article>
+
+  <article class="glass-card danger-card">
+    <h2>危险操作</h2>
+    <p>删除用户将移除其登录能力且不可恢复，请谨慎操作。</p>
+    <form action="{{ url_for('setting.delete_user', user_id=user.id) }}" method="POST" onsubmit="return confirm('确认删除此用户吗？');">
+      <button type="submit" class="danger-btn full">删除用户</button>
+    </form>
+  </article>
+</section>
+
 <style>
-  /* 用户表单样式 */
-  .user-form {
-    background-color: var(--card-bg-color); /* 使用全局卡片背景色 */
-    border: 1px solid var(--card-border-color); /* 使用全局卡片边框色 */
-    padding: 20px;
-    border-radius: 8px;
-    width: 100%;
-    max-width: 400px;
-    margin: 0 auto;
-    box-sizing: border-box;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-  }
+.settings-form-container {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2rem);
+}
 
-  .user-form label {
-    font-size: 1.2rem;
-    color: var(--text-color); /* 使用全局文本颜色 */
-    display: block;
-    margin-bottom: 8px;
-  }
+.glass-card {
+  background: rgba(255, 255, 255, 0.78);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(16px);
+  padding: clamp(1.6rem, 4vw, 2.4rem);
+}
 
-  .user-form input {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid var(--input-border-color); /* 使用全局输入框边框色 */
-    border-radius: 4px;
-    background-color: var(--input-bg-color); /* 使用全局输入框背景色 */
-    color: var(--text-color); /* 使用全局文本颜色 */
-    transition: border-color 0.3s ease;
-  }
+[data-theme="dark"] .glass-card {
+  background: rgba(15, 23, 42, 0.64);
+  border-color: rgba(148, 163, 184, 0.2);
+  box-shadow: 0 28px 56px rgba(2, 6, 23, 0.55);
+}
 
-  .user-form input:focus {
-    border-color: var(--input-focus-border-color); /* 使用全局聚焦边框颜色 */
-    outline: none;
-  }
+.form-badge {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(37, 99, 235, 0.75);
+}
 
-  .submit-btn {
-    background-color: var(--btn-bg-color); /* 使用全局按钮背景色 */
-    color: var(--btn-text-color); /* 使用全局按钮文本颜色 */
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: background-color 0.3s ease;
-  }
+.form-card h1 {
+  margin: 0.35rem 0 0.6rem;
+  font-size: clamp(1.7rem, 3vw, 2.2rem);
+  color: var(--text-color);
+}
 
-  .submit-btn:hover {
-    background-color: var(--btn-hover-bg-color); /* 使用全局按钮悬停背景色 */
-  }
+.form-sub {
+  margin: 0;
+  color: rgba(15, 23, 42, 0.68);
+}
 
-  .delete-btn {
-    background-color: transparent;
-    color: red;
-    border: 1px solid red;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: color 0.3s ease, border-color 0.3s ease;
-  }
+[data-theme="dark"] .form-sub {
+  color: rgba(226, 232, 240, 0.68);
+}
 
-  .delete-btn:hover {
-    background-color: red;
-    color: white;
-    border-color: red;
-  }
+.modern-form {
+  margin-top: 1.4rem;
+  display: grid;
+  gap: 1rem;
+}
 
-  .back-link {
-    display: block;
-    text-align: center;
-    margin-top: 20px;
-    color: var(--link-color); /* 使用全局链接颜色 */
-    text-decoration: none;
-    font-size: 1rem;
-    transition: color 0.3s ease;
-  }
+.modern-form label {
+  font-weight: 600;
+  color: var(--text-color);
+}
 
+.modern-form input[type="text"],
+.modern-form input[type="email"],
+.modern-form input[type="password"] {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--text-color);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
 
-  .back-link:hover {
-    color: var(--text-color); /* 悬停时使用全局文本颜色 */
-    text-decoration: underline;
+[data-theme="dark"] .modern-form input {
+  background: rgba(15, 23, 42, 0.7);
+  border-color: rgba(148, 163, 184, 0.35);
+}
+
+.modern-form input:focus {
+  outline: none;
+  border-color: rgba(37, 99, 235, 0.65);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.checkbox-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.form-divider {
+  height: 1px;
+  background: rgba(148, 163, 184, 0.25);
+  margin: 0.5rem 0;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 0.5rem;
+}
+
+.primary-btn,
+.ghost-btn,
+.danger-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1.4rem;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  border: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.primary-btn {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  box-shadow: 0 16px 30px rgba(37, 99, 235, 0.22);
+}
+
+.primary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 24px 34px rgba(37, 99, 235, 0.28);
+}
+
+.ghost-btn {
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
+}
+
+[data-theme="dark"] .ghost-btn {
+  background: rgba(148, 163, 184, 0.2);
+  color: #cbd5f5;
+}
+
+.ghost-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 24px rgba(37, 99, 235, 0.18);
+}
+
+.danger-card {
+  display: grid;
+  gap: 0.75rem;
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+[data-theme="dark"] .danger-card {
+  background: rgba(248, 113, 113, 0.18);
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+.danger-btn {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.danger-btn.full {
+  width: 100%;
+}
+
+.danger-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 26px rgba(239, 68, 68, 0.22);
+}
+
+@media (max-width: 600px) {
+  .form-actions {
+    flex-direction: column;
+    align-items: stretch;
   }
+}
 </style>
-
-<!-- 局部JavaScript代码 -->
-<script>
-  // 如果需要对表单进行额外的验证或交互，可以在此处添加JavaScript代码
-  document.querySelector(".user-form").addEventListener("submit", function(event) {
-    const username = document.getElementById("username").value;
-    const email = document.getElementById("email").value;
-
-    if (!username || !email) {
-      event.preventDefault(); // 阻止表单提交
-      alert("请填写所有必填字段！");
-    }
-  });
-</script>
-
 {% endblock %}

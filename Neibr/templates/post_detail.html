@@ -1,547 +1,1055 @@
 {% extends "base.html" %}
 {% block content %}
-
-<div class="card">
-  <div class="title">{{ post.title }}</div>
-  <!-- 新增作者和发布时间 -->
-  <div class="post-meta" style="margin-bottom: 12px; color: var(--meta-text-color); font-size: 0.9rem;">
-    <span class="meta-author">作者：{{ author }}</span>
-    <span class="meta-date" style="margin-left: 1em;">
-      发布时间：{{ post.creation_time.strftime('%Y-%m-%d %H:%M:%S') }}
-    </span>
-  </div>
-
-  <div class="tags">
-    {% for tag in post.tags.split(',') %}
-      <span>{{ tag.strip() }}</span>
-    {% endfor %}
-  </div>
-
-  <div class="content-text">{{ post_text | safe }}</div>
-
-  <!-- ✅ 媒体卡片区域：HTML + JS + CSS 整合版 -->
-<div class="media-masonry">
-  {% for file in media_files %}
-    {% set ext = file.lower().rsplit('.', 1)[-1] %}
-
-
-    <div class="media-card" title="{{ file }}">
-      {% if ext in ['jpg', 'jpeg', 'png', 'gif', 'webp', 'NEF', 'nef'] %}
-        <img class="media-preview" src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}" onclick="showFullImage(this.src)" alt="image">
-
-      {% elif ext in ['mp4', 'webm', 'mov', 'MOV'] %}
-        <video class="media-preview" controls>
-          <source src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}" type="video/mp4">
-        </video>
-
-      {% elif ext in ['mp3', 'wav', 'flac'] %}
-        <div class="media-preview audio-card">
-          <audio controls>
-            <source src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}" type="audio/mpeg">
-          </audio>
-        </div>
-
-      {% elif ext == 'pdf' %}
-        <div class="media-preview pdf-card" onclick="window.open('{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}', '_blank')">
-          <div class="pdf-icon">📄</div>
-        </div>
-
-      {% else %}
-        <div class="media-preview unknown-card">
-          <span>📁 {{ file }}</span>
-        </div>
-      {% endif %}
-
-      <div class="media-filename">{{ file }}</div>
-    </div>
-  {% endfor %}
-</div>
-  
-  
-
-  <div class="nav-links">
-    {% if previous_post %}
-      <a
-        href="{{ url_for(
-          'neibr.post_detail',
-          title=previous_post.title,
-          src=src,
-          idx=idx-1
-        ) }}"
-      >← 上一条</a>
-    {% else %}
-      <div></div>
+<div class="post-detail-shell">
+  <div class="feed-nav-floating">
+    {% if previous_url %}
+      <a href="{{ previous_url }}" class="nav-float prev" title="上一条">‹</a>
     {% endif %}
-  
-    <a href="javascript:void(0);" onclick="toggleCommentBox()">评论</a>
-  
-    {% if next_post %}
-      <a
-        href="{{ url_for(
-          'neibr.post_detail',
-          title=next_post.title,
-          src=src,
-          idx=idx+1
-        ) }}"
-      >下一条 →</a>
+    {% if next_url %}
+      <a href="{{ next_url }}" class="nav-float next" title="下一条">›</a>
     {% endif %}
   </div>
 
-<!-- 评论区 -->
-<div class="card">
-  <h3>评论</h3>
-  {% if comments %}
-    {% for comment in comments %}
-      <div class="comment">
-        <p><strong>{{ comment.username }}</strong> 于 {{ comment.timestamp }} 说：</p>
-        <p>{{ comment.content }}</p>
-        <hr>
+  <article class="post-card">
+    <header class="post-header">
+      <div class="author-info">
+        <div class="avatar-badge" data-name="{{ author }}">
+          {{ author[:1]|upper }}
+        </div>
+        <div class="author-meta">
+          <div class="author-name">{{ author }}</div>
+          <div class="author-time">
+            {{ post.creation_time.strftime('%Y-%m-%d %H:%M') }}
+          </div>
+        </div>
       </div>
-    {% endfor %}
-  {% else %}
-    <p>还没有评论，快来抢沙发吧！</p>
-  {% endif %}
+      <div class="post-header-info">
+        <h1 class="post-title">{{ post.title }}</h1>
+        {% if post.tags %}
+          <div class="post-tags header-tags">
+            {% for tag in post.tags.split(',') if tag.strip() %}
+              <span class="tag-chip">#{{ tag.strip() }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </header>
+
+    <section class="post-content">
+      {% if post_text %}
+        <div class="post-text">{{ post_text }}</div>
+      {% endif %}
+    </section>
+
+    {% if media_files or remote_media %}
+      <section class="media-gallery">
+        <div class="media-grid">
+          {% for file in media_files %}
+            {% set ext = file.lower().rsplit('.', 1)[-1] %}
+            {% if ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}
+              <div class="media-card local-card media-type-image">
+                <span class="media-chip">📷 图片</span>
+                <img
+                  loading="lazy"
+                  src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}"
+                  alt="{{ file }}"
+                  onclick="openLightbox(this.src)"
+                >
+              </div>
+            {% elif ext in ['mp4', 'webm', 'mov'] %}
+              <div class="media-card local-card media-type-video">
+                <span class="media-chip">🎬 视频</span>
+                <video controls preload="metadata">
+                  <source src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}">
+                  你的浏览器暂不支持视频播放。
+                </video>
+              </div>
+            {% elif ext in ['mp3', 'wav', 'flac'] %}
+              {% set audio_id = 'audio-local-' ~ loop.index %}
+              {% set audio_mime = 'audio/mpeg' if ext == 'mp3' else 'audio/wav' if ext == 'wav' else 'audio/flac' %}
+              <div class="media-card local-card media-type-audio">
+                <span class="media-chip">🎧 音频</span>
+                <div class="audio-station" data-audio-id="{{ audio_id }}" data-title="{{ file }}">
+                  <button class="audio-control" type="button" aria-label="播放音频">
+                    <span class="audio-icon">▶</span>
+                  </button>
+                  <div class="audio-timeline">
+                    <div class="audio-details">
+                      <span class="audio-label">音频文件</span>
+                      <span class="audio-name" title="{{ file }}">{{ file }}</span>
+                    </div>
+                    <div class="audio-progress"><span></span></div>
+                    <div class="audio-time">
+                      <span class="current">0:00</span>
+                      <span class="duration">--:--</span>
+                    </div>
+                  </div>
+                  <audio id="{{ audio_id }}" preload="metadata">
+                    <source src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}" type="{{ audio_mime }}">
+                    你的浏览器暂不支持音频播放。
+                  </audio>
+                </div>
+              </div>
+            {% elif ext == 'pdf' %}
+              <div class="media-card local-card media-type-document" onclick="window.open('{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}', '_blank')">
+                <span class="media-chip">📄 PDF</span>
+                <div class="doc-card">
+                  <span>点击查看</span>
+                  <small>{{ file }}</small>
+                </div>
+              </div>
+            {% else %}
+              <div class="media-card local-card media-type-document" onclick="window.open('{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}', '_blank')">
+                <span class="media-chip">📁 文件</span>
+                <div class="doc-card">
+                  <span>立即下载</span>
+                  <small>{{ file }}</small>
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+
+          {% for item in remote_media %}
+            {% if item.type == 'image' %}
+              <div class="media-card remote-card media-type-image">
+                <span class="media-chip remote">🌐 图片</span>
+                <img loading="lazy" src="{{ item.url }}" alt="remote media" onclick="openLightbox(this.src)">
+              </div>
+            {% elif item.type == 'video' %}
+              <div class="media-card remote-card media-type-video">
+                <span class="media-chip remote">🌐 视频</span>
+                <video controls preload="metadata">
+                  <source src="{{ item.url }}">
+                </video>
+              </div>
+            {% elif item.type == 'audio' %}
+              {% set remote_audio_id = 'audio-remote-' ~ loop.index %}
+              {% set remote_ext = item.url.rsplit('.', 1)[-1].lower() if '.' in item.url else '' %}
+              {% set remote_mime = 'audio/mpeg' if remote_ext == 'mp3' else 'audio/wav' if remote_ext == 'wav' else 'audio/flac' if remote_ext == 'flac' else 'audio/mpeg' %}
+              {% set display_name = item.url.rsplit('/', 1)[-1] if '/' in item.url else item.url %}
+              <div class="media-card remote-card media-type-audio">
+                <span class="media-chip remote">🌐 音频</span>
+                <div class="audio-station" data-audio-id="{{ remote_audio_id }}" data-title="{{ display_name }}">
+                  <button class="audio-control" type="button" aria-label="播放音频">
+                    <span class="audio-icon">▶</span>
+                  </button>
+                  <div class="audio-timeline">
+                    <div class="audio-details">
+                      <span class="audio-label">远程音频</span>
+                      <span class="audio-name" title="{{ display_name }}">{{ display_name }}</span>
+                    </div>
+                    <div class="audio-progress"><span></span></div>
+                    <div class="audio-time">
+                      <span class="current">0:00</span>
+                      <span class="duration">--:--</span>
+                    </div>
+                  </div>
+                  <audio id="{{ remote_audio_id }}" preload="metadata">
+                    <source src="{{ item.url }}" type="{{ remote_mime }}">
+                  </audio>
+                </div>
+              </div>
+            {% else %}
+              <div class="media-card remote-card media-type-document" onclick="window.open('{{ item.url }}', '_blank')">
+                <span class="media-chip remote">🌐 {{ item.type|capitalize }}</span>
+                <div class="doc-card">
+                  <span>点击访问</span>
+                  <small>{{ item.url }}</small>
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    <footer class="post-footer">
+      <div class="nav-links">
+        {% if previous_url %}
+          <a href="{{ previous_url }}" class="nav-link prev">← 上一条</a>
+        {% else %}
+          <span class="nav-link disabled">已是最新</span>
+        {% endif %}
+        {% if next_url %}
+          <a href="{{ next_url }}" class="nav-link next">下一条 →</a>
+        {% else %}
+          <span class="nav-link disabled">到底啦</span>
+        {% endif %}
+      </div>
+    </footer>
+  </article>
+
+  <section class="comment-section card">
+    <div class="comment-header-row">
+      <h3>评论</h3>
+    </div>
+
+    {% if comments %}
+      <div class="comment-list">
+        {% for comment in comments %}
+          <div class="comment-item">
+            <div class="comment-avatar" data-name="{{ comment.username }}">
+              {{ comment.username[:1]|upper }}
+            </div>
+            <div class="comment-body">
+              <div class="comment-meta">
+                <span class="comment-author">{{ comment.username }}</span>
+                <span class="comment-time">{{ comment.timestamp }}</span>
+              </div>
+              <p class="comment-text">{{ comment.content }}</p>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="comment-empty">还没有评论，快来抢沙发吧！</p>
+    {% endif %}
+  </section>
+</div>
+
+<button class="floating-comment" type="button" onclick="toggleCommentBox()" title="写评论">💬</button>
+{% if can_edit %}
+<a class="floating-edit" href="{{ url_for('neibr.edit_post', title=post.title) }}" title="编辑帖子" aria-label="编辑帖子">✏️</a>
+{% endif %}
+
+<!-- 评论弹窗 -->
+<div id="comment-box" class="comment-box" style="display:none;">
+  <form method="POST" class="comment-form">
+    <textarea name="comment" rows="4" placeholder="在这里输入你的评论..." required></textarea>
+    <div class="comment-actions">
+      <button type="submit" class="submit-comment">提交评论</button>
+      <button type="button" class="close-comment" onclick="toggleCommentBox()">取消</button>
+    </div>
+  </form>
+</div>
+
+<!-- 图片灯箱 -->
+<div id="image-preview-overlay" onclick="closeLightbox()">
+  <img id="image-preview" alt="preview">
 </div>
 
 <style>
-.media-masonry {
+.post-detail-shell {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 24px;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.post-card {
+  background: var(--card-bg-color);
+  border: 1px solid var(--card-border-color);
+  border-radius: 20px;
+  padding: clamp(20px, 4vw, 32px);
+  box-shadow: 0 20px 35px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.author-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.avatar-badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff4d67, #ff9a9e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.4rem;
+  color: #fff;
+  text-transform: uppercase;
+  box-shadow: 0 8px 16px rgba(255, 77, 103, 0.35);
+}
+
+.author-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.author-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.author-time {
+  font-size: 0.85rem;
+  color: var(--meta-text-color);
+}
+
+.post-header-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  max-width: min(60%, 520px);
+}
+
+.post-title {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  line-height: 1.3;
+  color: var(--text-color);
+  text-align: right;
+}
+
+.post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.header-tags {
+  justify-content: flex-end;
+  gap: 6px;
+  margin: 0;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  background: rgba(255, 77, 103, 0.1);
+  color: #ff4d67;
+  backdrop-filter: blur(6px);
+}
+
+.post-text {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--text-color);
+  margin-top: 8px;
+}
+
+.media-gallery {
+  margin-top: 24px;
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 16px;
-  margin-top: 1rem;
 }
 
 .media-card {
   position: relative;
-  background: var(--card-bg-color);
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transition: transform 0.3s;
+  background: var(--card-bg-color);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 14px 24px rgba(15, 23, 42, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
 }
 
 .media-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px);
+  box-shadow: 0 18px 30px rgba(15, 23, 42, 0.12);
 }
 
-.media-preview {
-  width: 100%;
-  height: 160px;
-  object-fit: cover;
-  display: block;
-}
-
-.audio-card, .pdf-card, .unknown-card {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 160px;
-  font-size: 2rem;
-  background: linear-gradient(135deg, #eee, #ccc);
-  color: #333;
-}
-
-[data-theme="dark"] .audio-card,
-[data-theme="dark"] .pdf-card,
-[data-theme="dark"] .unknown-card {
-  background: linear-gradient(135deg, #333, #444);
-  color: #eee;
-}
-
-.media-filename {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  background: rgba(0,0,0,0.6);
-  color: #fff;
-  font-size: 0.75rem;
-  text-align: center;
-  padding: 2px 4px;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.media-card:hover .media-filename {
-  opacity: 1;
-}
-</style>
-
-<script>
-function showFullImage(src) {
-  const overlay = document.getElementById('image-preview-overlay');
-  const img = document.getElementById('image-preview');
-  img.src = src;
-  overlay.classList.add('active');
-}
-function closeImagePreview() {
-  document.getElementById('image-preview-overlay').classList.remove('active');
-}
-</script>
-
-<!-- 全屏图像预览容器 -->
-<div id="image-preview-overlay" onclick="closeImagePreview()">
-  <img id="image-preview" src="" alt="preview" />
-</div>
-
-<style>
-#image-preview-overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100vw; height: 100vh;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.8);
-  z-index: 9999;
-}
-#image-preview-overlay.active {
-  display: flex;
-}
-#image-preview {
-  max-width: 90%;
-  max-height: 90%;
-  border-radius: 12px;
-  box-shadow: 0 0 20px #000;
-}
-
-
-.posts-container .card {
-  background: var(--quick-card-bg);
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  padding: 15px 20px;
-  margin-bottom: 15px;
-}
-.posts-container .card h3 {
-  margin-top: 0;
-  margin-bottom: 8px;
-  color: #333;
-}
-.posts-container .card .tags {
-  margin-bottom: 10px;
-}
-.posts-container .card .tags span {
-  display: inline-block;
-  background: var(--quick-card-bg);
-  color: #ff2442;
-  border-radius: 16px;
-  padding: 3px 8px;
-  font-size: 12px;
-  margin-right: 4px;
-}
-.posts-container .card a {
-  text-decoration: none;
-  color: #ff2442;
-  transition: color 0.3s;
-}
-.posts-container .card a:hover {
-  color: #d81e36;
-}
-
-
-.card {
-  max-width: 700px;
-  margin: 20px auto;
-  padding: 25px;
-  background: var(--quick-card-bg);
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, 'PingFang SC', 'Noto Sans SC', sans-serif;
-}
-
-.title {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 12px;
-  color: #333;
-}
-
-.tags span {
-  display: inline-block;
-  background: var(--quick-card-bg);
-  color: #ff2442;
-  border-radius: 20px;
-  padding: 4px 10px;
-  font-size: 12px;
-  margin-right: 6px;
-  margin-bottom: 6px;
-}
-
-.content-text {
-  font-size: 15px;
-  color: #444;
-  line-height: 1.8;
-  white-space: pre-wrap;
-  margin-bottom: 20px;
-}
-
-.thumbnail-box {
-  width: 150px;
-  height: 150px;
-  overflow: hidden;
-  display: inline-block;
-  margin: 5px;
-  border-radius: 8px;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-.thumbnail-box img {
+.media-card img,
+.media-card video {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.2s ease-in-out;
 }
 
-.thumbnail-box:hover img {
-  transform: scale(1.1);
+.media-card.media-type-video {
+  padding: 14px;
+  background: linear-gradient(135deg, rgba(255, 77, 103, 0.18), rgba(91, 134, 229, 0.18));
 }
 
-.media-container img,
-.media-container video,
-.media-container audio {
-  max-width: 100%;
-  border-radius: 8px;
-  margin-bottom: 15px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.media-card.media-type-video video {
+  border-radius: 12px;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.2);
 }
 
-.media-title {
-  margin-top: 30px;
-  margin-bottom: 15px;
-  padding-bottom: 5px;
-  border-bottom: 2px solid #582121;
-  color: #555;
+.media-card.media-type-audio {
+  padding: 0;
+  background: transparent;
+  cursor: default;
 }
 
-
-.audio-player-container {
-  margin: 10px 0;
-  padding: 10px;
-  background: var(--quick-card-bg);
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-.audio-player-container audio {
-  width: 100%;
+.media-card.media-type-image img {
+  border-radius: 0;
 }
 
-.link-card {
-  display: inline-block;
-  padding: 5px 8px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background-color: var(--quick-card-bg);
-  color: #2e6ad5;
-  font-size: 14px;
-  word-break: break-word;
-  text-decoration: none;
-}
-.link-card:hover {
-  background-color: #f5f5f5;
-  color: #1a4cb3;
+.media-card.media-type-document {
+  background: rgba(15, 23, 42, 0.05);
 }
 
+.media-card.remote-card.media-type-document {
+  background: rgba(91, 134, 229, 0.12);
+}
 
+.media-chip {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  letter-spacing: 0.03em;
+  z-index: 2;
+}
+
+.media-chip.remote {
+  background: rgba(91, 134, 229, 0.85);
+}
+
+.audio-station {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 22px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 16px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.18);
+}
+
+.audio-control {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #ff2442, #ff7a85);
+  color: #fff;
+  font-size: 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.audio-control:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 20px rgba(255, 118, 140, 0.35);
+}
+
+.audio-station.playing .audio-control {
+  background: linear-gradient(135deg, #36d1dc, #5b86e5);
+}
+
+.audio-timeline {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.audio-details {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.audio-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--meta-text-color);
+}
+
+.audio-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9rem;
+  color: var(--text-color);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.audio-progress {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.1);
+  cursor: pointer;
+}
+
+.audio-progress span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 0%;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #ff2442, #ff7a85);
+  transition: width 0.15s linear;
+}
+
+.audio-time {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--meta-text-color);
+}
+
+.audio-station audio {
+  display: none;
+}
+
+.doc-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 20px;
+  font-size: 1rem;
+  color: var(--text-color);
+  background: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+}
+
+.media-card.remote-card .doc-card {
+  background: rgba(91, 134, 229, 0.18);
+}
+
+.doc-card small {
+  font-size: 0.8rem;
+  color: var(--meta-text-color);
+  text-align: center;
+  word-break: break-all;
+}
+
+.post-footer {
+  margin-top: 28px;
+}
 
 .nav-links {
   display: flex;
   justify-content: space-between;
-  margin-top: 25px;
-  padding-top: 15px;
-  border-top: 1px solid #602b2b;
+  align-items: center;
+  gap: 16px;
 }
-.nav-links a {
+
+.nav-link {
+  font-weight: 600;
+  color: #ff4d67;
   text-decoration: none;
-  color: #ff2442;
-  transition: color 0.3s;
+  transition: color 0.25s ease;
 }
-.nav-links a:hover {
+
+.nav-link.disabled {
+  color: var(--meta-text-color);
+}
+
+.nav-link:hover {
   color: #d81e36;
 }
 
+.comment-section {
+  background: var(--card-bg-color);
+  border-radius: 20px;
+  padding: clamp(18px, 3vw, 28px);
+}
+
+.comment-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.comment-header-row h3 {
+  margin: 0;
+}
+
+.comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.comment-item {
+  display: flex;
+  gap: 14px;
+  background: rgba(15, 23, 42, 0.03);
+  border-radius: 16px;
+  padding: 14px 18px;
+}
+
+.comment-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #36d1dc, #5b86e5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.comment-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.comment-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: var(--meta-text-color);
+}
+
+.comment-author {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.comment-text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.comment-empty {
+  text-align: center;
+  color: var(--meta-text-color);
+  padding: 40px 0;
+}
+
+.floating-comment {
+  position: fixed;
+  bottom: 28px;
+  right: 32px;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #ff2442, #ff7a85);
+  color: #fff;
+  font-size: 1.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 16px 32px rgba(255, 77, 103, 0.28);
+  cursor: pointer;
+  z-index: 1080;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.floating-comment:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 22px 36px rgba(255, 77, 103, 0.34);
+}
+
+.floating-edit {
+  position: fixed;
+  bottom: 28px;
+  right: 104px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #34d399, #0f766e);
+  color: #fff;
+  font-size: 1.3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 16px 32px rgba(15, 118, 110, 0.28);
+  cursor: pointer;
+  z-index: 1080;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  text-decoration: none;
+}
+
+.floating-edit:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 22px 36px rgba(15, 118, 110, 0.34);
+}
+
 .comment-box {
-  display: none;
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: var(--card-bg-color);           /* ✅ 亮暗模式自适应 */
-  color: var(--text-color);                   /* ✅ 文字颜色自适应 */
-  border: 1px solid var(--card-border-color); /* ✅ 边框颜色自适应 */
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-  width: 80%;
-  max-width: 500px;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  background: var(--card-bg-color);
+  color: var(--text-color);
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: 0 30px 50px rgba(15, 23, 42, 0.25);
+  z-index: 1100;
+  width: min(520px, 90vw);
 }
 
-.comment-box textarea {
+.comment-form textarea {
   width: 100%;
-  height: 100px;
-  margin-bottom: 10px;
-  padding: 10px;
-  background-color: var(--input-bg-color);         /* ✅ 输入背景自适应 */
-  color: var(--text-color);                        /* ✅ 输入文字色适应 */
-  border: 1px solid var(--input-border-color);     /* ✅ 自适应边框色 */
-  border-radius: 5px;
-  resize: none;
-  transition: background-color 0.3s, border-color 0.3s;
+  border-radius: 12px;
+  border: 1px solid var(--card-border-color);
+  background: var(--input-bg-color);
+  color: var(--text-color);
+  padding: 12px 14px;
+  resize: vertical;
 }
 
-.comment-box .submit-comment,
-.comment-box .close-comment {
-  background-color: var(--btn-bg-color);     /* ✅ 亮暗统一按钮背景 */
-  color: var(--btn-text-color);              /* ✅ 统一按钮文字色 */
+.comment-form textarea:focus {
+  outline: none;
+  border-color: #ff4d67;
+  box-shadow: 0 0 0 3px rgba(255, 77, 103, 0.12);
+}
+
+.comment-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.submit-comment,
+.close-comment {
   border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-weight: 600;
   cursor: pointer;
-  margin-right: 10px;
-  transition: background-color 0.3s, transform 0.3s;
 }
 
-.comment-box .submit-comment:hover,
-.comment-box .close-comment:hover {
-  background-color: var(--btn-hover-bg-color); /* ✅ 亮暗统一按钮悬停色 */
+.submit-comment {
+  background: linear-gradient(135deg, #36d1dc, #5b86e5);
+  color: #fff;
+}
+
+.close-comment {
+  background: var(--input-bg-color);
+  color: var(--text-color);
+  border: 1px solid var(--card-border-color);
+}
+
+#image-preview-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+}
+
+#image-preview-overlay.active {
+  display: flex;
+}
+
+#image-preview {
+  max-width: 92vw;
+  max-height: 92vh;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+}
+
+.feed-nav-floating {
+  position: fixed;
+  top: 50%;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 1050;
+}
+
+.nav-float {
+  pointer-events: all;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.65);
+  color: #fff;
+  font-size: 1.6rem;
+  text-decoration: none;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.nav-float:hover {
+  background: rgba(255, 77, 103, 0.85);
   transform: scale(1.05);
 }
 
-.comment {
-  margin-bottom: 15px;
-  padding: 15px;
-  background: var(--quick-card-bg);
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-.comment p {
-  margin: 5px 0;
-  color: #333;
-  font-size: 14px;
-}
-.comment strong {
-  color: #ff2442;
-  font-weight: bold;
-}
-.comment hr {
-  border: none;
-  border-top: 1px solid #712626;
-  margin: 10px 0;
-}
-.comment h3 {
-  font-size: 18px;
-  color: #444;
-  margin-bottom: 10px;
+.nav-float.prev {
+  margin-right: auto;
 }
 
-
-
-.inline-img {
-  max-width: 100%;
-  border-radius: 0.5rem;
-  margin: 0.5rem 0;
+.nav-float.next {
+  margin-left: auto;
 }
 
-.inline-video {
-  max-width: 100%;
-  margin: 1rem 0;
-  border-radius: 0.5rem;
-}
+@media (max-width: 768px) {
+  .post-card, .comment-section {
+    border-radius: 16px;
+    padding: 18px;
+  }
 
-.hashtag {
-  color: var(--primary-color);
-  font-weight: bold;
-}
+  .post-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
 
-.mention {
-  color: var(--link-color);
-  font-weight: bold;
-}
-
-
-
-
-  .inline-img {
+  .post-header-info {
+    align-items: flex-start;
     max-width: 100%;
-    margin: 1rem 0;
-    border-radius: 0.5rem;
-  }
-
-  .inline-video {
     width: 100%;
-    max-height: 360px;
-    margin: 1rem 0;
   }
 
-  .inline-pdf {
-    width: 100%;
-    height: 600px;
-    margin: 1rem 0;
-    border: 1px solid #ccc;
-    border-radius: 8px;
+  .post-header-info .post-title {
+    text-align: left;
   }
 
-  .mention {
-    color: #007bff;
-    font-weight: bold;
+  .header-tags {
+    justify-content: flex-start;
   }
 
-  .hashtag {
-    background-color: #f2f2f2;
-    padding: 0 0.4em;
-    border-radius: 4px;
+  .avatar-badge {
+    width: 48px;
+    height: 48px;
+    font-size: 1.2rem;
   }
 
+  .media-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+
+  .feed-nav-floating {
+    display: none;
+  }
+
+  .floating-comment {
+    right: 18px;
+    bottom: 18px;
+    width: 52px;
+    height: 52px;
+  }
+
+  .floating-edit {
+    right: 82px;
+    bottom: 18px;
+    width: 48px;
+    height: 48px;
+  }
+}
+
+[data-theme="dark"] .post-card,
+[data-theme="dark"] .comment-section {
+  box-shadow: 0 20px 35px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .media-card {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .doc-card {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .media-card.remote-card.media-type-document .doc-card {
+  background: rgba(91, 134, 229, 0.16);
+}
+
+[data-theme="dark"] .audio-station {
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .audio-progress {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .audio-progress span {
+  background: linear-gradient(135deg, #5b86e5, #36d1dc);
+}
+
+[data-theme="dark"] .audio-label {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+[data-theme="dark"] .audio-name {
+  color: #fff;
+}
+
+[data-theme="dark"] .media-chip {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="dark"] .media-chip.remote {
+  background: rgba(91, 134, 229, 0.85);
+}
+
+[data-theme="dark"] .floating-edit {
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .floating-comment {
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .comment-item {
+  background: rgba(255, 255, 255, 0.05);
+}
 </style>
 
-<!-- 评论提交弹窗 -->
-<div id="comment-box" class="comment-box" style="display: none;">
-  <form method="POST">
-    <textarea name="comment" class="form-control" rows="4" placeholder="在这里输入你的评论..." required></textarea>
-    <button type="submit" class="submit-comment">提交</button>
-    <button type="button" class="close-comment" onclick="toggleCommentBox()">关闭</button>
-  </form>
-</div>
 <script>
-  function showFullImage(src) {
-  const previewOverlay = document.getElementById('image-preview-overlay');
-  const previewImage = document.getElementById('image-preview');
+const commentBox = document.getElementById('comment-box');
+const overlay = document.getElementById('image-preview-overlay');
+const overlayImg = document.getElementById('image-preview');
+const prevUrl = {{ previous_url|tojson }};
+const nextUrl = {{ next_url|tojson }};
 
-  previewImage.src = src;
-  previewOverlay.style.display = 'flex';
+function toggleCommentBox() {
+  if (!commentBox) return;
+  commentBox.style.display = (commentBox.style.display === 'none' || !commentBox.style.display) ? 'block' : 'none';
 }
 
-function closeImagePreview() {
-  document.getElementById('image-preview-overlay').style.display = 'none';
+function openLightbox(src) {
+  if (!overlay || !overlayImg) return;
+  overlayImg.src = src;
+  overlay.classList.add('active');
 }
 
-  function toggleCommentBox() {
-    const commentBox = document.getElementById('comment-box');
-    if (commentBox.style.display === 'none' || commentBox.style.display === '') {
-      commentBox.style.display = 'block';
-    } else {
-      commentBox.style.display = 'none';
+function closeLightbox() {
+  if (!overlay) return;
+  overlay.classList.remove('active');
+  overlayImg.src = '';
+}
+
+document.addEventListener('keydown', (evt) => {
+  if (evt.key === 'Escape') {
+    closeLightbox();
+    if (commentBox && commentBox.style.display === 'block') {
+      toggleCommentBox();
     }
   }
+  if (evt.key === 'ArrowLeft' && prevUrl) {
+    window.location.href = prevUrl;
+  }
+  if (evt.key === 'ArrowRight' && nextUrl) {
+    window.location.href = nextUrl;
+  }
+});
 
+const audioStations = Array.from(document.querySelectorAll('.audio-station'));
+let activeAudio = null;
 
-  // 统一使用 class 切换，避免直接操作 style
-  function showFullImage(src) {
-    const overlay = document.getElementById('image-preview-overlay');
-    const preview = document.getElementById('image-preview');
-    preview.src = src;
-    overlay.classList.add('active');
+const formatTime = (seconds) => {
+  if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+const resetAudioStation = (station, audio, resetPosition = false) => {
+  if (!station || !audio) return;
+  if (resetPosition) {
+    audio.currentTime = 0;
+  }
+  station.classList.remove('playing');
+  const control = station.querySelector('.audio-control');
+  const icon = station.querySelector('.audio-icon');
+  const progressBar = station.querySelector('.audio-progress span');
+  const currentEl = station.querySelector('.audio-time .current');
+
+  if (control) control.setAttribute('aria-label', '播放音频');
+  if (icon) icon.textContent = '▶';
+  if (progressBar) {
+    const percent = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+    progressBar.style.width = `${Math.max(0, Math.min(percent, 100))}%`;
+  }
+  if (currentEl) currentEl.textContent = formatTime(audio.currentTime);
+
+  if (activeAudio === audio) {
+    activeAudio = null;
+  }
+};
+
+audioStations.forEach((station) => {
+  const audio = station.querySelector('audio');
+  const control = station.querySelector('.audio-control');
+  const icon = station.querySelector('.audio-icon');
+  const progressContainer = station.querySelector('.audio-progress');
+  const progressBar = progressContainer?.querySelector('span');
+  const currentEl = station.querySelector('.audio-time .current');
+  const durationEl = station.querySelector('.audio-time .duration');
+
+  if (!audio || !control || !icon || !progressContainer || !progressBar || !currentEl || !durationEl) {
+    return;
   }
 
-  function closeImagePreview() {
-    const overlay = document.getElementById('image-preview-overlay');
-    overlay.classList.remove('active');
+  if (audio.readyState >= 1) {
+    durationEl.textContent = formatTime(audio.duration);
+  } else {
+    audio.addEventListener('loadedmetadata', () => {
+      durationEl.textContent = formatTime(audio.duration);
+    });
   }
+
+  audio.addEventListener('timeupdate', () => {
+    if (audio.duration) {
+      const percent = (audio.currentTime / audio.duration) * 100;
+      progressBar.style.width = `${Math.max(0, Math.min(percent, 100))}%`;
+    }
+    currentEl.textContent = formatTime(audio.currentTime);
+  });
+
+  audio.addEventListener('ended', () => {
+    resetAudioStation(station, audio, true);
+  });
+
+  control.addEventListener('click', () => {
+    if (audio.paused) {
+      if (activeAudio && activeAudio !== audio) {
+        resetAudioStation(activeAudio.closest('.audio-station'), activeAudio, false);
+        activeAudio.pause();
+      }
+      audio.play().then(() => {
+        station.classList.add('playing');
+        control.setAttribute('aria-label', '暂停音频');
+        icon.textContent = '❚❚';
+        durationEl.textContent = formatTime(audio.duration);
+        activeAudio = audio;
+      }).catch(() => {
+        resetAudioStation(station, audio, false);
+      });
+    } else {
+      audio.pause();
+      resetAudioStation(station, audio, false);
+    }
+  });
+
+  progressContainer.addEventListener('click', (evt) => {
+    if (!audio.duration || !Number.isFinite(audio.duration)) return;
+    const rect = progressContainer.getBoundingClientRect();
+    const ratio = Math.min(Math.max((evt.clientX - rect.left) / rect.width, 0), 1);
+    audio.currentTime = ratio * audio.duration;
+  });
+});
 </script>
 {% endblock %}
-
-
