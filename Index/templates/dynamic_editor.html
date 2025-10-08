@@ -1,13 +1,18 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="editor-container">
-  <div class="editor-header">
-    <h1 class="page-heading">编辑页面：{{ page }}</h1>
-  </div>
+<div class="editor-shell">
+  <section class="card-panel editor-hero">
+    <div>
+      <h1>编辑页面：{{ page }}</h1>
+      <p class="editor-subtitle">拖拽式模块组合，快速打造属于你的动态页面。</p>
+    </div>
+    <div class="editor-toolbar">
+      <button type="button" class="pill-btn accent-sky" onclick="add()">+ 添加元素</button>
+    </div>
+  </section>
 
-  <form method="POST" id="edit-page-form" class="edit-page-form">
-    <!-- 文件名输入：保证 POST 时 request.form['filename'] 存在 -->
-    <div class="form-group">
+  <form method="POST" id="edit-page-form" class="card-panel form-card editor-form">
+    <div class="control-group">
       <label for="filename">文件名（不含 .json）：</label>
       <input id="filename"
              name="filename"
@@ -17,29 +22,26 @@
              value="{{ page }}">
     </div>
 
-    <!-- 隐藏组件数量，后端遍历时使用 -->
     <input id="elements_count" name="elements_count" type="hidden" value="{{ page_components|length }}">
 
     <h3 class="section-heading">元素列表</h3>
-    <div id="elements-container">
+    <div class="elements-stack" id="elements-container">
       {% for comp in page_components %}
         {% set idx = loop.index %}
         {% include 'partials/editor/_element_card.html' %}
       {% endfor %}
     </div>
 
-    <div class="form-actions">
-      <button type="button" class="btn btn-add" onclick="add()">添加元素</button>
-      <button type="submit" class="btn btn-save">保存更改</button>
+    <div class="editor-actions">
+      <button type="button" class="pill-btn neutral sm" onclick="add()">+ 添加元素</button>
+      <button type="submit" class="pill-btn accent-sky">保存更改</button>
     </div>
   </form>
 </div>
 
-{# 编辑器模板片段：只需一次，放在主模板里 #}
 {% include 'partials/editor/_editor_templates.html' %}
 
 <script>
-  // 重建索引：更新每个 card 的 data-index、name、id 及 onclick/onchange
   function reindex() {
     const container = document.getElementById('elements-container');
     const cards = container.querySelectorAll('.element-card');
@@ -47,49 +49,43 @@
       const newIdx = i + 1;
       const oldIdx = card.dataset.index;
       card.dataset.index = newIdx;
-  
-      // 更新主区域 id
+
       const main = card.querySelector(`[id^="main-"]`);
       if (main) main.id = `main-${newIdx}`;
-  
-      // 更新所有 name 和 id 属性
+
       card.querySelectorAll('[name]').forEach(el => {
         el.name = el.name.replace(`elements-${oldIdx}-`, `elements-${newIdx}-`);
       });
       card.querySelectorAll('[id]').forEach(el => {
         el.id = el.id.replace(`-${oldIdx}`, `-${newIdx}`);
       });
-  
-      // 更新 select 的 onchange
+
       const sel = card.querySelector('select');
       if (sel) sel.setAttribute('onchange', `toggleExtra(${newIdx})`);
-  
-      // 更新按钮 onclick
+
       card.querySelectorAll('.element-actions button').forEach(btn => {
         if (btn.textContent.includes('上移'))    btn.setAttribute('onclick', `move(${newIdx}, 'up')`);
         else if (btn.textContent.includes('下移')) btn.setAttribute('onclick', `move(${newIdx}, 'down')`);
         else if (btn.textContent.includes('删除')) btn.setAttribute('onclick', `remove(${newIdx})`);
       });
     });
-  
-    // 同步隐藏的元素总数
+
     document.getElementById('elements_count').value = cards.length;
   }
-  
-  // 克隆 <template> 并替换占位符 __IDX__
+
   function getTemplate(type, idx) {
     const tpl = document.getElementById(`tmpl-${type}`);
     return tpl ? tpl.innerHTML.replace(/__IDX__/g, idx) : '';
   }
-  
-  // 根据选择的类型渲染对应输入区
+
   function toggleExtra(idx) {
     const sel  = document.getElementsByName(`elements-${idx}-type`)[0];
     const main = document.getElementById(`main-${idx}`);
-    main.innerHTML = getTemplate(sel.value, idx);
+    if (sel && main) {
+      main.innerHTML = getTemplate(sel.value, idx);
+    }
   }
-  
-  // 添加新元素卡片
+
   function add() {
     const container = document.getElementById('elements-container');
     const idx = container.children.length + 1;
@@ -107,13 +103,12 @@
       </div>
       <div id="main-${idx}" class="control-group"></div>
       <div class="element-actions">
-        <button type="button">↑ 上移</button>
-        <button type="button">↓ 下移</button>
-        <button type="button">删除</button>
+        <button type="button" class="pill-btn neutral sm">↑ 上移</button>
+        <button type="button" class="pill-btn neutral sm">↓ 下移</button>
+        <button type="button" class="pill-btn accent-rose sm">删除</button>
       </div>`;
     container.appendChild(card);
     toggleExtra(idx);
-    // 初始化按钮事件
     card.querySelectorAll('.element-actions button').forEach(btn => {
       if (btn.textContent.includes('上移'))    btn.onclick = () => move(idx, 'up');
       else if (btn.textContent.includes('下移')) btn.onclick = () => move(idx, 'down');
@@ -121,205 +116,22 @@
     });
     reindex();
   }
-  
-  // 删除指定卡片
+
   function remove(idx) {
     const el = document.querySelector(`.element-card[data-index='${idx}']`);
     if (el) el.remove();
     reindex();
   }
-  
-  // 上移/下移操作
+
   function move(idx, dir) {
     const container = document.getElementById('elements-container');
     const el = document.querySelector(`.element-card[data-index='${idx}']`);
-    const sib = (dir === 'up') ? el.previousElementSibling : el.nextElementSibling;
+    if (!el) return;
+    const sib = dir === 'up' ? el.previousElementSibling : el.nextElementSibling;
     if (sib) {
-      container.insertBefore(dir === 'up' ? el : sib,
-                             dir === 'up' ? sib : el);
+      container.insertBefore(dir === 'up' ? el : sib, dir === 'up' ? sib : el);
+      reindex();
     }
-    reindex();
   }
-  </script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<style>
-.editor-container { 
-  max-width: 900px; 
-  margin: 2rem auto; 
-  padding: 1rem; 
-  background: var(--canvas-bg); 
-  border-radius: 8px; 
-}
-.editor-header { 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center; 
-  margin-bottom: 1.5rem; 
-}
-.page-heading { 
-  font-size: 1.8rem; 
-  color: var(--text-color); 
-  margin: 0; 
-}
-.btn-save-header { 
-  background: var(--btn-bg-color); 
-  color: var(--btn-text-color); 
-  border: none; 
-  padding: 0.5rem 1rem; 
-  border-radius: 4px; 
-}
-.btn-save-header:hover { 
-  background: var(--btn-hover-bg-color); 
-}
-.form-group, .control-group { 
-  margin-bottom: 1rem; 
-}
-label { 
-  display: block; 
-  margin-bottom: 0.3rem; 
-  color: var(--text-color); 
-}
-.input-field, .select-field, .textarea-field { 
-  width: 100%; 
-  padding: 0.6rem; 
-  border: 1px solid var(--input-border-color); 
-  border-radius: 6px; 
-  background: var(--input-bg-color); 
-  transition: border-color 0.3s; 
-}
-.input-field:focus, .select-field:focus, .textarea-field:focus { 
-  outline: none; 
-  border-color: var(--input-focus-border-color); 
-}
-.textarea-field { 
-  min-height: 100px; 
-  resize: vertical; 
-}
-.section-heading { 
-  margin: 1.5rem 0 0.5rem; 
-  font-size: 1.2rem; 
-  color: var(--text-color); 
-}
-.element-card { 
-  background: var(--card-bg-color); 
-  border: 1px solid var(--card-border-color); 
-  border-radius: 6px; 
-  padding: 1rem; 
-  margin-bottom: 1rem; 
-  transition: box-shadow 0.3s; 
-}
-.element-card:hover { 
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
-}
-.element-controls { 
-  display: flex; 
-  flex-wrap: wrap; 
-  gap: 1rem; 
-}
-.element-actions { 
-  display: flex; 
-  gap: 0.5rem; 
-  flex-wrap: wrap; 
-}
-.btn { 
-  font-size: 0.9rem; 
-  padding: 0.4rem 0.8rem; 
-  border-radius: 4px; 
-  border: 1px solid transparent; 
-  cursor: pointer; 
-  transition: background-color 0.3s, color 0.3s; 
-}
-.btn-up, .btn-down { 
-  background: var(--quick-card-bg); 
-  color: var(--quick-label-color); 
-  border-color: var(--input-border-color); 
-}
-.btn-up:hover, .btn-down:hover { 
-  background: var(--quick-card-hover-bg); 
-  color: var(--text-color); 
-}
-.btn-delete { 
-  background: transparent; 
-  color: var(--btn-bg-color); 
-  border-color: var(--btn-bg-color); 
-}
-.btn-delete:hover { 
-  background: var(--btn-bg-color); 
-  color: var(--btn-text-color); 
-}
-.btn-add { 
-  background: var(--btn-bg-color); 
-  color: var(--btn-text-color); 
-  border: none; 
-  padding: 0.5rem 1rem; 
-  border-radius: 4px; 
-  margin-right: 1rem; 
-}
-.btn-add:hover { 
-  background: var(--btn-hover-bg-color); 
-}
-.btn-save { 
-  background: var(--btn-bg-color); 
-  color: var(--btn-text-color); 
-  border: none; 
-  padding: 0.8rem; 
-  border-radius: 4px; 
-}
-.btn-save:hover { 
-  background: var(--btn-hover-bg-color); 
-}
-
-.back-link {
-  display: block;
-  text-align: center;
-  margin-top: 20px;
-  color: var(--link-color);
-  text-decoration: none;
-  font-size: 1rem;
-  transition: color 0.3s ease;
-}
-.back-link:hover {
-  color: var(--text-color);
-  text-decoration: underline;
-}
-
-@media (max-width: 768px) {
-  .editor-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  .element-controls {
-    flex-direction: column;
-  }
-}
-</style>
+</script>
 {% endblock %}

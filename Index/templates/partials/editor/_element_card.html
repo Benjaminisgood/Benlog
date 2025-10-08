@@ -1,53 +1,45 @@
-<style>
-    .element-card { background: var(--card-bg-color); border:1px solid var(--card-border-color); border-radius:6px; padding:1rem; margin-bottom:1rem; }
-    .control-group { margin-bottom:1rem; }
-    .select-field, .input-field, .textarea-field { width:100%; padding:0.6rem; border:1px solid var(--input-border-color); border-radius:6px; background:var(--input-bg-color); transition:border-color 0.3s; }
-    .element-actions { display:flex; gap:0.5rem; margin-top:0.5rem; }
-    .element-actions button { padding:0.4rem 0.8rem; border:1px solid transparent; border-radius:4px; cursor:pointer; }
-    </style>
-    
-    <div class="element-card" data-index="{{ idx }}">
-      <div class="control-group">
-        <label>类型：</label>
-        <select name="elements-{{ idx }}-type" class="select-field" onchange="toggleExtra({{ idx }})">
-          {% for opt in ['title','text','link','quote','code','image','gallery','flipcard','faq','html'] %}
-          <option value="{{ opt }}" {% if comp.type==opt %}selected{% endif %}>{{ opt }}</option>
-          {% endfor %}
-        </select>
-      </div>
-    
-      <div id="main-{{ idx }}" class="control-group">
-        {% if comp.type == 'title' %}
-          <input name="elements-{{ idx }}-content" class="input-field" value="{{ comp.content }}">
-        {% elif comp.type == 'text' %}
-          <textarea name="elements-{{ idx }}-content" class="textarea-field">{{ comp.content }}</textarea>
-        {% elif comp.type == 'link' %}
-          <input name="elements-{{ idx }}-href" class="input-field" value="{{ comp.href }}">
-          <input name="elements-{{ idx }}-text" class="input-field" value="{{ comp.text }}">
-        {% elif comp.type == 'quote' %}
-          <textarea name="elements-{{ idx }}-content" class="textarea-field">{{ comp.content }}</textarea>
-        {% elif comp.type == 'code' %}
-          <textarea name="elements-{{ idx }}-content" class="textarea-field">{{ comp.content }}</textarea>
-          <input name="elements-{{ idx }}-language" class="input-field" value="{{ comp.language }}">
-        {% elif comp.type == 'image' %}
-          <input name="elements-{{ idx }}-src" class="input-field" value="{{ comp.src }}">
-          <input name="elements-{{ idx }}-alt" class="input-field" value="{{ comp.alt }}">
-        {% elif comp.type == 'gallery' %}
-          <input name="elements-{{ idx }}-images" class="input-field" value="{{ comp.images|join(',') }}">
-        {% elif comp.type == 'flipcard' %}
-          <input name="elements-{{ idx }}-front" class="input-field" value="{{ comp.front }}">
-          <input name="elements-{{ idx }}-back" class="input-field" value="{{ comp.back }}">
-        {% elif comp.type == 'faq' %}
-          <input name="elements-{{ idx }}-question" class="input-field" value="{{ comp.question }}">
-          <textarea name="elements-{{ idx }}-answer" class="textarea-field">{{ comp.answer }}</textarea>
-        {% elif comp.type == 'html' %}
-          <textarea name="elements-{{ idx }}-content" class="textarea-field">{{ comp.content }}</textarea>
-        {% endif %}
-      </div>
-    
-      <div class="element-actions">
-        <button type="button" onclick="move({{ idx }}, 'up')">↑ 上移</button>
-        <button type="button" onclick="move({{ idx }}, 'down')">↓ 下移</button>
-        <button type="button" onclick="remove({{ idx }})">删除</button>
-      </div>
-    </div>
+<div class="element-card" data-index="{{ idx }}">
+  <div class="control-group">
+    <label>类型：</label>
+    <select name="elements-{{ idx }}-type" class="select-field" onchange="toggleExtra({{ idx }})">
+      {% for opt in ['title','text','link','quote','code','image','gallery','flipcard','faq','html'] %}
+      <option value="{{ opt }}" {% if comp.type==opt %}selected{% endif %}>{{ opt }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div id="main-{{ idx }}" class="control-group">
+    {% if comp.type == 'title' %}
+      <input name="elements-{{ idx }}-content" class="input-field" value="{{ comp.content }}">
+    {% elif comp.type == 'text' %}
+      <textarea name="elements-{{ idx }}-content" class="textarea-field">{{ comp.content }}</textarea>
+    {% elif comp.type == 'link' %}
+      <input name="elements-{{ idx }}-href" class="input-field" value="{{ comp.href }}">
+      <input name="elements-{{ idx }}-text" class="input-field" value="{{ comp.text }}">
+    {% elif comp.type == 'quote' %}
+      <textarea name="elements-{{ idx }}-content" class="textarea-field">{{ comp.content }}</textarea>
+    {% elif comp.type == 'code' %}
+      <textarea name="elements-{{ idx }}-content" class="textarea-field">{{ comp.content }}</textarea>
+      <input name="elements-{{ idx }}-language" class="input-field" value="{{ comp.language }}">
+    {% elif comp.type == 'image' %}
+      <input name="elements-{{ idx }}-src" class="input-field" value="{{ comp.src }}">
+      <input name="elements-{{ idx }}-alt" class="input-field" value="{{ comp.alt }}">
+    {% elif comp.type == 'gallery' %}
+      <input name="elements-{{ idx }}-images" class="input-field" value="{{ comp.images|join(',') }}">
+    {% elif comp.type == 'flipcard' %}
+      <input name="elements-{{ idx }}-front" class="input-field" value="{{ comp.front }}">
+      <input name="elements-{{ idx }}-back" class="input-field" value="{{ comp.back }}">
+    {% elif comp.type == 'faq' %}
+      <input name="elements-{{ idx }}-question" class="input-field" value="{{ comp.question }}">
+      <textarea name="elements-{{ idx }}-answer" class="textarea-field">{{ comp.answer }}</textarea>
+    {% elif comp.type == 'html' %}
+      <textarea name="elements-{{ idx }}-content" class="textarea-field">{{ comp.content }}</textarea>
+    {% endif %}
+  </div>
+
+  <div class="element-actions">
+    <button type="button" class="pill-btn neutral sm" onclick="move({{ idx }}, 'up')">↑ 上移</button>
+    <button type="button" class="pill-btn neutral sm" onclick="move({{ idx }}, 'down')">↓ 下移</button>
+    <button type="button" class="pill-btn accent-rose sm" onclick="remove({{ idx }})">删除</button>
+  </div>
+</div>
