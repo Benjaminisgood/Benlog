@@ -1,15 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="post-detail-shell">
-  <div class="feed-nav-floating">
-    {% if previous_url %}
-      <a href="{{ previous_url }}" class="nav-float prev" title="上一条">‹</a>
-    {% endif %}
-    {% if next_url %}
-      <a href="{{ next_url }}" class="nav-float next" title="下一条">›</a>
-    {% endif %}
-  </div>
-
   <article class="post-card">
     <header class="post-header">
       <div class="author-info">
@@ -163,20 +154,6 @@
       </section>
     {% endif %}
 
-    <footer class="post-footer">
-      <div class="nav-links">
-        {% if previous_url %}
-          <a href="{{ previous_url }}" class="nav-link prev">← 上一条</a>
-        {% else %}
-          <span class="nav-link disabled">已是最新</span>
-        {% endif %}
-        {% if next_url %}
-          <a href="{{ next_url }}" class="nav-link next">下一条 →</a>
-        {% else %}
-          <span class="nav-link disabled">到底啦</span>
-        {% endif %}
-      </div>
-    </footer>
   </article>
 
   <section class="comment-section card">
@@ -537,28 +514,6 @@
   margin-top: 28px;
 }
 
-.nav-links {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-}
-
-.nav-link {
-  font-weight: 600;
-  color: #ff4d67;
-  text-decoration: none;
-  transition: color 0.25s ease;
-}
-
-.nav-link.disabled {
-  color: var(--meta-text-color);
-}
-
-.nav-link:hover {
-  color: #d81e36;
-}
-
 .comment-section {
   background: var(--card-bg-color);
   border-radius: 20px;
@@ -764,45 +719,6 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
 }
 
-.feed-nav-floating {
-  position: fixed;
-  top: 50%;
-  left: 20px;
-  right: 20px;
-  display: flex;
-  justify-content: space-between;
-  pointer-events: none;
-  z-index: 1050;
-}
-
-.nav-float {
-  pointer-events: all;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: rgba(15, 23, 42, 0.65);
-  color: #fff;
-  font-size: 1.6rem;
-  text-decoration: none;
-  transition: background 0.25s ease, transform 0.25s ease;
-}
-
-.nav-float:hover {
-  background: rgba(255, 77, 103, 0.85);
-  transform: scale(1.05);
-}
-
-.nav-float.prev {
-  margin-right: auto;
-}
-
-.nav-float.next {
-  margin-left: auto;
-}
-
 @media (max-width: 768px) {
   .post-card, .comment-section {
     border-radius: 16px;
@@ -837,10 +753,6 @@
 
   .media-grid {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  }
-
-  .feed-nav-floating {
-    display: none;
   }
 
   .floating-comment {
@@ -921,8 +833,6 @@
 const commentBox = document.getElementById('comment-box');
 const overlay = document.getElementById('image-preview-overlay');
 const overlayImg = document.getElementById('image-preview');
-const prevUrl = {{ previous_url|tojson }};
-const nextUrl = {{ next_url|tojson }};
 
 function toggleCommentBox() {
   if (!commentBox) return;
@@ -947,12 +857,6 @@ document.addEventListener('keydown', (evt) => {
     if (commentBox && commentBox.style.display === 'block') {
       toggleCommentBox();
     }
-  }
-  if (evt.key === 'ArrowLeft' && prevUrl) {
-    window.location.href = prevUrl;
-  }
-  if (evt.key === 'ArrowRight' && nextUrl) {
-    window.location.href = nextUrl;
   }
 });
 

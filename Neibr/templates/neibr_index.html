@@ -13,9 +13,9 @@
     </div>
     <div class="hero-right">
       {% if current_user.is_authenticated %}
-        <a class="cta-btn" href="{{ url_for('neibr.create_post') }}">+ 发布新内容</a>
+        <a class="pill-btn accent-rose" href="{{ url_for('neibr.create_post') }}">+ 发布新内容</a>
       {% else %}
-        <a class="cta-btn ghost" href="{{ url_for('setting.login') }}">登录后开始探索</a>
+        <a class="pill-btn accent-rose ghost" href="{{ url_for('setting.login') }}">登录后开始探索</a>
       {% endif %}
     </div>
   </section>
@@ -97,32 +97,6 @@
   margin: 0;
   color: var(--meta-text-color);
   font-size: 1rem;
-}
-
-.cta-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #ff2442, #ff7a85);
-  color: #fff;
-  font-weight: 600;
-  text-decoration: none;
-  box-shadow: 0 12px 20px rgba(255, 118, 140, 0.25);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.cta-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 18px 26px rgba(255, 118, 140, 0.3);
-}
-
-.cta-btn.ghost {
-  background: transparent;
-  border: 1px solid rgba(255, 77, 103, 0.3);
-  color: #ff2442;
-  box-shadow: none;
 }
 
 .hero-tabs {

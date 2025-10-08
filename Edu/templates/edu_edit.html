@@ -1,141 +1,61 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h1 class="page-heading">编辑文档：{{ slug }}</h1>
-
-  <!-- 重命名表单 -->
-  <form method="POST"
-        action="{{ url_for('edu.rename_note', slug=slug) }}"
-        class="edit-form">
-    <label for="new_slug">重命名为：</label>
-    <input
-      type="text"
-      name="new_slug"
-      id="new_slug"
-      value="{{ slug }}"
-      class="input-field"
-      required
-    >
-    <button type="submit" class="btn btn-rename">重命名</button>
-  </form>
-
-  <!-- 正文编辑表单 -->
-  <form method="POST"
-        action="{{ url_for('edu.edit_note', slug=slug) }}"
-        class="edit-form"
-        style="margin-top:1.5em;">
-    <div class="editor-card">
-      <textarea
-        name="content"
-        rows="20"
-        class="textarea-field"
-        required
-      >{{ content }}</textarea>
+<div class="page-shell">
+  <section class="page-hero-card">
+    <div class="page-hero-main">
+      <span class="hero-badge">Edu 编辑</span>
+      <h1 class="hero-title">编辑笔记</h1>
+      <p class="hero-subtitle">当前笔记：<strong>{{ slug }}</strong>。统一的卡片布局让学习内容维护更轻松。</p>
     </div>
-    <button type="submit" class="btn btn-save">保存内容</button>
-  </form>
+    <div class="page-hero-aside">
+      <div class="hero-stats">
+        <strong>{{ current_user.username }}</strong>
+        <span>编辑者</span>
+      </div>
+    </div>
+  </section>
 
+  <section class="card-panel form-card">
+    <form method="POST"
+          action="{{ url_for('edu.rename_note', slug=slug) }}"
+          class="form-stack">
+      <div class="form-group">
+        <label for="new_slug">重命名为</label>
+        <input
+          type="text"
+          name="new_slug"
+          id="new_slug"
+          value="{{ slug }}"
+          class="form-control"
+          required
+        >
+      </div>
+      <div class="form-footer">
+        <button type="submit" class="glass-btn alt">重命名</button>
+      </div>
+    </form>
+  </section>
 
-  <style>
-    .page-heading {
-      text-align: center;
-      font-size: 2rem;
-      margin-bottom: 1em;
-      color: var(--text-color);
-    }
-
-    .edit-form {
-      max-width: 800px;
-      margin: 0 auto 2em;
-      padding: 1.5em;
-      background: var(--card-bg-color);
-      border: 1px solid var(--card-border-color);
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    .edit-form label {
-      display: block;
-      font-size: 1.1rem;
-      margin-bottom: 0.5em;
-      color: var(--text-color);
-      font-weight: bold;
-    }
-
-    .input-field {
-      width: 100%;
-      padding: 0.75em;
-      font-size: 1rem;
-      border: 1px solid var(--input-border-color);
-      border-radius: 5px;
-      background: var(--input-bg-color);
-      color: var(--text-color);
-      margin-bottom: 1em;
-      box-sizing: border-box;
-    }
-
-    .editor-card {
-      margin-bottom: 1em;
-    }
-
-    .textarea-field {
-      width: 100%;
-      min-height: 300px;
-      padding: 1em;
-      font-family: monospace;
-      font-size: 1rem;
-      line-height: 1.5;
-      border: 1px solid var(--card-border-color);
-      border-radius: 5px;
-      background: var(--card-bg-color);
-      color: var(--text-color);
-      box-sizing: border-box;
-      resize: vertical;
-    }
-
-    .btn {
-      display: inline-block;
-      padding: 0.6em 1.2em;
-      border: none;
-      border-radius: 5px;
-      color: #fff;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s;
-      text-decoration: none;
-      margin-right: 1em;
-    }
-
-    .btn-rename {
-      background-color: #17a2b8;
-    }
-    .btn-rename:hover {
-      background-color: #138496;
-      transform: translateY(-1px);
-    }
-
-    .btn-save {
-      background-color: var(--btn-bg-color);
-    }
-    .btn-save:hover {
-      background-color: var(--btn-hover-bg-color);
-      transform: translateY(-1px);
-    }
-
-    .btn-back {
-      background-color: #6c757d;
-      margin-top: 1em;
-    }
-    .btn-back:hover {
-      background-color: #5a6268;
-      transform: translateY(-1px);
-    }
-
-    @media (max-width: 600px) {
-      .edit-form { padding: 1em; }
-      .page-heading { font-size: 1.5rem; }
-      .textarea-field { min-height: 200px; }
-      .btn { font-size: 0.9rem; }
-    }
-  </style>
+  <section class="card-panel form-card">
+    <form method="POST"
+          action="{{ url_for('edu.edit_note', slug=slug) }}"
+          class="form-stack">
+      <div class="form-group">
+        <label for="content">正文内容</label>
+        <textarea
+          name="content"
+          id="content"
+          rows="20"
+          class="form-control textarea-field editor-field"
+          required
+        >{{ content }}</textarea>
+      </div>
+      <div class="form-footer">
+        <a href="{{ url_for('edu.manage_notes') }}" class="glass-btn ghost align-left">返回列表</a>
+        <button type="submit" class="glass-btn">保存内容</button>
+      </div>
+    </form>
+  </section>
+</div>
 {% endblock %}

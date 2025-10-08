@@ -1,179 +1,41 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="settings-form-container">
-  <article class="glass-card form-card">
-    <header>
-      <p class="form-badge">新增用户</p>
-      <h1>创建新的后台账号</h1>
-      <p class="form-sub">填写基础信息并勾选是否赋予管理员权限。</p>
-    </header>
+<div class="page-shell">
+  <section class="page-hero-card">
+    <div class="page-hero-main">
+      <span class="hero-badge">新增用户</span>
+      <h1 class="hero-title">创建新的后台账号</h1>
+      <p class="hero-subtitle">填写基础信息并可选赋予管理员权限，支持即时生效。</p>
+    </div>
+  </section>
 
-    <form method="POST" class="modern-form">
-      <label for="username">用户名</label>
-      <input type="text" name="username" id="username" required placeholder="输入用户名">
-
-      <label for="email">邮箱</label>
-      <input type="email" name="email" id="email" required placeholder="name@example.com">
-
-      <label for="password">密码</label>
-      <input type="password" name="password" id="password" required placeholder="设置登陆密码">
-
-      <label class="checkbox-field">
-        <input type="checkbox" name="is_admin" id="is_admin">
-        <span>赋予管理员权限</span>
-      </label>
-
-      <div class="form-actions">
-        <a href="{{ url_for('setting.manage_users') }}" class="ghost-btn">取消</a>
-        <button type="submit" class="primary-btn">创建用户</button>
+  <section class="card-panel form-card">
+    <form method="POST" class="form-stack">
+      <div class="form-group">
+        <label for="username">用户名</label>
+        <input type="text" name="username" id="username" class="form-control" placeholder="输入用户名" required>
+      </div>
+      <div class="form-group">
+        <label for="email">邮箱</label>
+        <input type="email" name="email" id="email" class="form-control" placeholder="name@example.com" required>
+      </div>
+      <div class="form-group">
+        <label for="password">密码</label>
+        <input type="password" name="password" id="password" class="form-control" placeholder="设置登录密码" required>
+      </div>
+      <div class="form-group">
+        <label class="checkbox-chip">
+          <input type="checkbox" name="is_admin" id="is_admin">
+          <span>赋予管理员权限</span>
+        </label>
+      </div>
+      <div class="form-footer">
+        <a href="{{ url_for('setting.manage_users') }}" class="glass-btn ghost align-left">取消</a>
+        <button type="submit" class="glass-btn">
+          <span class="btn-text">创建用户</span>
+        </button>
       </div>
     </form>
-  </article>
-</section>
-
-<style>
-.settings-form-container {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: clamp(1.5rem, 4vw, 2.5rem);
-}
-
-.glass-card {
-  background: rgba(255, 255, 255, 0.78);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.08);
-  backdrop-filter: blur(16px);
-}
-
-[data-theme="dark"] .glass-card {
-  background: rgba(15, 23, 42, 0.64);
-  border-color: rgba(148, 163, 184, 0.2);
-  box-shadow: 0 28px 56px rgba(2, 6, 23, 0.55);
-}
-
-.form-card {
-  padding: clamp(1.6rem, 4vw, 2.4rem);
-  display: grid;
-  gap: 1.5rem;
-}
-
-.form-badge {
-  margin: 0;
-  font-size: 0.78rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(37, 99, 235, 0.75);
-}
-
-.form-card h1 {
-  margin: 0.25rem 0 0.6rem;
-  font-size: clamp(1.6rem, 3vw, 2.1rem);
-  color: var(--text-color);
-}
-
-.form-sub {
-  margin: 0;
-  color: rgba(15, 23, 42, 0.65);
-}
-
-[data-theme="dark"] .form-sub {
-  color: rgba(226, 232, 240, 0.65);
-}
-
-.modern-form {
-  display: grid;
-  gap: 1rem;
-}
-
-.modern-form label {
-  font-weight: 600;
-  color: var(--text-color);
-}
-
-.modern-form input[type="text"],
-.modern-form input[type="email"],
-.modern-form input[type="password"] {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(255, 255, 255, 0.85);
-  color: var(--text-color);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-[data-theme="dark"] .modern-form input {
-  background: rgba(15, 23, 42, 0.7);
-  border-color: rgba(148, 163, 184, 0.35);
-}
-
-.modern-form input:focus {
-  outline: none;
-  border-color: rgba(37, 99, 235, 0.65);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-}
-
-.checkbox-field {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 500;
-  color: var(--text-color);
-}
-
-.form-actions {
-  margin-top: 0.5rem;
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-}
-
-.primary-btn,
-.ghost-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.65rem 1.4rem;
-  border-radius: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: none;
-  border: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.primary-btn {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  color: #fff;
-  box-shadow: 0 16px 30px rgba(37, 99, 235, 0.22);
-}
-
-.primary-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 22px 34px rgba(37, 99, 235, 0.28);
-}
-
-.ghost-btn {
-  background: rgba(37, 99, 235, 0.12);
-  color: #1d4ed8;
-}
-
-[data-theme="dark"] .ghost-btn {
-  background: rgba(148, 163, 184, 0.2);
-  color: #cbd5f5;
-}
-
-.ghost-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 16px 24px rgba(37, 99, 235, 0.18);
-}
-
-@media (max-width: 600px) {
-  .form-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-}
-</style>
+  </section>
+</div>
 {% endblock %}

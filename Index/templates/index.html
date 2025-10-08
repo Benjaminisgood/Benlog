@@ -1,281 +1,35 @@
 {% extends "base.html" %}
 {% block content %}
-  <div class="center-content">
+<div class="home-shell">
+  <section class="card-panel home-hero">
     <h1>Welcome to My Personal Site</h1>
     <p>欢迎来逛逛啊</p>
-  </div>
+  </section>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-  <div class="search-bar">
+  <div class="home-search">
     <form action="{{ url_for('index.search') }}" method="get">
-      <input type="text" name="q" value="{{ request.args.get('q', '') }}" placeholder="支持站内搜索，暂不支持AGI和LLM聊天" required>
+      <input type="text" name="q" value="{{ request.args.get('q', '') }}" placeholder="支持站内搜索，暂不支持 AGI 和 LLM 聊天" required>
     </form>
   </div>
-  
-  
 
-
-
-
-
-
-
-
-
-
-
-  <div class="quick-links">
-    {% for link in quick_links %}
-      <a href="{{ link.url }}" class="quick-card">
-        <img src="{{ link.icon }}" alt="{{ link.label }}" class="quick-icon">
-        <span class="quick-label">{{ link.label }}</span>
-      </a>
-    {% endfor %}
-  </div>
-  
-  
-  <p class="friend-links">
-    友情链接：
-    {% for link in friend_links %}
-      <a href="{{ link.url }}" target="_blank">{{ link.label }}</a> |
-    {% endfor %}
-  </p>
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<style>
-  .search-bar {
-    max-width: 600px;
-    margin: 40px auto 20px;
-    padding: 10px 20px;
-    display: flex;
-    align-items: center;
-    border-radius: 12px;
-    background: var(--quick-card-bg);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid var(--card-border-color);
-  }
-
-  .search-bar form {
-    flex: 1;
-    display: flex;
-    align-items: center;
-  }
-
-  /* 输入框 */
-  .search-bar input[type="text"] {
-    flex: 1;
-    width: 100%;
-    padding: 10px;
-    font-size: 1rem;
-    border: none;
-    background-color: transparent;
-    color: var(--text-color);
-    outline: none;
-  }
-
-  .search-bar input[type="text"]::placeholder {
-    color: var(--meta-text-color);
-  }
-
-
-
-  .center-content {
-    text-align: center;
-    margin-top: 50px;
-  }
-  .quick-links {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 24px;
-  padding: 40px;
-  margin-top: 20px;
-}
-
-.quick-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 150px;
-  text-decoration: none;
-  background: var(--quick-card-bg);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(200, 200, 200, 0.4);
-  border-radius: 16px;
-  padding: 20px 15px;
-  transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-.quick-card:hover {
-  background: var(--quick-card-hover-bg);
-  transform: translateY(-5px) scale(1.08);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-}
-
-.quick-icon {
-  width: 64px;
-  height: 64px;
-  object-fit: cover;
-  margin-bottom: 12px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.quick-label {
-  font-size: 1.1rem;
-  color: var(--quick-label-color);
-  font-weight: 500;
-}
-
-.center-content {
-  text-align: center;
-  margin: 0 auto;
-  padding: 20px;
-}
-.friend-links {
-  text-align: center;
-  margin: 20px auto;
-  font-size: 16px;
-  line-height: 1.5;
-}
-/* 所有画廊 链接样式 */
-.gallery-list {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 16px;
-  padding: 20px 0;
-  list-style: none;
-  margin: 0;
-}
-
-.gallery-item {
-  /* 保证每个链接块大小一致，可根据需要调整 */
-  flex: 0 1 auto;
-}
-
-.gallery-link {
-  display: inline-block;
-  padding: 10px 16px;
-  background: var(--card-bg-color);
-  border: 1px solid var(--card-border-color);
-  border-radius: 8px;
-  color: var(--link-color);
-  text-decoration: none;
-  font-weight: 500;
-  transition: 
-    background 0.3s ease, 
-    transform 0.2s ease, 
-    box-shadow 0.2s ease;
-}
-
-.gallery-link:hover {
-  background: var(--quick-card-hover-bg);
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-[data-theme="dark"] .gallery-link {
-  border-color: var(--card-border-color);
-  color: var(--link-color);
-}
-
-</style>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<script>
-  // JavaScript for any additional functionality can be added here
-</script>
-
+  {% if quick_links %}
+    <section class="quick-grid">
+      {% for link in quick_links %}
+        <a href="{{ link.url }}" class="quick-card">
+          <img src="{{ link.icon }}" alt="{{ link.label }}" class="quick-icon">
+          <span class="quick-label">{{ link.label }}</span>
+        </a>
+      {% endfor %}
+    </section>
+  {% endif %}
+
+  {% if friend_links %}
+    <p class="friend-links">
+      <span>友情链接：</span>
+      {% for link in friend_links %}
+        <a href="{{ link.url }}" target="_blank" rel="noopener">{{ link.label }}</a>{% if not loop.last %}<span>·</span>{% endif %}
+      {% endfor %}
+    </p>
+  {% endif %}
+</div>
 {% endblock %}

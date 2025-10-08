@@ -3,28 +3,44 @@
 {% block nav %}{# 子模板不需要导航栏 #}{% endblock %}
 {% block content %}
 
-<div class="page-container">
-  <article>
-    {# ---------- Front-matter ---------- #}
-    {% if note_date or frontmatter %}
-      <div class="note-frontmatter">
-        <ul>
-          {% if note_date %}
-            <li><strong>Date:</strong> {{ note_date }}</li>
-          {% endif %}
-          {% if frontmatter %}
-            {% for key, value in frontmatter.items() %}
-              {% if key not in ['title', 'date'] %}
-                <li><strong>{{ key|capitalize }}:</strong> {{ value }}</li>
-              {% endif %}
-            {% endfor %}
-          {% endif %}
-        </ul>
+<div class="article-shell">
+  {% if note_date or frontmatter %}
+    <section class="card-panel article-meta-card">
+      <div class="article-meta-head">
+        <span class="article-badge">笔记元信息</span>
+        {% if note_date %}
+          <span class="article-meta-primary">更新于 {{ note_date }}</span>
+        {% endif %}
       </div>
-    {% endif %}
+      <div class="article-meta-grid">
+        {% if note_date %}
+          <div class="meta-chip">
+            <span class="meta-key">Date</span>
+            <span class="meta-value">{{ note_date }}</span>
+          </div>
+        {% endif %}
+        {% if frontmatter %}
+          {% for key, value in frontmatter.items() %}
+            {% if key not in ['title', 'date'] %}
+              {% set display_value = value %}
+              {% if value is mapping %}
+                {% set display_value = value | tojson %}
+              {% elif value is sequence and value is not string %}
+                {% set display_value = value | join(', ') %}
+              {% endif %}
+              <div class="meta-chip">
+                <span class="meta-key">{{ key|replace('_', ' ')|capitalize }}</span>
+                <span class="meta-value">{{ display_value }}</span>
+              </div>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+      </div>
+    </section>
+  {% endif %}
 
-    {# ---------- 正文 ---------- #}
-    <div class="note-content">
+  <article class="card-panel article-content">
+    <div class="markdown-body">
       {{ note_content|safe }}
     </div>
   </article>
@@ -46,414 +62,75 @@
   <span id="modalCaption"></span>
 </div>
 
-<style>
-/* ========== 页面布局 ========== */
-.page-container{max-width:1200px;margin:0 auto;padding:0 5%;}
-
-/* ========== Front-matter 卡片 ========== */
-.note-frontmatter{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-  gap:1rem 1.5rem;background:var(--quick-card-bg);
-  border:1px solid var(--card-border-color);
-  box-shadow:0 4px 12px rgba(0,0,0,.05);
-  padding:1.25rem 1.5rem;margin:1.5rem 0;border-radius:8px;
-  transition:transform .2s,box-shadow .2s;
-}
-.note-frontmatter:hover{transform:translateY(-2px);box-shadow:0 8px 16px rgba(0,0,0,.08);}
-.note-frontmatter ul{list-style:none;margin:0;padding:0;display:contents;}
-.note-frontmatter li strong{display:block;font-weight:600;color:var(--link-color);margin-bottom:.25rem;}
-.note-frontmatter li span{color:var(--text-color);font-size:.95em;line-height:1.4;}
-
-/* ========== Markdown 样式 ========== */
-.note-content code{
-  background:var(--inline-code-bg,rgba(27,31,35,.05));
-  color:var(--inline-code-color,#c7254e);
-  padding:.2em .4em;border-radius:3px;
-  font-family:SFMono-Regular,Consolas,"Liberation Mono",Menlo,monospace;font-size:.95em;
-}
-.note-content pre{
-  background:var(--code-block-bg,#f6f8fa);
-  border:1px solid var(--card-border-color,#e1e4e8);
-  border-radius:5px;padding:16px;margin:24px 0;overflow:auto;
-  font-family:SFMono-Regular,Consolas,"Liberation Mono",Menlo,monospace;
-  font-size:.9em;line-height:1.45;
-}
-.note-content blockquote{
-  border-left:4px solid var(--link-color);
-  background:var(--blockquote-bg,rgba(52,58,64,.05));
-  color:var(--blockquote-color,#6a737d);
-  margin:24px 0;padding:12px 20px;border-radius:4px;
-}
-
-/* -------- 标题 -------- */
-.note-content h1,.note-content h2,.note-content h3,
-.note-content h4,.note-content h5,.note-content h6{
-  margin-top:1.6em;margin-bottom:.6em;line-height:1.3;
-  color:var(--heading-color,#24292e);cursor:pointer;
-}
-.note-content h1{
-  font-size:2.5em;font-weight:700;text-align:center;
-  margin-top:2em;margin-bottom:1em;padding-bottom:.5em;position:relative;
-}
-.note-content h1::before,.note-content h1::after{
-  content:"";position:absolute;height:2px;background:var(--heading-color);
-  width:30%;left:35%;
-}
-.note-content h1::before{top:0;transform:translateY(-1.5em);}
-.note-content h1::after {bottom:0;transform:translateY(.5em);}
-.note-content h2{
-  font-size:1.875em;font-weight:600;border-bottom:3px solid var(--link-color);
-  padding-bottom:.3em;margin-top:1.8em;margin-bottom:.8em;
-}
-.note-content h3{
-  font-size:1.5em;font-weight:600;margin-top:1.6em;margin-bottom:.6em;
-  padding-left:.75em;position:relative;
-}
-.note-content h3::before{
-  content:"";position:absolute;left:0;top:.2em;height:.8em;width:4px;
-  background:var(--link-color);border-radius:2px;
-}
-.note-content h4{font-size:1.25em;font-weight:600;opacity:.85;margin-top:1.4em;margin-bottom:.6em;}
-.note-content h5{font-size:1.1em;font-weight:500;opacity:.75;margin-top:1.2em;margin-bottom:.5em;}
-.note-content h6{font-size:1em;font-weight:500;opacity:.65;margin-top:1em;margin-bottom:.4em;}
-
-/* -------- 图片 & 媒体 -------- */
-.note-content img{
-  display:block;margin:1rem auto;width:50%;height:auto;object-fit:contain;
-  border:1px solid var(--card-border-color);border-radius:8px;
-  box-shadow:0 4px 12px rgba(0,0,0,.1);transition:transform .3s;cursor:zoom-in;
-}
-.note-content img:hover{transform:scale(1.02);}
-.fullscreen-overlay{
-  position:fixed;top:0;left:0;width:100%;height:100%;
-  background:rgba(0,0,0,.8);display:flex;flex-direction:column;
-  align-items:center;justify-content:center;z-index:9999;
-}
-.fullscreen-overlay img{max-width:90%;max-height:80vh;border-radius:8px;
-  box-shadow:0 0 15px rgba(255,255,255,.5);cursor:zoom-out;}
-.fullscreen-overlay span{color:#fff;margin-top:8px;font-size:.9rem;text-align:center;}
-
-/* 视频 / 音频 */
-.note-content video,.note-content audio{
-  display:block;width:100%;max-width:800px;margin:2rem auto;
-  background:var(--card-bg-color);border:1px solid var(--card-border-color);
-  border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.05);padding:.5rem;
-}
-.note-content video::-webkit-media-controls-panel,
-.note-content audio::-webkit-media-controls-panel{
-  background:var(--card-bg-color)!important;border-radius:6px;
-}
-.note-content video::-webkit-media-controls-play-button,
-.note-content audio::-webkit-media-controls-play-button{
-  filter:invert(var(--filter-invert,0))!important;
-}
-.note-content video::-webkit-media-controls-timeline,
-.note-content audio::-webkit-media-controls-timeline{
-  height:6px!important;background:var(--quick-card-bg)!important;border-radius:3px;
-}
-.note-content video::-webkit-media-controls-current-time-display,
-.note-content audio::-webkit-media-controls-current-time-display{
-  color:var(--meta-text-color);font-size:.75rem;
-}
-.note-content video::-webkit-media-controls-volume-slider,
-.note-content audio::-webkit-media-controls-volume-slider{
-  background:var(--quick-card-bg)!important;border-radius:3px!important;
-}
-@media(max-width:600px){.note-content video,.note-content audio{margin:1.5rem auto;padding:.25rem;}}
-
-/* ========== TOC 弹窗 ========== */
-#toc-modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;}
-#toc-modal{display:none;position:fixed;top:10%;left:50%;transform:translateX(-50%);
-  width:90%;max-width:400px;background:var(--card-bg-color);
-  border:1px solid var(--card-border-color);border-radius:8px;overflow:hidden;z-index:1001;}
-#toc-modal-header{padding:.75rem 1rem;background:var(--nav-bg-color);
-  display:flex;justify-content:space-between;align-items:center;}
-#toc-modal-header h2{margin:0;font-size:1.125rem;color:var(--nav-text-color);}
-#toc-close-btn{background:none;border:none;font-size:1.25rem;cursor:pointer;color:var(--nav-text-color);}
-#toc-modal-body{max-height:70vh;overflow-y:auto;padding:1rem;}
-#toc-modal-body ul{list-style:none;margin:0;padding:0;}
-#toc-modal-body li{margin-bottom:.5rem;}
-#toc-modal-body a{color:var(--link-color);font-size:.875rem;}
-#toc-modal-body a:hover{text-decoration:underline;}
-    /* 前置信息卡片样式 */
-    .post-metadata {
-      background: #f7f7f7;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      padding: 1em;
-      margin-bottom: 1.5em;
-    }
-    .post-metadata .post-title {
-      margin: 0;
-      font-size: 1.8em;
-      font-weight: bold;
-    }
-    .post-metadata .post-meta {
-      margin-top: 0.5em;
-      font-size: 0.9em;
-      color: #666;
-    }
-    .post-metadata .post-meta span {
-      margin-right: 1em;
-    }
-
-    /* 内容区基础样式（保留原有 .post-content 定义） */
-    .post-content img {
-      max-width: 100%;
-      cursor: zoom-in;
-    }
-    .post-content table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 1em 0;
-    }
-    .post-content th, .post-content td {
-      border: 1px solid #ddd;
-      padding: 8px;
-    }
-    .post-content tr:nth-child(even) {
-      background: #f9f9f9;
-    }
-    .post-content th {
-      background: #f2f2f2;
-      font-weight: bold;
-      text-align: left;
-    }
-
-    /* 块级提示框（Admonition）样式 */
-    .admonition {
-      border-left: 4px solid;
-      border-radius: 4px;
-      padding: 0.75em 1em;
-      margin: 1.5em 0;
-    }
-    .admonition p { margin: 0; }
-    .admonition.info { border-color: #2196F3; background: #f0f8ff; }
-    .admonition.info::before {
-      content: "ℹ️ Info:";
-      font-weight: bold;
-      margin-right: 0.5em;
-    }
-    .admonition.warning { border-color: #ff9800; background: #fff8e1; }
-    .admonition.warning::before {
-      content: "⚠️ Warning:";
-      font-weight: bold;
-      margin-right: 0.5em;
-    }
-    .admonition.tip { border-color: #4caf50; background: #f1f8e9; }
-    .admonition.tip::before {
-      content: "💡 Tip:";
-      font-weight: bold;
-      margin-right: 0.5em;
-    }
-
-    /* Q&A 折叠组件样式 */
-    .qa-block {
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      margin: 1em 0;
-    }
-    .qa-block .question {
-      padding: 0.75em 1em;
-      background: #e0f7fa;
-      cursor: pointer;
-      position: relative;
-      font-weight: bold;
-    }
-    .qa-block .question::after {
-      content: "＋";
-      position: absolute;
-      right: 1em;
-      font-weight: bold;
-    }
-    .qa-block.open .question::after {
-      content: "－";
-    }
-    .qa-block .answer {
-      display: none;
-      padding: 0.75em 1em;
-      background: #fafafa;
-      border-top: 1px solid #ccc;
-    }
-    .qa-block.open .answer {
-      display: block;
-    }
-
-    /* 可翻转卡片组件样式 */
-    .flip-card {
-      background: transparent;
-      perspective: 1000px;
-      display: inline-block;
-      margin: 1em 0;
-      cursor: pointer;
-      /* 固定尺寸可以在这里设置，如需要固定宽高 */
-      width: 300px;
-      height: 150px;
-    }
-    .flip-card-inner {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      transition: transform 0.6s;
-      transform-style: preserve-3d;
-    }
-    .flip-card.flipped .flip-card-inner {
-      transform: rotateY(180deg);
-    }
-    .flip-card-front, .flip-card-back {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      backface-visibility: hidden;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      box-sizing: border-box;
-      padding: 1em;
-      text-align: center;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .flip-card-front {
-      background: #f0f0f0;
-      color: #000;
-    }
-    .flip-card-back {
-      background: #f0f0f0;
-      color: #000;
-      transform: rotateY(180deg);
-    }
-
-    /* 目录弹窗样式 */
-    .toc-toggle {
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      padding: 8px 12px;
-      font-size: 14px;
-      background: #333;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      z-index: 1000;
-    }
-    .toc-overlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.7);
-      display: none;
-      z-index: 1001;
-      align-items: center;
-      justify-content: center;
-    }
-    .toc-overlay-content {
-      background: #fff;
-      width: 80%; height: 80%;
-      padding: 20px;
-      border-radius: 8px;
-      overflow-y: auto;
-      position: relative;
-    }
-    .toc-overlay-content h2 {
-      margin-top: 0;
-      margin-bottom: 1em;
-    }
-    .toc-overlay-content .toc-close {
-      position: absolute;
-      top: 10px;
-      right: 20px;
-      font-size: 30px;
-      color: #aaa;
-      cursor: pointer;
-    }
-    .toc-overlay-content ul {
-      list-style: none;
-      padding-left: 0;
-    }
-    .toc-overlay-content ul li {
-      margin: 0.5em 0;
-    }
-    .toc-overlay-content ul li li {
-      /* 缩进子目录项 */
-      margin-left: 1.5em;
-    }
-    .toc-overlay-content ul li a {
-      text-decoration: none;
-      color: #337ab7;
-    }
-    .toc-overlay-content ul li a:hover {
-      text-decoration: underline;
-    }
-</style>
-
 <script>
+document.addEventListener('DOMContentLoaded', () => {
+  const markdownRoot = document.querySelector('.markdown-body');
+  const headers = markdownRoot ? markdownRoot.querySelectorAll('h1, h2, h3, h4') : [];
+  const tocList = document.getElementById('toc-list');
+  const backdrop = document.getElementById('toc-modal-backdrop');
+  const modal = document.getElementById('toc-modal');
+  const closeBtn = document.getElementById('toc-close-btn');
 
-    // 代码高亮初始化（如果使用 highlight.js）
-    document.addEventListener('DOMContentLoaded', function() {
-      document.querySelectorAll('pre code').forEach((block) => {
-        try { hljs.highlightElement(block); } catch(e) {}
-      });
-    });
-    
-    // 问答折叠 Q&A 组件交互
-    document.querySelectorAll('.qa-block .question').forEach(q => {
-      q.addEventListener('click', () => {
-        const qaBlock = q.parentElement;
-        qaBlock.classList.toggle('open');
-      });
-    });
+  if (!markdownRoot || !tocList || !backdrop || !modal || !closeBtn) {
+    return;
+  }
 
-    // 可翻转卡片交互：点击卡片容器时翻转
-    document.querySelectorAll('.flip-card').forEach(card => {
-      card.addEventListener('click', () => {
-        card.classList.toggle('flipped');
-      });
+  headers.forEach((h) => {
+    if (!h.id) {
+      h.id = h.textContent.trim().replace(/\s+/g, '-').toLowerCase();
+    }
+    const li = document.createElement('li');
+    li.style.paddingLeft = (parseInt(h.tagName.slice(1), 10) - 1) * 12 + 'px';
+    const link = document.createElement('a');
+    link.href = `#${h.id}`;
+    link.textContent = h.textContent;
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      document.getElementById(h.id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+      closeTOC();
     });
-
-document.addEventListener('DOMContentLoaded',()=>{
-  /* ---------- 生成目录 ---------- */
-  const headers=document.querySelectorAll('.note-content h1, .note-content h2, .note-content h3, .note-content h4');
-  const tocList=document.getElementById('toc-list');
-  headers.forEach(h=>{
-    if(!h.id) h.id=h.textContent.trim().replace(/\\s+/g,'-').toLowerCase();
-    const li=document.createElement('li');
-    li.style.paddingLeft=(parseInt(h.tagName.slice(1),10)-1)*12+'px';
-    const a=document.createElement('a');
-    a.href='#'+h.id;a.textContent=h.textContent;
-    a.addEventListener('click',e=>{e.preventDefault();document.getElementById(h.id).scrollIntoView({behavior:'smooth'});closeTOC();});
-    li.appendChild(a);tocList.appendChild(li);
+    li.appendChild(link);
+    tocList.appendChild(li);
   });
 
-  /* 标题点击打开目录 */
-  headers.forEach(h=>{h.style.cursor='pointer';h.addEventListener('click',openTOC);});
-  document.getElementById('toc-close-btn').addEventListener('click',closeTOC);
-  document.getElementById('toc-modal-backdrop').addEventListener('click',closeTOC);
+  const openTOC = () => {
+    backdrop.style.display = 'block';
+    modal.style.display = 'block';
+  };
 
-  /* ---------- 图片放大 ---------- */
-  document.querySelectorAll('.note-content img').forEach(img=>{
-    img.addEventListener('click',()=>openModal(img.src,img.alt||''));});
-  document.getElementById('imageModal').addEventListener('click',closeModal);
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeTOC();}});
+  const closeTOC = () => {
+    backdrop.style.display = 'none';
+    modal.style.display = 'none';
+  };
 
+  headers.forEach((h) => {
+    h.style.cursor = 'pointer';
+    h.addEventListener('click', openTOC);
+  });
+
+  closeBtn.addEventListener('click', closeTOC);
+  backdrop.addEventListener('click', closeTOC);
+
+  // 图片放大/关闭
+  const imageOverlay = document.getElementById('imageModal');
+  const modalImg = document.getElementById('modalImage');
+  const modalCaption = document.getElementById('modalCaption');
+  if (imageOverlay && modalImg) {
+    markdownRoot.querySelectorAll('img').forEach((img) => {
+      img.addEventListener('click', () => {
+        imageOverlay.style.display = 'flex';
+        modalImg.src = img.src;
+        if (modalCaption) {
+          modalCaption.textContent = img.alt || '';
+        }
+      });
+    });
+    imageOverlay.addEventListener('click', () => {
+      imageOverlay.style.display = 'none';
+      modalImg.src = '';
+    });
+  }
 });
-/* TOC helpers */
-function openTOC(){document.getElementById('toc-modal-backdrop').style.display='block';document.getElementById('toc-modal').style.display='block';}
-function closeTOC(){document.getElementById('toc-modal-backdrop').style.display='none';document.getElementById('toc-modal').style.display='none';}
-/* Image helpers */
-function openModal(src,caption){
-  const modal=document.getElementById('imageModal');
-  modal.style.display='flex';
-  document.getElementById('modalImage').src=src;
-  document.getElementById('modalCaption').innerText=caption;
-}
-function closeModal(){document.getElementById('imageModal').style.display='none';}
 </script>
 
-<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css" />
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 {% endblock %}

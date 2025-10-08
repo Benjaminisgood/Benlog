@@ -1,214 +1,103 @@
-{# templates/manage_dynamic_pages.html #}
 {% extends 'base.html' %}
 {% block content %}
-<div class="dynamic-pages-container">
-  <!-- 新建动态页面按钮 -->
-  <div class="header-bar">
-    <h1 class="dp-heading">可编辑的动态页面</h1>
-    <form action="{{ url_for('setting.new_dynamic_page') }}" method="POST" class="new-page-form">
-      <button type="submit" class="btn btn-create">新建动态网页</button>
-    </form>
-  </div>
+<div class="page-shell">
+  <section class="page-hero-card">
+    <div class="page-hero-main">
+      <span class="hero-badge">动态页面</span>
+      <h1 class="hero-title">可编辑的动态页面</h1>
+      <p class="hero-subtitle">快速进入自定义页面的编辑、查看与链接复制，保持站点内容常新。</p>
+    </div>
+    <div class="page-hero-aside">
+      <div class="hero-stats">
+        <strong>{{ editable_pages|length if editable_pages else 0 }}</strong>
+        <span>可编辑页面</span>
+      </div>
+    </div>
+  </section>
 
-  <ul class="page-list">
-    {% for page in editable_pages %}
-    <li class="page-card">
-      <div class="page-info">
-        {# 显示文件名，而不是不存在的 title #}
-        <span class="page-title">{{ page.page_name }}</span>
+  <section class="card-panel">
+    <div class="card-panel-header">
+      <div>
+        <h2 class="card-panel-title">页面列表</h2>
+        <p class="card-panel-subtitle">文件名即访问路径，操作按钮支持编辑、预览、删除与复制链接。</p>
       </div>
-      <div class="action-buttons">
-        <a href="{{ page.edit_url }}" class="btn btn-edit">编辑</a>
-        <a href="{{ page.view_url }}" target="_blank" class="btn btn-view">查看</a>
-        <form action="{{ url_for('setting.delete_dynamic_page', page=page.page_name) }}"
-              method="POST"
-              class="inline-form"
-              onsubmit="return confirm('确认删除页面 {{ page.page_name }} 吗？');">
-          <button type="submit" class="btn btn-delete">删除</button>
+      <div class="card-panel-actions">
+        <form action="{{ url_for('setting.new_dynamic_page') }}" method="POST" class="action-form">
+          <button type="submit" class="glass-btn small">＋ 新建动态网页</button>
         </form>
-        <button type="button"
-                class="btn btn-copy"
-                onclick="copyLink('{{ page.view_url }}')">
-          拷贝链接
-        </button>
       </div>
-    </li>
+    </div>
+
+    {% if editable_pages %}
+    <div class="card-collection stack" id="dynamic-pages">
+      {% for page in editable_pages %}
+      <article class="card-tile">
+        <div class="tile-body">
+          <strong class="tile-title">{{ page.page_name }}</strong>
+          <span class="tile-meta">{{ page.view_url }}</span>
+        </div>
+        <div class="tile-actions">
+          <a href="{{ page.edit_url }}" class="glass-btn small">编辑</a>
+          <a href="{{ page.view_url }}" target="_blank" rel="noopener" class="glass-btn ghost small">查看</a>
+          <form action="{{ url_for('setting.delete_dynamic_page', page=page.page_name) }}"
+                method="POST"
+                class="inline-form"
+                onsubmit="return confirm('确认删除页面 {{ page.page_name }} 吗？');">
+            <button type="submit" class="glass-btn danger small">删除</button>
+          </form>
+          <button type="button"
+                  class="glass-btn neutral small"
+                  data-copy-url="{{ page.view_url }}">
+            拷贝链接
+          </button>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
     {% else %}
-    <li class="no-pages">没有可编辑的页面。</li>
-    {% endfor %}
-  </ul>
+    <div class="empty-hint-card">
+      <strong>暂无动态页面</strong>
+      <p>点击右上角「新建动态网页」即可创建一个新的自定义页面。</p>
+    </div>
+    {% endif %}
+  </section>
+
+  <a href="{{ url_for('setting.index') }}" class="glass-btn ghost">← 返回管理首页</a>
 </div>
 
 <script>
-function copyLink(url) {
-  const tempInput = document.createElement("input");
-  tempInput.value = url;
-  document.body.appendChild(tempInput);
-  tempInput.select();
-  try {
-    document.execCommand("copy");
-    alert('已复制页面链接：' + url);
-  } catch (err) {
-    alert('复制失败：' + err);
-  }
-  document.body.removeChild(tempInput);
-}
+(() => {
+  const copyButtons = document.querySelectorAll('[data-copy-url]');
+  if (!copyButtons.length) return;
+
+  const copyText = async (text) => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+    const tempInput = document.createElement('input');
+    tempInput.value = text;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand('copy');
+    document.body.removeChild(tempInput);
+  };
+
+  copyButtons.forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const url = btn.dataset.copyUrl;
+      if (!url) return;
+      try {
+        await copyText(url);
+        btn.textContent = '已复制 ✅';
+        setTimeout(() => { btn.textContent = '拷贝链接'; }, 1600);
+      } catch (error) {
+        btn.textContent = '复制失败 ❌';
+        console.error('复制链接失败：', error);
+        setTimeout(() => { btn.textContent = '拷贝链接'; }, 2000);
+      }
+    });
+  });
+})();
 </script>
-
-<a href="{{ url_for('setting.index') }}" class="back-link">返回管理首页</a>
-
-<style>
-.dynamic-pages-container {
-  max-width: 960px;
-  margin: 2rem auto;
-  padding: 1rem;
-  background: var(--canvas-bg);
-  border-radius: 8px;
-}
-
-.header-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.dp-heading {
-  margin: 0;
-  font-size: 2rem;
-  color: var(--text-color);
-}
-
-.new-page-form .btn-create {
-  background: var(--btn-bg-color);
-  color: var(--btn-text-color);
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  transition: background-color 0.3s ease;
-}
-.new-page-form .btn-create:hover {
-  background: var(--btn-hover-bg-color);
-}
-
-.page-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: 1rem;
-}
-
-.page-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--card-bg-color);
-  border: 1px solid var(--card-border-color);
-  border-radius: 6px;
-  padding: 1rem;
-  transition: box-shadow 0.3s ease;
-}
-.page-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.page-info .page-title {
-  font-size: 1.1rem;
-  color: var(--text-color);
-  font-weight: 500;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.btn {
-  font-size: 0.9rem;
-  padding: 0.4rem 0.8rem;
-  border-radius: 4px;
-  text-decoration: none;
-  transition: background-color 0.3s ease, color 0.3s ease;
-  border: 1px solid transparent;
-  cursor: pointer;
-}
-
-.btn-edit {
-  background: var(--quick-card-bg);
-  color: var(--quick-label-color);
-  border-color: var(--input-border-color);
-}
-.btn-edit:hover {
-  background: var(--quick-card-hover-bg);
-  color: var(--text-color);
-}
-
-.btn-view {
-  background: var(--btn-bg-color);
-  color: var(--btn-text-color);
-}
-.btn-view:hover {
-  background: var(--btn-hover-bg-color);
-}
-
-.btn-delete {
-  background: transparent;
-  color: var(--btn-bg-color);
-  border-color: var(--btn-bg-color);
-}
-.btn-delete:hover {
-  background: var(--btn-bg-color);
-  color: var(--btn-text-color);
-}
-
-.btn-copy {
-  background: transparent;
-  color: var(--link-color);
-  border-color: var(--link-color);
-}
-.btn-copy:hover {
-  background: var(--link-color);
-  color: var(--btn-text-color);
-}
-
-.no-pages {
-  text-align: center;
-  color: var(--meta-text-color);
-  font-style: italic;
-}
-.back-link {
-    display: block;
-    text-align: center;
-    margin-top: 20px;
-    color: var(--link-color);
-    text-decoration: none;
-    font-size: 1rem;
-    transition: color 0.3s ease;
-  }
-.back-link:hover {
-    color: var(--text-color);
-    text-decoration: underline;
-  }
-
-@media (max-width: 768px) {
-  .header-bar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  .page-card {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-  .action-buttons {
-    width: 100%;
-  }
-  .action-buttons .btn {
-    width: auto;
-  }
-}
-</style>
 {% endblock %}

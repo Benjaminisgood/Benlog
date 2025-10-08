@@ -1,220 +1,61 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="settings-form-container">
-  <article class="glass-card form-card">
-    <header>
-      <p class="form-badge">编辑用户</p>
-      <h1>调整账户数据 · {{ user.username }}</h1>
-      <p class="form-sub">修改基础信息或重置密码，及时同步权限状态。</p>
-    </header>
+<div class="page-shell">
+  <section class="page-hero-card">
+    <div class="page-hero-main">
+      <span class="hero-badge">编辑用户</span>
+      <h1 class="hero-title">调整账户数据 · {{ user.username }}</h1>
+      <p class="hero-subtitle">修改基础信息或重置密码，随时掌控权限状态。</p>
+    </div>
+  </section>
 
-    <form method="POST" class="modern-form">
-      <label for="username">用户名</label>
-      <input type="text" name="username" id="username" value="{{ user.username }}" required>
+  <section class="card-panel form-card">
+    <form method="POST" class="form-stack">
+      <div class="form-group">
+        <label for="username">用户名</label>
+        <input type="text" name="username" id="username" class="form-control" value="{{ user.username }}" required>
+      </div>
+      <div class="form-group">
+        <label for="email">邮箱</label>
+        <input type="email" name="email" id="email" class="form-control" value="{{ user.email }}" required>
+      </div>
+      <div class="form-group">
+        <label class="checkbox-chip">
+          <input type="checkbox" name="is_admin" id="is_admin" {% if user.is_admin %}checked{% endif %}>
+          <span>管理员权限</span>
+        </label>
+      </div>
 
-      <label for="email">邮箱</label>
-      <input type="email" name="email" id="email" value="{{ user.email }}" required>
+      <div class="form-divider emphasis"></div>
 
-      <label class="checkbox-field">
-        <input type="checkbox" name="is_admin" id="is_admin" {% if user.is_admin %}checked{% endif %}>
-        <span>管理员权限</span>
-      </label>
+      <div class="form-group">
+        <label for="password">修改密码（可选）</label>
+        <input type="password" name="password" id="password" class="form-control" placeholder="留空表示保持不变">
+      </div>
 
-      <div class="form-divider"></div>
-
-      <label for="password">修改密码（可选）</label>
-      <input type="password" name="password" id="password" placeholder="留空表示保持不变">
-
-      <div class="form-actions">
-        <a href="{{ url_for('setting.manage_users') }}" class="ghost-btn">取消</a>
-        <button type="submit" class="primary-btn">保存修改</button>
+      <div class="form-footer">
+        <a href="{{ url_for('setting.manage_users') }}" class="glass-btn ghost align-left">取消</a>
+        <button type="submit" class="glass-btn">
+          <span class="btn-text">保存修改</span>
+        </button>
       </div>
     </form>
-  </article>
+  </section>
 
-  <article class="glass-card danger-card">
-    <h2>危险操作</h2>
-    <p>删除用户将移除其登录能力且不可恢复，请谨慎操作。</p>
+  <section class="card-panel danger">
+    <div class="card-panel-header">
+      <div>
+        <h2 class="card-panel-title">危险操作</h2>
+        <p class="card-panel-subtitle">删除用户将移除其登录能力且不可恢复，请谨慎操作。</p>
+      </div>
+    </div>
     <form action="{{ url_for('setting.delete_user', user_id=user.id) }}" method="POST" onsubmit="return confirm('确认删除此用户吗？');">
-      <button type="submit" class="danger-btn full">删除用户</button>
+      <div class="form-footer">
+        <button type="submit" class="glass-btn danger">
+          <span class="btn-text">删除用户</span>
+        </button>
+      </div>
     </form>
-  </article>
-</section>
-
-<style>
-.settings-form-container {
-  max-width: 760px;
-  margin: 0 auto;
-  padding: clamp(1.5rem, 4vw, 2.5rem);
-  display: grid;
-  gap: clamp(1.5rem, 3vw, 2rem);
-}
-
-.glass-card {
-  background: rgba(255, 255, 255, 0.78);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.08);
-  backdrop-filter: blur(16px);
-  padding: clamp(1.6rem, 4vw, 2.4rem);
-}
-
-[data-theme="dark"] .glass-card {
-  background: rgba(15, 23, 42, 0.64);
-  border-color: rgba(148, 163, 184, 0.2);
-  box-shadow: 0 28px 56px rgba(2, 6, 23, 0.55);
-}
-
-.form-badge {
-  margin: 0;
-  font-size: 0.78rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(37, 99, 235, 0.75);
-}
-
-.form-card h1 {
-  margin: 0.35rem 0 0.6rem;
-  font-size: clamp(1.7rem, 3vw, 2.2rem);
-  color: var(--text-color);
-}
-
-.form-sub {
-  margin: 0;
-  color: rgba(15, 23, 42, 0.68);
-}
-
-[data-theme="dark"] .form-sub {
-  color: rgba(226, 232, 240, 0.68);
-}
-
-.modern-form {
-  margin-top: 1.4rem;
-  display: grid;
-  gap: 1rem;
-}
-
-.modern-form label {
-  font-weight: 600;
-  color: var(--text-color);
-}
-
-.modern-form input[type="text"],
-.modern-form input[type="email"],
-.modern-form input[type="password"] {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(255, 255, 255, 0.85);
-  color: var(--text-color);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-[data-theme="dark"] .modern-form input {
-  background: rgba(15, 23, 42, 0.7);
-  border-color: rgba(148, 163, 184, 0.35);
-}
-
-.modern-form input:focus {
-  outline: none;
-  border-color: rgba(37, 99, 235, 0.65);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-}
-
-.checkbox-field {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 500;
-}
-
-.form-divider {
-  height: 1px;
-  background: rgba(148, 163, 184, 0.25);
-  margin: 0.5rem 0;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 0.5rem;
-}
-
-.primary-btn,
-.ghost-btn,
-.danger-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.65rem 1.4rem;
-  border-radius: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: none;
-  border: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.primary-btn {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  color: #fff;
-  box-shadow: 0 16px 30px rgba(37, 99, 235, 0.22);
-}
-
-.primary-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 24px 34px rgba(37, 99, 235, 0.28);
-}
-
-.ghost-btn {
-  background: rgba(37, 99, 235, 0.12);
-  color: #1d4ed8;
-}
-
-[data-theme="dark"] .ghost-btn {
-  background: rgba(148, 163, 184, 0.2);
-  color: #cbd5f5;
-}
-
-.ghost-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 16px 24px rgba(37, 99, 235, 0.18);
-}
-
-.danger-card {
-  display: grid;
-  gap: 0.75rem;
-  background: rgba(248, 113, 113, 0.1);
-  border-color: rgba(248, 113, 113, 0.35);
-}
-
-[data-theme="dark"] .danger-card {
-  background: rgba(248, 113, 113, 0.18);
-  border-color: rgba(248, 113, 113, 0.4);
-}
-
-.danger-btn {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.25);
-}
-
-.danger-btn.full {
-  width: 100%;
-}
-
-.danger-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 26px rgba(239, 68, 68, 0.22);
-}
-
-@media (max-width: 600px) {
-  .form-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-}
-</style>
+  </section>
+</div>
 {% endblock %}

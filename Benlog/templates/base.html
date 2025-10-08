@@ -27,20 +27,45 @@
 <body data-user-id="{{ current_user.id }}">
   <canvas id="universe"></canvas>
   {% block nav %}
-  <header>
-    <nav>
-      <a href="{{ url_for('index.home') }}" class="navbar-brand">
-        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="logo">
-      </a>
+  <header class="global-header">
+    <nav class="glass-nav">
+      <div class="nav-brand">
+        <a href="{{ url_for('index.home') }}" class="brand-link">
+          <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="brand-logo">
+          <span class="brand-title">Benlog</span>
+        </a>
+      </div>
 
-      <a href="{{ url_for('blog.list_posts') }}">Blog</a>
-      <a href="{{ url_for('edu.list_notes') }}">Education</a>
-      <a href="{{ url_for('neibr.index') }}">Neibr</a>
+      <div class="nav-links">
+        <a href="{{ url_for('blog.list_posts') }}" class="nav-link">Blog</a>
+        <a href="{{ url_for('edu.list_notes') }}" class="nav-link">Education</a>
+        <a href="{{ url_for('neibr.index') }}" class="nav-link">Neibr</a>
+      </div>
 
-      <!-- 黑白主题切换按钮 -->
-      <button id="theme-toggle">🌙</button>
-      <a href="{{ url_for('setting.index') }}" id="settings-button" title="设置页">⚙️</a>
-      <a href="{{ url_for('gallery.index') }}">🖼️</a>
+      <div class="nav-actions">
+        <button id="theme-toggle" class="nav-action nav-theme" type="button" aria-label="切换主题">
+          <svg class="nav-icon icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+            <path class="fill" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="none"></path>
+          </svg>
+          <svg class="nav-icon icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+            <circle class="fill" cx="12" cy="12" r="5"></circle>
+            <path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"></path>
+          </svg>
+        </button>
+        <a href="{{ url_for('gallery.index') }}" class="nav-action nav-gallery" aria-label="图库">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+            <path d="M7 15l3-3 3 3 3-4 5 6"></path>
+            <circle class="fill" cx="9" cy="9" r="1.6"></circle>
+          </svg>
+        </a>
+        <a href="{{ url_for('setting.index') }}" id="settings-button" class="nav-action nav-settings" title="设置页" aria-label="设置页">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a1.6 1.6 0 01-2.26 2.26l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a1.6 1.6 0 01-3 0v-.12a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a1.6 1.6 0 01-2.26-2.26l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a1.6 1.6 0 010-3h.12a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a1.6 1.6 0 012.26-2.26l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a1.6 1.6 0 013 0v.12a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a1.6 1.6 0 012.26 2.26l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a1.6 1.6 0 010 3h-.12a1.65 1.65 0 00-1.51 1z"></path>
+            <circle class="fill" cx="12" cy="12" r="2"></circle>
+          </svg>
+        </a>
+      </div>
     </nav>
   </header>
   {% endblock %}

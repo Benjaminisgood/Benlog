@@ -1,257 +1,146 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="quick-links-container">
-  <div class="header-bar">
-    <h1 class="ql-heading">快捷链接管理</h1>
-    <form action="{{ url_for('setting.manage_quick_links') }}" method="POST" class="new-link-form">
-      <button type="submit" name="action" value="add" class="btn btn-create">添加快捷链接</button>
-    </form>
-  </div>
-
-  {% if quick_links %}
-  <div class="links-grid">
-    {% for link in quick_links %}
-    <div class="link-card">
-      <div class="link-info">
-        <img src="{{ link.icon }}" alt="{{ link.label }}" class="link-icon">
-        <a href="{{ link.url }}" target="_blank" class="link-label">{{ link.label }}</a>
+<div class="page-shell">
+  <section class="page-hero-card">
+    <div class="page-hero-main">
+      <span class="hero-badge">站点跳转</span>
+      <h1 class="hero-title">快捷链接管理</h1>
+      <p class="hero-subtitle">为常用的外部服务配置入口，让访客与自己一键直达。</p>
+    </div>
+    <div class="page-hero-aside">
+      <div class="hero-stats">
+        <strong>{{ quick_links|length if quick_links else 0 }}</strong>
+        <span>当前快捷链接</span>
       </div>
-      <form action="{{ url_for('setting.manage_quick_links') }}" method="POST" class="delete-form">
-        <input type="hidden" name="index" value="{{ loop.index0 }}">
-        <input type="hidden" name="action" value="delete">
-        <button type="submit" class="btn btn-delete" onclick="return confirm('确认删除快捷链接 {{ link.label }}？');">删除</button>
-      </form>
     </div>
-    {% endfor %}
-  </div>
-  {% else %}
-  <p class="no-links">暂无快捷链接，点击上方“添加快捷链接”开始吧！</p>
-  {% endif %}
+  </section>
 
-  <!-- 添加快捷链接表单弹出层 -->
-  <div id="add-link-popup" class="popup-overlay hidden">
-    <div class="popup-dialog">
-      <h2>添加快捷链接</h2>
-      <form action="{{ url_for('setting.manage_quick_links') }}" method="POST" class="popup-form">
-        <input type="hidden" name="action" value="add">
-        <div class="form-field">
-          <label for="url">链接地址：</label>
-          <input type="url" id="url" name="url" class="input-field" placeholder="https://example.com" required>
-        </div>
-        <div class="form-field">
-          <label for="label">链接名称：</label>
-          <input type="text" id="label" name="label" class="input-field" placeholder="名称" required>
-        </div>
-        <div class="form-field">
-          <label for="icon">图标 URL：</label>
-          <input type="url" id="icon" name="icon" class="input-field" placeholder="https://example.com/icon.png" required>
-        </div>
-        <div class="popup-actions">
-          <button type="submit" class="btn btn-create">提交</button>
-          <button type="button" class="btn btn-cancel" onclick="togglePopup()">取消</button>
-        </div>
-      </form>
+  <section class="card-panel">
+    <div class="card-panel-header">
+      <div>
+        <h2 class="card-panel-title">快捷入口列表</h2>
+        <p class="card-panel-subtitle">支持图标 URL、自定义标题与目标地址，删除操作会立即生效。</p>
+      </div>
+      <div class="card-panel-actions">
+        <button type="button" class="glass-btn small" data-quick-link-open>＋ 添加快捷链接</button>
+      </div>
     </div>
+
+    {% if quick_links %}
+    <div class="card-collection compact">
+      {% for link in quick_links %}
+      <article class="card-tile icon-tile">
+        <div class="icon-avatar" aria-hidden="true">
+          {% if link.icon %}
+            <img src="{{ link.icon }}" alt="{{ link.label }}">
+          {% else %}
+            <span class="chip-muted">Icon</span>
+          {% endif %}
+        </div>
+        <div class="tile-body">
+          <a href="{{ link.url }}" target="_blank" rel="noopener" class="tile-title">{{ link.label }}</a>
+          <span class="tile-meta">{{ link.url }}</span>
+        </div>
+        <div class="tile-actions">
+          <form action="{{ url_for('setting.manage_quick_links') }}" method="POST" class="inline-form" onsubmit="return confirm('确认删除快捷链接 {{ link.label }}？');">
+            <input type="hidden" name="index" value="{{ loop.index0 }}">
+            <input type="hidden" name="action" value="delete">
+            <button type="submit" class="glass-btn danger small">删除</button>
+          </form>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-hint-card">
+      <strong>还没有快捷链接</strong>
+      <p>点击右上角的「添加快捷链接」即可建立第一个常用入口。</p>
+    </div>
+    {% endif %}
+  </section>
+
+  <a href="{{ url_for('setting.index') }}" class="glass-btn ghost">← 返回管理首页</a>
+</div>
+
+<div class="form-overlay" id="quick-link-overlay" aria-hidden="true">
+  <div class="overlay-card">
+    <form action="{{ url_for('setting.manage_quick_links') }}" method="POST" class="form-stack" id="quick-link-form">
+      <input type="hidden" name="action" value="add">
+      <div class="form-group">
+        <label for="ql-url">链接地址</label>
+        <input type="url" id="ql-url" name="url" class="form-control" placeholder="https://example.com" required>
+      </div>
+      <div class="form-group">
+        <label for="ql-label">链接名称</label>
+        <input type="text" id="ql-label" name="label" class="form-control" placeholder="展示名称" required>
+      </div>
+      <div class="form-group">
+        <label for="ql-icon">图标 URL</label>
+        <input type="url" id="ql-icon" name="icon" class="form-control" placeholder="https://example.com/icon.png" required>
+      </div>
+      <div class="form-footer">
+        <button type="button" class="glass-btn ghost" data-quick-link-close>取消</button>
+        <button type="submit" class="glass-btn">
+          <span class="btn-text">提交</span>
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 
-<a href="{{ url_for('setting.index') }}" class="back-link">返回管理首页</a>
-
 <script>
-function togglePopup() {
-  document.getElementById('add-link-popup').classList.toggle('hidden');
-}
-// 点击“添加快捷链接”按钮弹出表单
-document.querySelector('.new-link-form .btn-create').addEventListener('click', function(e) {
-  e.preventDefault();
-  togglePopup();
-});
+(() => {
+  const overlay = document.getElementById('quick-link-overlay');
+  const form = document.getElementById('quick-link-form');
+  const openBtn = document.querySelector('[data-quick-link-open]');
+  const closeButtons = overlay ? overlay.querySelectorAll('[data-quick-link-close]') : [];
+  const urlInput = document.getElementById('ql-url');
+
+  if (!overlay || !form || !openBtn) {
+    return;
+  }
+
+  const openOverlay = () => {
+    overlay.classList.add('show');
+    overlay.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => urlInput?.focus());
+  };
+
+  const closeOverlay = () => {
+    overlay.classList.remove('show');
+    overlay.setAttribute('aria-hidden', 'true');
+    form.reset();
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      const text = submitBtn.querySelector('.btn-text');
+      if (text) text.textContent = '提交';
+    }
+  };
+
+  openBtn.addEventListener('click', openOverlay);
+  closeButtons.forEach((btn) => btn.addEventListener('click', closeOverlay));
+
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) {
+      closeOverlay();
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && overlay.classList.contains('show')) {
+      closeOverlay();
+    }
+  });
+
+  form.addEventListener('submit', () => {
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      const text = submitBtn.querySelector('.btn-text');
+      if (text) text.textContent = '提交中...';
+    }
+  });
+})();
 </script>
-
-<style>
-.quick-links-container {
-  max-width: 960px;
-  margin: 2rem auto;
-  padding: 1rem;
-  background: var(--canvas-bg);
-  border-radius: 8px;
-}
-
-.header-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.ql-heading {
-  margin: 0;
-  font-size: 2rem;
-  color: var(--text-color);
-}
-
-.links-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 1rem;
-}
-
-.link-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--card-bg-color);
-  border: 1px solid var(--card-border-color);
-  border-radius: 6px;
-  padding: 1rem;
-  transition: box-shadow 0.3s ease;
-}
-.link-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.link-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.link-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 4px;
-  object-fit: cover;
-}
-
-.link-label {
-  color: var(--link-color);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.3s;
-}
-.link-label:hover {
-  color: var(--text-color);
-}
-
-.btn {
-  font-size: 0.9rem;
-  padding: 0.4rem 0.8rem;
-  border-radius: 4px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.btn-delete {
-  background: transparent;
-  color: var(--btn-bg-color);
-  border-color: var(--btn-bg-color);
-}
-.btn-delete:hover {
-  background: var(--btn-bg-color);
-  color: var(--btn-text-color);
-}
-
-.new-link-form .btn-create {
-  background: var(--btn-bg-color);
-  color: var(--btn-text-color);
-  border: none;
-  padding: 0.5rem 1rem;
-}
-.new-link-form .btn-create:hover {
-  background: var(--btn-hover-bg-color);
-}
-
-/* 弹出层 */
-.popup-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-.hidden { display: none; }
-
-.popup-dialog {
-  background: var(--card-bg-color);
-  padding: 1.5rem;
-  border-radius: 8px;
-  width: 100%;
-  max-width: 400px;
-}
-
-.popup-dialog h2 {
-  margin-top: 0;
-  font-size: 1.5rem;
-  color: var(--text-color);
-  margin-bottom: 1rem;
-}
-
-.popup-form .form-field {
-  margin-bottom: 1rem;
-}
-.popup-form label {
-  display: block;
-  margin-bottom: 0.3rem;
-  color: var(--text-color);
-}
-.popup-form .input-field {
-  width: 100%;
-  padding: 0.6rem 1rem;
-  border: 1px solid var(--input-border-color);
-  border-radius: 4px;
-  background: var(--input-bg-color);
-  transition: border-color 0.3s ease;
-}
-.popup-form .input-field:focus {
-  outline: none;
-  border-color: var(--input-focus-border-color);
-}
-
-.popup-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-}
-
-.btn-cancel {
-  background: transparent;
-  border: 1px solid var(--btn-hover-bg-color);
-  color: var(--btn-hover-bg-color);
-}
-.btn-cancel:hover {
-  background: var(--btn-hover-bg-color);
-  color: var(--btn-text-color);
-}
-
-.no-links {
-  text-align: center;
-  color: var(--meta-text-color);
-  font-style: italic;
-}
-
-.back-link {
-    display: block;
-    text-align: center;
-    margin-top: 20px;
-    color: var(--link-color); /* 使用全局链接颜色 */
-    text-decoration: none;
-    font-size: 1rem;
-    transition: color 0.3s ease;
-  }
-.back-link:hover {
-    color: var(--text-color); /* 悬停时使用全局文本颜色 */
-    text-decoration: underline;
-  }
-
-@media (max-width: 600px) {
-  .links-grid { grid-template-columns: 1fr; }
-  .header-bar { flex-direction: column; gap: 1rem; }
-}
-</style>
 {% endblock %}

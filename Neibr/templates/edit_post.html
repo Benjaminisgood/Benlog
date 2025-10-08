@@ -1,51 +1,61 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="edit-card">
-  <h1>编辑帖子</h1>
-  <form method="POST" enctype="multipart/form-data">
-
-    <!-- 编辑标题 -->
-    <div class="form-group">
-      <label for="title">标题</label>
-      <input type="text" id="title" name="title" class="form-control" value="{{ post.title }}" required>
+<div class="page-shell">
+  <section class="page-hero-card">
+    <div class="page-hero-main">
+      <span class="hero-badge">Neibr 编辑</span>
+      <h1 class="hero-title">编辑帖子</h1>
+      <p class="hero-subtitle">同步更新文案与多媒体资源，让内容在社区中保持统一质感。</p>
     </div>
-
-    <!-- 编辑标签 -->
-    <div class="form-group">
-      <label for="tags">标签</label>
-      <input type="text" id="tags" name="tags" class="form-control" value="{{ post.tags }}">
+    <div class="page-hero-aside">
+      <div class="hero-stats">
+        <strong>{{ post.title }}</strong>
+        <span>当前标题</span>
+      </div>
+      <div class="hero-stats">
+        <strong>{{ post.creation_time.strftime('%Y-%m-%d') if post.creation_time else '未记录' }}</strong>
+        <span>创建日期</span>
+      </div>
     </div>
+  </section>
 
-    <!-- 编辑正文内容 -->
-    <div class="form-group">
-      <label for="post_text">正文内容</label>
-      <textarea id="post_text" name="post_text" class="form-control" rows="10">{{ post_text }}</textarea>
-    </div>
+  <section class="card-panel form-card">
+    <form method="POST" enctype="multipart/form-data" class="form-stack" id="edit-post-form">
+      <div class="form-group">
+        <label for="title">标题</label>
+        <input type="text" id="title" name="title" class="form-control" value="{{ post.title }}" required>
+      </div>
 
-    <!-- 隐藏设置 -->
-    <div class="form-group hidden-checkbox">
-      <label>
-        <input type="checkbox" name="is_hidden" {% if post.is_hidden %}checked{% endif %}>
-        隐藏（仅自己可见）
-      </label>
-    </div>
+      <div class="form-group">
+        <label for="tags">标签</label>
+        <input type="text" id="tags" name="tags" class="form-control" value="{{ post.tags }}" placeholder="多个标签使用英文逗号分隔">
+      </div>
 
-    <!-- 上传新的媒体文件 -->
-    <div class="form-group">
-      <label for="media_files">上传新的媒体文件</label>
-      <input type="file" id="media_files" name="media_files" class="form-control-file" multiple>
-    </div>
+      <div class="form-group">
+        <label for="post_text">正文内容</label>
+        <textarea id="post_text" name="post_text" class="form-control textarea-field" rows="10">{{ post_text }}</textarea>
+      </div>
 
-    <!-- 远程媒体链接 -->
-    <div class="form-group">
-      <label for="media_links">媒体链接（每行一个）</label>
-      <textarea id="media_links" name="media_links" class="form-control" rows="4" placeholder="https://your-cdn.com/sample.jpg&#10;https://video.aliyun.com/clip.mp4">{{ remote_links_text }}</textarea>
-      <small class="input-hint">删除对应链接即可移除，支持 OSS、图床、短视频平台等公开链接。</small>
-    </div>
+      <div class="form-group">
+        <label class="checkbox-chip">
+          <input type="checkbox" name="is_hidden" {% if post.is_hidden %}checked{% endif %}>
+          <span>隐藏（仅自己可见）</span>
+        </label>
+      </div>
 
-    <!-- 显示现有媒体文件 -->
-    <div class="media-section">
+      <div class="form-group">
+        <label for="media_files">上传新的媒体文件</label>
+        <input type="file" id="media_files" name="media_files" class="input-file" multiple>
+        <small>新的文件会追加到列表中；如需删除旧文件请在下方勾选。</small>
+      </div>
+
+      <div class="form-group">
+        <label for="media_links">媒体链接（每行一个）</label>
+        <textarea id="media_links" name="media_links" class="form-control textarea-field" rows="4" placeholder="https://your-cdn.com/sample.jpg&#10;https://video.aliyun.com/clip.mp4">{{ remote_links_text }}</textarea>
+        <small>删除对应链接即可移除外链，支持 OSS、图床、短视频平台等公开链接。</small>
+      </div>
+
       {% set image_files = [] %}
       {% set video_files = [] %}
       {% set audio_files = [] %}
@@ -61,94 +71,102 @@
         {% endif %}
       {% endfor %}
 
-      {% if image_files %}
-        <h3>图片</h3>
-        <div class="media-container image-group">
-          {% for file in image_files %}
-          <div class="media-card media-image">
-            <img src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}" alt="{{ file }}">
-            <div class="delete-overlay">
-              <input type="checkbox" name="delete_files" value="{{ file }}" id="delete_img_{{ loop.index }}">
-              <label for="delete_img_{{ loop.index }}" class="delete-label">删除</label>
+      {% if image_files or video_files or audio_files or remote_media %}
+      <div class="media-review">
+        {% if image_files %}
+          <div>
+            <h3>图片</h3>
+            <div class="media-review-grid">
+              {% for file in image_files %}
+                <div class="card-tile media-preview">
+                  <img src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}" alt="{{ file }}">
+                  <label class="checkbox-chip compact">
+                    <input type="checkbox" name="delete_files" value="{{ file }}">
+                    <span>标记删除</span>
+                  </label>
+                </div>
+              {% endfor %}
             </div>
           </div>
-          {% endfor %}
-        </div>
-      {% endif %}
+        {% endif %}
 
-      {% if video_files %}
-        <h3>视频</h3>
-        <div class="media-container video-group">
-          {% for file in video_files %}
-          <div class="media-card media-video">
-            <video controls>
-              <source src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}"
-                      type="{{ 'video/mp4' if file.endswith('mp4') else 'video/webm' if file.endswith('webm') else 'video/quicktime' }}">
-            </video>
-            <div class="delete-overlay">
-              <input type="checkbox" name="delete_files" value="{{ file }}" id="delete_vid_{{ loop.index }}">
-              <label for="delete_vid_{{ loop.index }}" class="delete-label">删除</label>
+        {% if video_files %}
+          <div>
+            <h3>视频</h3>
+            <div class="media-review-grid">
+              {% for file in video_files %}
+                <div class="card-tile media-preview">
+                  <video controls preload="metadata">
+                    <source src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}"
+                            type="{{ 'video/mp4' if file.endswith('mp4') else 'video/webm' if file.endswith('webm') else 'video/quicktime' }}">
+                  </video>
+                  <label class="checkbox-chip compact">
+                    <input type="checkbox" name="delete_files" value="{{ file }}">
+                    <span>标记删除</span>
+                  </label>
+                </div>
+              {% endfor %}
             </div>
           </div>
-          {% endfor %}
-        </div>
-      {% endif %}
+        {% endif %}
 
-      {% if audio_files %}
-        <h3>音频</h3>
-        <div class="media-container audio-group">
-          {% for file in audio_files %}
-          <div class="media-card media-audio">
-            <audio controls>
-              <source src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}"
-                      type="{{ 'audio/mpeg' if file.endswith('mp3') else 'audio/wav' }}">
-            </audio>
-            <div class="delete-overlay">
-              <input type="checkbox" name="delete_files" value="{{ file }}" id="delete_aud_{{ loop.index }}">
-              <label for="delete_aud_{{ loop.index }}" class="delete-label">删除</label>
+        {% if audio_files %}
+          <div>
+            <h3>音频</h3>
+            <div class="media-review-grid">
+              {% for file in audio_files %}
+                <div class="card-tile media-preview">
+                  <audio controls preload="metadata">
+                    <source src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}"
+                            type="{{ 'audio/mpeg' if file.endswith('mp3') else 'audio/wav' }}">
+                  </audio>
+                  <label class="checkbox-chip compact">
+                    <input type="checkbox" name="delete_files" value="{{ file }}">
+                    <span>标记删除</span>
+                  </label>
+                </div>
+              {% endfor %}
             </div>
           </div>
-          {% endfor %}
-        </div>
-      {% endif %}
+        {% endif %}
 
-      {% if remote_media %}
-        <h3>外链媒体</h3>
-        <div class="media-container remote-group">
-          {% for item in remote_media %}
-            <div class="media-card remote-card remote-{{ item.type }}">
-              {% if item.type == 'image' %}
-                <img src="{{ item.url }}" alt="remote image preview">
-              {% elif item.type == 'video' %}
-                <video controls>
-                  <source src="{{ item.url }}">
-                </video>
-              {% elif item.type == 'audio' %}
-                <audio controls>
-                  <source src="{{ item.url }}">
-                </audio>
-              {% else %}
-                <a href="{{ item.url }}" target="_blank" rel="noopener">打开外链</a>
-              {% endif %}
-              <div class="remote-meta">
-                <span class="remote-tag">{{ item.type }}</span>
-                <a class="remote-link" href="{{ item.url }}" target="_blank" rel="noopener">{{ item.url }}</a>
-              </div>
+        {% if remote_media %}
+          <div>
+            <h3>外链媒体</h3>
+            <div class="media-review-grid">
+              {% for item in remote_media %}
+                <div class="card-tile media-preview">
+                  {% if item.type == 'image' %}
+                    <img src="{{ item.url }}" alt="remote image preview">
+                  {% elif item.type == 'video' %}
+                    <video controls preload="metadata">
+                      <source src="{{ item.url }}">
+                    </video>
+                  {% elif item.type == 'audio' %}
+                    <audio controls preload="metadata">
+                      <source src="{{ item.url }}">
+                    </audio>
+                  {% else %}
+                    <div class="chip-muted">外链 {{ item.type|capitalize }}</div>
+                  {% endif %}
+                  <a class="remote-url" href="{{ item.url }}" target="_blank" rel="noopener">{{ item.url }}</a>
+                </div>
+              {% endfor %}
             </div>
-          {% endfor %}
-        </div>
+          </div>
+        {% endif %}
+      </div>
       {% endif %}
-    </div>
 
-    <!-- 提交按钮 -->
-    <div class="form-group button-group">
-      <button type="submit" class="btn btn-primary">
-        <span class="btn-text">保存更改</span>
-        <span class="btn-icon">💾</span>
-      </button>
-      <a href="{{ url_for('neibr.post_detail', title=post.title) }}" class="btn btn-secondary">取消</a>
-    </div>
-  </form>
+      <div class="form-footer">
+        <a href="{{ url_for('neibr.post_detail', title=post.title) }}" class="glass-btn ghost align-left">取消</a>
+        <button type="submit" class="glass-btn">
+          <span class="btn-text">保存更改</span>
+          <span aria-hidden="true">💾</span>
+        </button>
+      </div>
+    </form>
+  </section>
 </div>
 
 <div class="form-overlay" id="edit-post-overlay" aria-hidden="true">
@@ -157,338 +175,16 @@
   </div>
 </div>
 
-<style>
-  @media (max-width: 768px) {
-  .media-image img {
-    max-height: 280px;
-  }
-}
-  .edit-card {
-    background-color: var(--card-bg-color);
-    border: 1px solid var(--card-border-color);
-    border-radius: 12px;
-    padding: 20px 30px;
-    max-width: 900px;
-    margin: 40px auto;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  .edit-card h1 {
-    font-size: 1.8rem;
-    color: var(--text-color);
-    margin-bottom: 25px;
-    text-align: center;
-  }
-
-  .form-group {
-    margin-bottom: 20px;
-  }
-
-  .form-group label {
-    display: block;
-    font-size: 1rem;
-    margin-bottom: 8px;
-    color: var(--text-color);
-  }
-
-  .form-control {
-    width: 100%;
-    padding: 10px 15px;
-    font-size: 1rem;
-    border: 1px solid var(--card-border-color);
-    border-radius: 8px;
-    background-color: var(--card-bg-color);
-    color: var(--text-color);
-  }
-
-  .form-control:focus {
-    border-color: #ff4d67;
-  }
-
-  .form-control-file {
-    padding: 5px 0;
-  }
-  .input-hint {
-    display: block;
-    margin-top: 6px;
-    font-size: 0.85rem;
-    color: var(--meta-text-color);
-  }
-
-  .hidden-checkbox {
-    display: flex;
-    align-items: center;
-  }
-
-  .hidden-checkbox input[type="checkbox"] {
-    margin-right: 10px;
-    width: 18px;
-    height: 18px;
-  }
-
-  .media-section h3 {
-    margin-top: 2rem;
-    font-size: 1.2rem;
-    color: var(--text-color);
-    border-bottom: 1px solid var(--card-border-color);
-    padding-bottom: 0.3rem;
-  }
-
-  .media-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-bottom: 20px;
-  }
-
-  .media-card {
-    position: relative;
-    border-radius: 8px;
-    overflow: hidden;
-    background: var(--card-bg-color);
-    border: 1px solid var(--card-border-color);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  }
-
-  .remote-card {
-    width: min(320px, 100%);
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .remote-card img,
-  .remote-card video {
-    width: 100%;
-    border-radius: 10px;
-    object-fit: cover;
-  }
-
-  .remote-card audio {
-    width: 100%;
-  }
-
-  .remote-card a {
-    text-decoration: none;
-  }
-
-  .remote-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .remote-tag {
-    align-self: flex-start;
-    background: #ff4d67;
-    color: #fff;
-    font-size: 0.75rem;
-    padding: 2px 8px;
-    border-radius: 999px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  [data-theme="dark"] .remote-tag {
-    background: #ff2442;
-  }
-
-  .remote-link {
-    word-break: break-all;
-    color: var(--link-color);
-    font-size: 0.85rem;
-  }
-
-.image-group {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 1rem;
-}
-
-.media-card.media-image {
-  position: relative;
-  background: var(--card-bg-color);
-  border: 1px solid var(--card-border-color);
-  border-radius: 12px;
-  overflow: hidden;
-  padding: 0.5rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.media-card.media-image img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-  object-fit: contain;
-  border-radius: 8px;
-  transition: transform 0.3s ease;
-}
-
-.media-card.media-image:hover img {
-  transform: scale(1.01);
-}
-
-/* 保持删除按钮悬浮样式不变 */
-.delete-overlay {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  background: rgba(0, 0, 0, 0.5);
-  padding: 3px 6px;
-  border-radius: 4px;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.media-card:hover .delete-overlay {
-  opacity: 1;
-}
-
-.delete-overlay input[type="checkbox"] {
-  display: none;
-}
-
-.delete-label {
-  color: #fff;
-  font-size: 0.9rem;
-  cursor: pointer;
-}
-
-.delete-overlay input[type="checkbox"]:checked + .delete-label {
-  color: #ff4d67;
-  font-weight: bold;
-}
-
-  .media-video video {
-    width: 300px;
-    height: auto;
-    display: block;
-  }
-
-  .media-audio {
-    width: 100%;
-    max-width: 600px;
-    padding: 10px;
-    display: flex;
-    align-items: center;
-  }
-
-  .media-audio audio {
-    flex-grow: 1;
-  }
-
-  .delete-overlay {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    background: rgba(0, 0, 0, 0.5);
-    padding: 3px 6px;
-    border-radius: 4px;
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-
-  .media-card:hover .delete-overlay {
-    opacity: 1;
-  }
-
-  .delete-overlay input[type="checkbox"] {
-    display: none;
-  }
-
-  .delete-label {
-    color: #fff;
-    font-size: 0.9rem;
-    cursor: pointer;
-  }
-
-  .delete-overlay input[type="checkbox"]:checked + .delete-label {
-    color: #ff4d67;
-    font-weight: bold;
-  }
-
-  .button-group {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-  }
-
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 24px;
-    font-size: 1rem;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.2s;
-    text-decoration: none;
-  }
-
-  .btn-primary {
-    background-color: #007bff;
-    color: #fff;
-  }
-
-  .btn-primary:hover {
-    background-color: #0056b3;
-    transform: translateY(-1px);
-  }
-
-  .btn-secondary {
-    background-color: #6c757d;
-    color: #fff;
-  }
-
-  .btn-secondary:hover {
-    background-color: #5a6268;
-    transform: translateY(-1px);
-  }
-
-  .btn-icon {
-    font-size: 1.1rem;
-  }
-
-  .form-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.55);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 1500;
-  }
-
-  .form-overlay.show {
-    display: flex;
-  }
-
-  .overlay-card {
-    width: min(320px, 88vw);
-    background: var(--card-bg-color);
-    border-radius: 18px;
-    padding: 26px;
-    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.28);
-    text-align: center;
-    color: var(--text-color);
-    font-size: 1rem;
-  }
-</style>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const form = document.querySelector('.edit-card form');
+  const form = document.getElementById('edit-post-form');
   const overlay = document.getElementById('edit-post-overlay');
   if (!form || !overlay) return;
 
   form.addEventListener('submit', () => {
     overlay.classList.add('show');
     overlay.setAttribute('aria-hidden', 'false');
-    const submitBtn = form.querySelector('button[type="submit"]');
+    const submitBtn = form.querySelector('button[type=\"submit\"]');
     if (submitBtn) {
       submitBtn.disabled = true;
       const text = submitBtn.querySelector('.btn-text');

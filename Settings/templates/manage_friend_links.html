@@ -1,189 +1,78 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="friend-links-container">
-  <h1 class="fl-heading">友链管理</h1>
+<div class="page-shell">
+  <section class="page-hero-card">
+    <div class="page-hero-main">
+      <span class="hero-badge">社交互链</span>
+      <h1 class="hero-title">友链管理</h1>
+      <p class="hero-subtitle">维护站点之间的互相引荐，打造温暖的博客邻里关系。</p>
+    </div>
+    <div class="page-hero-aside">
+      <div class="hero-stats">
+        <strong>{{ friend_links|length if friend_links else 0 }}</strong>
+        <span>当前友链</span>
+      </div>
+    </div>
+  </section>
 
-  <!-- 已有友链列表 -->
-  <div class="links-grid">
-    {% for link in friend_links %}
-    <div class="link-card">
-      <a href="{{ link.url }}" target="_blank" class="link-label">🔗 {{ link.label }}</a>
-      <form action="{{ url_for('setting.manage_friend_links') }}" method="POST" class="delete-form">
-        <input type="hidden" name="index" value="{{ loop.index0 }}">
-        <input type="hidden" name="action" value="delete">
-        <button type="submit" class="btn btn-delete" onclick="return confirm('确认删除链接 {{ link.label }}？');">删除</button>
-      </form>
+  <section class="card-panel">
+    <div class="card-panel-header">
+      <div>
+        <h2 class="card-panel-title">友链列表</h2>
+        <p class="card-panel-subtitle">点击名称即可访问，对方友链更新建议提前沟通确认。</p>
+      </div>
+    </div>
+
+    {% if friend_links %}
+    <div class="card-collection">
+      {% for link in friend_links %}
+      <article class="card-tile">
+        <div class="tile-body">
+          <a href="{{ link.url }}" target="_blank" rel="noopener" class="tile-title">🔗 {{ link.label }}</a>
+          <span class="tile-meta">{{ link.url }}</span>
+        </div>
+        <div class="tile-actions">
+          <form action="{{ url_for('setting.manage_friend_links') }}" method="POST" class="inline-form" onsubmit="return confirm('确认删除链接 {{ link.label }}？');">
+            <input type="hidden" name="index" value="{{ loop.index0 }}">
+            <input type="hidden" name="action" value="delete">
+            <button type="submit" class="glass-btn danger small">删除</button>
+          </form>
+        </div>
+      </article>
+      {% endfor %}
     </div>
     {% else %}
-    <p class="no-links">暂无友链，快去添加吧！</p>
-    {% endfor %}
-  </div>
+    <div class="empty-hint-card">
+      <strong>暂无友链</strong>
+      <p>可以先与对方博主沟通交换，再点击下方新增表单完成配置。</p>
+    </div>
+    {% endif %}
+  </section>
 
-  <!-- 添加新友链表单 -->
-  <div class="add-link-form">
-    <h2>添加友链</h2>
-    <form action="{{ url_for('setting.manage_friend_links') }}" method="POST">
-      <div class="form-field">
-        <label for="url">链接地址：</label>
-        <input type="url" name="url" id="url" class="input-field" placeholder="https://example.com" required>
+  <section class="card-panel form-card">
+    <div class="card-panel-header">
+      <div>
+        <h2 class="card-panel-title">添加友链</h2>
+        <p class="card-panel-subtitle">常规格式包含跳转地址与展示名称，保存后立即显示。</p>
       </div>
-      <div class="form-field">
-        <label for="label">链接名称：</label>
-        <input type="text" name="label" id="label" class="input-field" placeholder="Friend Name" required>
+    </div>
+    <form action="{{ url_for('setting.manage_friend_links') }}" method="POST" class="form-stack">
+      <div class="form-group">
+        <label for="fl-url">链接地址</label>
+        <input type="url" name="url" id="fl-url" class="form-control" placeholder="https://example.com" required>
       </div>
-      <button type="submit" class="btn btn-create">提交</button>
+      <div class="form-group">
+        <label for="fl-label">链接名称</label>
+        <input type="text" name="label" id="fl-label" class="form-control" placeholder="站点名称 / 昵称" required>
+      </div>
+      <div class="form-footer">
+        <button type="submit" class="glass-btn">
+          <span class="btn-text">提交</span>
+        </button>
+      </div>
     </form>
-  </div>
+  </section>
+
+  <a href="{{ url_for('setting.index') }}" class="glass-btn ghost">← 返回管理首页</a>
 </div>
-
-<a href="{{ url_for('setting.index') }}" class="back-link">返回管理首页</a>
-
-<style>
-.friend-links-container {
-  max-width: 800px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background: var(--canvas-bg);
-  border-radius: 8px;
-}
-
-.fl-heading {
-  font-size: 2.2rem;
-  color: var(--text-color);
-  text-align: center;
-  margin-bottom: 1.5rem;
-}
-
-.links-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.link-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--card-bg-color);
-  border: 1px solid var(--card-border-color);
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-  transition: box-shadow 0.3s ease;
-}
-.link-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.link-label {
-  color: var(--link-color);
-  text-decoration: none;
-  font-weight: bold;
-  transition: color 0.3s;
-}
-.link-label:hover {
-  color: var(--text-color);
-}
-
-.delete-form {
-  margin: 0;
-}
-
-.add-link-form {
-  background: var(--card-bg-color);
-  border: 1px solid var(--card-border-color);
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-}
-
-.add-link-form h2 {
-  margin-top: 0;
-  color: var(--text-color);
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid var(--card-border-color);
-  padding-bottom: 0.5rem;
-}
-
-.form-field {
-  margin-bottom: 1rem;
-}
-
-.form-field label {
-  display: block;
-  margin-bottom: 0.3rem;
-  color: var(--text-color);
-}
-
-.input-field {
-  width: 100%;
-  padding: 0.6rem 1rem;
-  border: 1px solid var(--input-border-color);
-  border-radius: 4px;
-  background: var(--input-bg-color);
-  transition: border-color 0.3s ease;
-}
-.input-field:focus {
-  outline: none;
-  border-color: var(--input-focus-border-color);
-}
-
-.btn {
-  cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.btn-create {
-  background: var(--btn-bg-color);
-  color: var(--btn-text-color);
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 4px;
-}
-.btn-create:hover {
-  background: var(--btn-hover-bg-color);
-}
-
-.btn-delete {
-  background: transparent;
-  border: 1px solid var(--btn-bg-color);
-  color: var(--btn-bg-color);
-  padding: 0.4rem 0.8rem;
-  border-radius: 4px;
-}
-.btn-delete:hover {
-  background: var(--btn-bg-color);
-  color: var(--btn-text-color);
-}
-
-.no-links {
-  text-align: center;
-  color: var(--meta-text-color);
-  font-style: italic;
-}
-
-.back-link {
-    display: block;
-    text-align: center;
-    margin-top: 20px;
-    color: var(--link-color); /* 使用全局链接颜色 */
-    text-decoration: none;
-    font-size: 1rem;
-    transition: color 0.3s ease;
-  }
-.back-link:hover {
-    color: var(--text-color); /* 悬停时使用全局文本颜色 */
-    text-decoration: underline;
-  }
-
-/* 响应式设计 */
-@media (max-width: 600px) {
-  .links-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
 {% endblock %}

@@ -1,16 +1,31 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="settings-container">
-  <header class="panel-head glass-card">
-    <div>
-      <p class="panel-badge">用户中心</p>
-      <h1>用户与权限管理</h1>
-      <p class="panel-sub">查看、编辑或删除账户，对管理员角色保持精细控制。</p>
+<div class="page-shell">
+  <section class="page-hero-card">
+    <div class="page-hero-main">
+      <span class="hero-badge">用户中心</span>
+      <h1 class="hero-title">用户与权限管理</h1>
+      <p class="hero-subtitle">查看后台账号、调整管理员权限，保障站点安全运营。</p>
     </div>
-    <a href="{{ url_for('setting.add_user') }}" class="primary-btn">➕ 新增用户</a>
-  </header>
+    <div class="page-hero-aside">
+      <div class="hero-stats">
+        <strong>{{ users|length if users else 0 }}</strong>
+        <span>注册用户</span>
+      </div>
+    </div>
+  </section>
 
-  <article class="glass-card table-wrapper">
+  <section class="card-panel table-card">
+    <div class="card-panel-header">
+      <div>
+        <h2 class="card-panel-title">账号列表</h2>
+        <p class="card-panel-subtitle">支持快速编辑或删除用户，管理员状态以徽章形式展示。</p>
+      </div>
+      <div class="card-panel-actions">
+        <a href="{{ url_for('setting.add_user') }}" class="glass-btn small">＋ 新增用户</a>
+      </div>
+    </div>
+
     <div class="table-scroll">
       <table class="modern-table">
         <thead>
@@ -34,9 +49,9 @@
               </span>
             </td>
             <td class="action-cell">
-              <a href="{{ url_for('setting.edit_user', user_id=user.id) }}" class="ghost-btn">编辑</a>
-              <form action="{{ url_for('setting.delete_user', user_id=user.id) }}" method="POST" onsubmit="return confirm('确定删除该用户吗？');">
-                <button type="submit" class="danger-btn">删除</button>
+              <a href="{{ url_for('setting.edit_user', user_id=user.id) }}" class="glass-btn ghost small">编辑</a>
+              <form action="{{ url_for('setting.delete_user', user_id=user.id) }}" method="POST" class="inline-form" onsubmit="return confirm('确定删除该用户吗？');">
+                <button type="submit" class="glass-btn danger small">删除</button>
               </form>
             </td>
           </tr>
@@ -44,212 +59,8 @@
         </tbody>
       </table>
     </div>
-  </article>
+  </section>
 
-  <footer class="panel-footer">
-    <a href="{{ url_for('setting.index') }}" class="ghost-btn">← 返回后台首页</a>
-  </footer>
-</section>
-
-<style>
-.settings-container {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: clamp(1.5rem, 4vw, 2.5rem);
-  display: grid;
-  gap: clamp(1.2rem, 3vw, 2rem);
-}
-
-.glass-card {
-  background: rgba(255, 255, 255, 0.75);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.08);
-  backdrop-filter: blur(18px);
-  padding: clamp(1.6rem, 3vw, 2.2rem);
-}
-
-[data-theme="dark"] .glass-card {
-  background: rgba(15, 23, 42, 0.68);
-  border-color: rgba(148, 163, 184, 0.22);
-  box-shadow: 0 28px 56px rgba(2, 6, 23, 0.6);
-}
-
-.panel-head {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: clamp(1rem, 3vw, 1.6rem);
-}
-
-.panel-badge {
-  margin: 0;
-  font-size: 0.75rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(37, 99, 235, 0.78);
-}
-
-.panel-head h1 {
-  margin: 0.35rem 0 0.5rem;
-  font-size: clamp(1.8rem, 4vw, 2.4rem);
-  color: var(--text-color);
-}
-
-.panel-sub {
-  margin: 0;
-  color: rgba(15, 23, 42, 0.68);
-}
-
-[data-theme="dark"] .panel-sub {
-  color: rgba(226, 232, 240, 0.68);
-}
-
-.primary-btn,
-.ghost-btn,
-.danger-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.6rem 1.2rem;
-  border-radius: 12px;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  border: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.primary-btn {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  color: #fff;
-  box-shadow: 0 18px 30px rgba(37, 99, 235, 0.25);
-}
-
-.primary-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 24px 34px rgba(37, 99, 235, 0.32);
-}
-
-.ghost-btn {
-  background: rgba(37, 99, 235, 0.12);
-  color: #1d4ed8;
-}
-
-[data-theme="dark"] .ghost-btn {
-  background: rgba(148, 163, 184, 0.18);
-  color: #cbd5f5;
-}
-
-.ghost-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 26px rgba(37, 99, 235, 0.18);
-}
-
-.danger-btn {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.25);
-}
-
-.danger-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 26px rgba(239, 68, 68, 0.22);
-}
-
-.table-wrapper {
-  padding: 0;
-}
-
-.table-scroll {
-  overflow-x: auto;
-  border-radius: 20px;
-}
-
-.modern-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 680px;
-}
-
-.modern-table thead tr {
-  background: rgba(37, 99, 235, 0.12);
-}
-
-.modern-table th,
-.modern-table td {
-  padding: 1rem;
-  text-align: center;
-  color: var(--text-color);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-}
-
-.modern-table tbody tr:hover {
-  background: rgba(59, 130, 246, 0.08);
-}
-
-.tag {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.2rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.85rem;
-}
-
-.tag-success {
-  background: rgba(34, 197, 94, 0.18);
-  color: #15803d;
-}
-
-.tag-muted {
-  background: rgba(148, 163, 184, 0.24);
-  color: rgba(71, 85, 105, 0.75);
-}
-
-[data-theme="dark"] .tag-muted {
-  background: rgba(71, 85, 105, 0.35);
-  color: rgba(226, 232, 240, 0.7);
-}
-
-.action-cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-}
-
-.action-cell form {
-  display: inline-flex;
-}
-
-.panel-footer {
-  display: flex;
-  justify-content: flex-end;
-}
-
-@media (max-width: 768px) {
-  .settings-hero {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .hero-actions {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .link-grid,
-  .link-grid.admin,
-  .stats-deck,
-  .modern-table {
-    grid-template-columns: 1fr;
-  }
-
-  .table-scroll {
-    border-radius: 16px;
-  }
-}
-</style>
+  <a href="{{ url_for('setting.index') }}" class="glass-btn ghost">← 返回管理首页</a>
+</div>
 {% endblock %}
