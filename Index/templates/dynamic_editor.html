@@ -1,4 +1,17 @@
 {% extends 'base.html' %}
+{% set type_options = ['title','text','link','quote','code','image','gallery','flipcard','faq','html'] %}
+{% set type_labels = {
+  'title': '标题',
+  'text': '段落',
+  'link': '链接',
+  'quote': '引用',
+  'code': '代码块',
+  'image': '单图',
+  'gallery': '图集',
+  'flipcard': '翻转卡片',
+  'faq': '问答',
+  'html': '原生 HTML'
+} %}
 {% block content %}
 <div class="editor-shell">
   <section class="card-panel editor-hero">
@@ -86,12 +99,20 @@
     <div class="element-body" id="body-__IDX__">
       <div class="control-group select-row">
         <label>组件类型</label>
-        <div class="select-wrap">
-          <select name="elements-__IDX__-type" class="select-field" onchange="toggleExtra(__IDX__)">
-            {% for opt in ['title','text','link','quote','code','image','gallery','flipcard','faq','html'] %}
-            <option value="{{ opt }}">{{ opt }}</option>
+        <div class="type-picker" data-type-picker data-index="__IDX__">
+          <input type="hidden" name="elements-__IDX__-type" value="title">
+          <div class="type-chip-grid">
+            {% for opt in type_options %}
+            <button type="button"
+                    class="type-chip{% if opt == 'title' %} is-active{% endif %}"
+                    data-type-option
+                    data-value="{{ opt }}"
+                    aria-pressed="{{ 'true' if opt == 'title' else 'false' }}">
+              <span class="type-chip-label">{{ type_labels[opt] }}</span>
+              <span class="type-chip-key">{{ opt }}</span>
+            </button>
             {% endfor %}
-          </select>
+          </div>
         </div>
       </div>
       <div id="main-__IDX__" class="element-fields"></div>
@@ -115,6 +136,47 @@
 
   const DEFAULT_PREVIEW_COPY = '未填写内容';
 
+  function getTypeInput(card) {
+    return card ? card.querySelector('[name$="-type"]') : null;
+  }
+
+  function syncTypePicker(card, activeValue) {
+    if (!card) return;
+    const input = getTypeInput(card);
+    const picker = card.querySelector('[data-type-picker]');
+    if (!input || !picker) return;
+
+    const current = activeValue || input.value;
+    picker.dataset.index = card.dataset.index;
+
+    picker.querySelectorAll('[data-type-option]').forEach((btn) => {
+      const isActive = btn.dataset.value === current;
+      btn.classList.toggle('is-active', isActive);
+      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
+  }
+
+  document.addEventListener('click', (event) => {
+    const option = event.target.closest('[data-type-option]');
+    if (!option) return;
+    const picker = option.closest('[data-type-picker]');
+    if (!picker) return;
+    const index = picker.dataset.index;
+    const card = document.querySelector(`.element-card[data-index='${index}']`);
+    if (!card) return;
+    const input = getTypeInput(card);
+    if (!input) return;
+
+    const nextValue = option.dataset.value;
+    if (input.value === nextValue) {
+      return;
+    }
+
+    input.value = nextValue;
+    syncTypePicker(card, nextValue);
+    toggleExtra(Number(index));
+  });
+
   function padIndex(num) {
     return String(num).padStart(2, '0');
   }
@@ -137,14 +199,17 @@
         el.id = el.id.replace(`-${oldIdx}`, `-${newIdx}`);
       });
 
-      const sel = card.querySelector('select');
-      if (sel) sel.setAttribute('onchange', `toggleExtra(${newIdx})`);
+      const picker = card.querySelector('[data-type-picker]');
+      if (picker) {
+        picker.dataset.index = newIdx;
+      }
 
       const indexLabel = card.querySelector('[data-role="index"]');
       if (indexLabel) indexLabel.textContent = `#${padIndex(newIdx)}`;
 
       updateTypeLabel(card);
       updatePreview(card);
+      syncTypePicker(card);
     });
 
     document.getElementById('elements_count').value = cards.length;
@@ -169,6 +234,7 @@
 
     const card = document.querySelector(`.element-card[data-index='${idx}']`);
     if (card) {
+      syncTypePicker(card, sel ? sel.value : '');
       updateTypeLabel(card, sel ? sel.value : '');
       updatePreview(card);
     }
@@ -197,12 +263,13 @@
       container.appendChild(card);
     }
 
-    const select = card.querySelector('select');
-    if (select && preset.type) {
-      select.value = preset.type;
+    const typeInput = getTypeInput(card);
+    if (typeInput && preset.type) {
+      typeInput.value = preset.type;
     }
 
     toggleExtra(idx);
+    syncTypePicker(card);
 
     if (preset.fields) {
       applyPresetFields(card, preset.fields, idx);
@@ -276,9 +343,9 @@
   function duplicate(idx) {
     const card = document.querySelector(`.element-card[data-index='${idx}']`);
     if (!card) return;
-    const select = card.querySelector('select');
+    const typeInput = getTypeInput(card);
     const preset = {
-      type: select ? select.value : 'title',
+      type: typeInput ? typeInput.value : 'title',
       fields: collectFields(card),
       insertAfter: card
     };
@@ -288,8 +355,8 @@
   function updateTypeLabel(card, providedType) {
     const label = card.querySelector('[data-role="type-label"]');
     if (!label) return;
-    const select = card.querySelector('select');
-    const type = providedType || (select ? select.value : '');
+    const typeInput = getTypeInput(card);
+    const type = providedType || (typeInput ? typeInput.value : '');
     label.dataset.type = type;
     label.textContent = TYPE_LABEL_MAP[type] || type || '模块';
   }
@@ -303,8 +370,8 @@
   function updatePreview(card) {
     const previewEl = card.querySelector('[data-role="preview"]');
     if (!previewEl) return;
-    const select = card.querySelector('select');
-    const type = select ? select.value : '';
+    const typeInput = getTypeInput(card);
+    const type = typeInput ? typeInput.value : '';
 
     const pickValue = suffix => {
       const field = card.querySelector(`[name$='-${suffix}']`);
@@ -408,7 +475,6 @@
     container.addEventListener('change', event => {
       const target = event.target;
       if (!target.closest('.element-card')) return;
-      if (target.matches('select[name^="elements-"][name$="-type"]')) return;
       const card = target.closest('.element-card');
       updatePreview(card);
     });
@@ -420,6 +486,7 @@
       }
       updateTypeLabel(card);
       updatePreview(card);
+      syncTypePicker(card);
     });
   });
 </script>

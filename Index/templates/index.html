@@ -15,10 +15,32 @@
   {% if quick_links %}
     <section class="quick-grid">
       {% for link in quick_links %}
-        <a href="{{ link.url }}" class="quick-card">
-          <img src="{{ link.icon }}" alt="{{ link.label }}" class="quick-icon">
-          <span class="quick-label">{{ link.label }}</span>
-        </a>
+        <article class="quick-card">
+          <a href="{{ link.url }}" class="quick-card-link" target="_blank" rel="noopener">
+            {% if link.icon %}
+              <img src="{{ link.icon }}" alt="{{ link.label }}" class="quick-icon">
+            {% else %}
+              <div class="quick-icon quick-icon-fallback" aria-hidden="true">
+                {{ link.label[:1]|upper }}
+              </div>
+            {% endif %}
+            <span class="quick-label">{{ link.label }}</span>
+          </a>
+          {% if link.summary or link.children %}
+          <div class="quick-card-pop">
+            {% if link.summary %}
+            <p class="quick-card-summary">{{ link.summary | e | replace('\n', '<br>') | safe }}</p>
+            {% endif %}
+            {% if link.children %}
+            <div class="quick-card-sub">
+              {% for child in link.children %}
+              <a href="{{ child.url }}" class="quick-sub-link" target="_blank" rel="noopener">{{ child.label }}</a>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          {% endif %}
+        </article>
       {% endfor %}
     </section>
   {% endif %}

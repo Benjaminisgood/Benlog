@@ -70,12 +70,20 @@
   <div class="element-body" id="body-{{ idx }}">
     <div class="control-group select-row">
       <label>组件类型</label>
-      <div class="select-wrap">
-        <select name="elements-{{ idx }}-type" class="select-field" onchange="toggleExtra({{ idx }})">
+      <div class="type-picker" data-type-picker data-index="{{ idx }}">
+        <input type="hidden" name="elements-{{ idx }}-type" value="{{ comp.type }}">
+        <div class="type-chip-grid">
           {% for opt in ['title','text','link','quote','code','image','gallery','flipcard','faq','html'] %}
-          <option value="{{ opt }}" {% if comp.type==opt %}selected{% endif %}>{{ opt }}</option>
+          <button type="button"
+                  class="type-chip{% if comp.type==opt %} is-active{% endif %}"
+                  data-type-option
+                  data-value="{{ opt }}"
+                  aria-pressed="{{ 'true' if comp.type==opt else 'false' }}">
+            <span class="type-chip-label">{{ type_labels.get(opt, opt) }}</span>
+            <span class="type-chip-key">{{ opt }}</span>
+          </button>
           {% endfor %}
-        </select>
+        </div>
       </div>
     </div>
 

@@ -216,6 +216,21 @@ def resolve_visible_post(post_id: int) -> Optional[Post]:
     return post
 
 
+def _clean_summary_text(text: str) -> str:
+    """轻量清洗 Markdown / HTML，压缩空白。"""
+    if not text:
+        return ''
+    # 链接语法 -> 文本
+    text = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'\1', text)
+    # 行内代码/粗体/标题标记
+    text = re.sub(r'[`*_#>]+', ' ', text)
+    # HTML 标签
+    text = re.sub(r'<[^>]+>', ' ', text)
+    # 图片语法
+    text = re.sub(r'!\s*\[[^\]]*\]\s*\([^)]*\)', ' ', text)
+    return re.sub(r'\s+', ' ', text).strip()
+
+
 def extract_post_summary(post: Post, limit: int = 140) -> str:
     """读取帖子文本生成摘要，用于列表页卡片展示。"""
     folder = get_post_folder(post)
@@ -225,10 +240,20 @@ def extract_post_summary(post: Post, limit: int = 140) -> str:
     with open(text_path, 'r') as f:
         raw = f.read()
     meta, body = parse_post_file(raw)
-    snippet_source = body or raw
-    if not snippet_source:
+    body = body.strip()
+
+    if body:
+        snippet_source = body
+    else:
+        snippet_source = meta.get('Summary') or meta.get('Excerpt') or ''
+        if not snippet_source:
+            author = meta.get('Author') or '邻居'
+            created = post.creation_time.strftime('%Y-%m-%d %H:%M')
+            snippet_source = f"{author} · 发布于 {created}"
+
+    snippet = _clean_summary_text(snippet_source)
+    if not snippet:
         return ''
-    snippet = re.sub(r'\s+', ' ', snippet_source.strip())
     if len(snippet) <= limit:
         return snippet
     return snippet[:limit].rstrip() + '…'

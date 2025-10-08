@@ -519,23 +519,58 @@ def save_quick_links(links):
 def manage_quick_links():
     quick_links = load_quick_links()  # Load the quick links
 
-    # Handle form submission for adding or deleting quick links
+    # Handle form submission for adding, updating or deleting quick links
     if request.method == 'POST':
         action = request.form.get('action')
-        index = request.form.get('index')
-        url = request.form.get('url')
-        label = request.form.get('label')
-        icon = request.form.get('icon')
+        index_raw = request.form.get('index', '')
+        try:
+            index = int(index_raw) if index_raw not in (None, '') else None
+        except ValueError:
+            index = None
+
+        url = (request.form.get('url') or '').strip()
+        label = (request.form.get('label') or '').strip()
+        icon = (request.form.get('icon') or '').strip()
+        summary = (request.form.get('summary') or '').strip()
+        child_labels = [item.strip() for item in request.form.getlist('child_label[]')]
+        child_urls = [item.strip() for item in request.form.getlist('child_url[]')]
 
         if action == 'delete' and index is not None:  # Handle delete
-            index = int(index)
             if 0 <= index < len(quick_links):
                 quick_links.pop(index)  # Remove the link at the specified index
                 save_quick_links(quick_links)  # Save the updated list
 
-        elif url and label:  # Handle add
-            quick_links.append({"url": url, "label": label, "icon": icon})
-            save_quick_links(quick_links)  # Save the updated list
+        elif action in ('add', 'update'):
+            if not url or not label:
+                flash('链接地址和名称均为必填项。', 'error')
+                return redirect(url_for('setting.manage_quick_links'))
+
+            child_pairs = []
+            for lbl, href in zip(child_labels, child_urls):
+                if lbl and href:
+                    child_pairs.append({"label": lbl, "url": href})
+                if len(child_pairs) >= 6:
+                    break
+
+            payload = {
+                "url": url,
+                "label": label,
+                "icon": icon,
+            }
+            if summary:
+                payload["summary"] = summary
+            if child_pairs:
+                payload["children"] = child_pairs
+
+            if action == 'add':
+                quick_links.append(payload)
+                save_quick_links(quick_links)
+            elif action == 'update' and index is not None and 0 <= index < len(quick_links):
+                quick_links[index] = payload
+                save_quick_links(quick_links)
+            else:
+                flash('未找到需要更新的快捷链接。', 'warning')
+                return redirect(url_for('setting.manage_quick_links'))
 
         return redirect(url_for('setting.manage_quick_links'))  # Redirect to avoid resubmission
 

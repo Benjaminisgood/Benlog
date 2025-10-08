@@ -19,7 +19,7 @@
     <div class="card-panel-header">
       <div>
         <h2 class="card-panel-title">快捷入口列表</h2>
-        <p class="card-panel-subtitle">支持图标 URL、自定义标题与目标地址，删除操作会立即生效。</p>
+        <p class="card-panel-subtitle">支持图标、概要与子链接管理，鼠标悬停可预览详情，删除操作会立即生效。</p>
       </div>
       <div class="card-panel-actions">
         <button type="button" class="glass-btn small" data-quick-link-open>＋ 添加快捷链接</button>
@@ -29,7 +29,7 @@
     {% if quick_links %}
     <div class="card-collection compact">
       {% for link in quick_links %}
-      <article class="card-tile icon-tile">
+      <article class="card-tile icon-tile quick-link-item" data-hover-card>
         <div class="icon-avatar" aria-hidden="true">
           {% if link.icon %}
             <img src="{{ link.icon }}" alt="{{ link.label }}">
@@ -42,11 +42,32 @@
           <span class="tile-meta">{{ link.url }}</span>
         </div>
         <div class="tile-actions">
+          <button type="button"
+                  class="glass-btn ghost small"
+                  data-quick-link-edit
+                  data-index="{{ loop.index0 }}"
+                  data-link='{{ link|tojson|e }}'>
+            编辑
+          </button>
           <form action="{{ url_for('setting.manage_quick_links') }}" method="POST" class="inline-form" onsubmit="return confirm('确认删除快捷链接 {{ link.label }}？');">
             <input type="hidden" name="index" value="{{ loop.index0 }}">
             <input type="hidden" name="action" value="delete">
             <button type="submit" class="glass-btn danger small">删除</button>
           </form>
+        </div>
+        <div class="link-hover-card" role="note">
+          {% if link.summary %}
+          <p class="link-summary-text">{{ link.summary | e | replace('\n', '<br>') | safe }}</p>
+          {% else %}
+          <p class="link-summary-text muted">暂无概要，点击卡片快速访问。</p>
+          {% endif %}
+          {% if link.children %}
+          <div class="link-sub-links">
+            {% for child in link.children %}
+            <a href="{{ child.url }}" target="_blank" rel="noopener" class="link-sub-chip">{{ child.label }}</a>
+            {% endfor %}
+          </div>
+          {% endif %}
         </div>
       </article>
       {% endfor %}
@@ -66,6 +87,7 @@
   <div class="overlay-card">
     <form action="{{ url_for('setting.manage_quick_links') }}" method="POST" class="form-stack" id="quick-link-form">
       <input type="hidden" name="action" value="add">
+      <input type="hidden" name="index" value="">
       <div class="form-group">
         <label for="ql-url">链接地址</label>
         <input type="url" id="ql-url" name="url" class="form-control" placeholder="https://example.com" required>
@@ -77,6 +99,17 @@
       <div class="form-group">
         <label for="ql-icon">图标 URL</label>
         <input type="url" id="ql-icon" name="icon" class="form-control" placeholder="https://example.com/icon.png" required>
+      </div>
+      <div class="form-group">
+        <label for="ql-summary">链接概要（可选）</label>
+        <textarea id="ql-summary" name="summary" class="textarea-field" rows="3" placeholder="简要描述此链接的作用，支持换行"></textarea>
+        <small>填写后，悬停卡片即可看到简介。</small>
+      </div>
+      <div class="form-group">
+        <label>附加子链接（可选）</label>
+        <div class="child-links" data-child-links></div>
+        <button type="button" class="glass-btn ghost small" data-child-add>＋ 添加子链接</button>
+        <small>用于补充二级跳转，如帮助文档、后台入口。最多 6 条。</small>
       </div>
       <div class="form-footer">
         <button type="button" class="glass-btn ghost" data-quick-link-close>取消</button>
@@ -93,33 +126,144 @@
   const overlay = document.getElementById('quick-link-overlay');
   const form = document.getElementById('quick-link-form');
   const openBtn = document.querySelector('[data-quick-link-open]');
-  const closeButtons = overlay ? overlay.querySelectorAll('[data-quick-link-close]') : [];
   const urlInput = document.getElementById('ql-url');
+  const labelInput = document.getElementById('ql-label');
+  const iconInput = document.getElementById('ql-icon');
+  const summaryField = document.getElementById('ql-summary');
+  const closeButtons = overlay ? overlay.querySelectorAll('[data-quick-link-close]') : [];
+  const childContainer = form ? form.querySelector('[data-child-links]') : null;
+  const addChildBtn = form ? form.querySelector('[data-child-add]') : null;
+  const actionInput = form ? form.querySelector('input[name="action"]') : null;
+  const indexInput = form ? form.querySelector('input[name="index"]') : null;
+  const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+  const MAX_CHILDREN = 6;
+  const defaultBtnText = {
+    add: '提交',
+    update: '保存更改',
+    addSubmitting: '提交中...',
+    updateSubmitting: '保存中...'
+  };
 
-  if (!overlay || !form || !openBtn) {
+  if (!overlay || !form || !openBtn || !childContainer || !addChildBtn || !actionInput || !indexInput || !submitBtn) {
     return;
   }
 
-  const openOverlay = () => {
+  const editButtons = document.querySelectorAll('[data-quick-link-edit]');
+
+  function renderChildRow(data = {}) {
+    const row = document.createElement('div');
+    row.className = 'child-link-row';
+
+    const label = document.createElement('input');
+    label.type = 'text';
+    label.name = 'child_label[]';
+    label.className = 'input-field';
+    label.placeholder = '显示名称';
+    label.value = data.label || '';
+
+    const url = document.createElement('input');
+    url.type = 'url';
+    url.name = 'child_url[]';
+    url.className = 'input-field';
+    url.placeholder = 'https://example.com';
+    url.value = data.url || '';
+
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'icon-btn ghost';
+    remove.dataset.childRemove = 'true';
+    remove.setAttribute('aria-label', '移除子链接');
+    remove.innerHTML = '&times;';
+
+    row.append(label, url, remove);
+    return row;
+  }
+
+  function syncChildButtons() {
+    const count = childContainer.querySelectorAll('.child-link-row').length;
+    addChildBtn.disabled = count >= MAX_CHILDREN;
+  }
+
+  function clearChildren() {
+    childContainer.innerHTML = '';
+    syncChildButtons();
+  }
+
+  function setMode(mode) {
+    const submitText = submitBtn.querySelector('.btn-text');
+    actionInput.value = mode === 'update' ? 'update' : 'add';
+    if (submitText) {
+      submitText.textContent = mode === 'update' ? defaultBtnText.update : defaultBtnText.add;
+    }
+  }
+
+  function addChildRow(data = {}) {
+    if (childContainer.querySelectorAll('.child-link-row').length >= MAX_CHILDREN) {
+      return;
+    }
+    const row = renderChildRow(data);
+    childContainer.appendChild(row);
+    syncChildButtons();
+  }
+
+  function populateForm(payload) {
+    if (!payload) return;
+    urlInput.value = payload.url || '';
+    labelInput.value = payload.label || '';
+    iconInput.value = payload.icon || '';
+    summaryField.value = payload.summary || '';
+    if (Array.isArray(payload.children)) {
+      payload.children.forEach(child => addChildRow(child));
+    }
+    syncChildButtons();
+  }
+
+  function openOverlay(mode = 'add', payload = null, indexValue = null) {
+    form.reset();
+    clearChildren();
+    setMode(mode);
+    indexInput.value = indexValue !== null && indexValue !== undefined ? indexValue : '';
+    if (payload) {
+      populateForm(payload);
+    }
     overlay.classList.add('show');
     overlay.setAttribute('aria-hidden', 'false');
+    submitBtn.disabled = false;
+    overlay.scrollTop = 0;
+    const overlayCard = overlay.querySelector('.overlay-card');
+    if (overlayCard) {
+      overlayCard.scrollTop = 0;
+    }
     requestAnimationFrame(() => urlInput?.focus());
-  };
+  }
 
-  const closeOverlay = () => {
+  function closeOverlay() {
     overlay.classList.remove('show');
     overlay.setAttribute('aria-hidden', 'true');
     form.reset();
-    const submitBtn = form.querySelector('button[type="submit"]');
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      const text = submitBtn.querySelector('.btn-text');
-      if (text) text.textContent = '提交';
-    }
-  };
+    clearChildren();
+    setMode('add');
+    indexInput.value = '';
+    submitBtn.disabled = false;
+    overlay.scrollTop = 0;
+  }
 
-  openBtn.addEventListener('click', openOverlay);
-  closeButtons.forEach((btn) => btn.addEventListener('click', closeOverlay));
+  openBtn.addEventListener('click', () => openOverlay('add'));
+
+  editButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      let payload = {};
+      try {
+        payload = JSON.parse(btn.dataset.link || '{}');
+      } catch (error) {
+        payload = {};
+      }
+      const idx = btn.dataset.index;
+      openOverlay('update', payload, idx !== undefined ? idx : null);
+    });
+  });
+
+  closeButtons.forEach(btn => btn.addEventListener('click', closeOverlay));
 
   overlay.addEventListener('click', (event) => {
     if (event.target === overlay) {
@@ -133,14 +277,28 @@
     }
   });
 
-  form.addEventListener('submit', () => {
-    const submitBtn = form.querySelector('button[type="submit"]');
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      const text = submitBtn.querySelector('.btn-text');
-      if (text) text.textContent = '提交中...';
+  addChildBtn.addEventListener('click', () => addChildRow());
+
+  childContainer.addEventListener('click', (event) => {
+    const trigger = event.target.closest('[data-child-remove]');
+    if (!trigger) return;
+    const row = trigger.closest('.child-link-row');
+    if (row) {
+      row.remove();
+      syncChildButtons();
     }
   });
+
+  form.addEventListener('submit', () => {
+    submitBtn.disabled = true;
+    const submitText = submitBtn.querySelector('.btn-text');
+    const mode = actionInput.value === 'update' ? 'update' : 'add';
+    if (submitText) {
+      submitText.textContent = mode === 'update' ? defaultBtnText.updateSubmitting : defaultBtnText.addSubmitting;
+    }
+  });
+
+  syncChildButtons();
 })();
 </script>
 {% endblock %}
