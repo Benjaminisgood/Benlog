@@ -1,6 +1,7 @@
 <article class="content-card"
-         onclick="window.location.href='{{ item.url }}'"
-         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.location.href='{{ item.url }}';}"
+         data-url="{{ item.url }}"
+         onclick="window.location.href=this.dataset.url"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.location.href=this.dataset.url;}"
          role="button"
          tabindex="0"
          aria-label="{{ item.title }}">
