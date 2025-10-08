@@ -41,7 +41,84 @@
 
 {% include 'partials/editor/_editor_templates.html' %}
 
+<template id="element-card-template">
+  <div class="element-card" data-index="__IDX__">
+    <div class="element-head">
+      <div class="element-meta">
+        <span class="element-index" data-role="index">#__IDX_PAD__</span>
+        <span class="element-type-badge" data-role="type-label" data-type="title">标题</span>
+        <span class="element-preview muted" data-role="preview">未填写内容</span>
+      </div>
+      <div class="element-actions">
+        <button type="button"
+                class="icon-btn ghost"
+                data-action="collapse"
+                aria-expanded="true"
+                title="展开/收起">
+          <span class="icon-chevron"></span>
+        </button>
+        <button type="button"
+                class="icon-btn"
+                data-action="duplicate"
+                title="复制此模块">
+          复制
+        </button>
+        <button type="button"
+                class="icon-btn"
+                data-action="move-up"
+                title="上移">
+          ↑
+        </button>
+        <button type="button"
+                class="icon-btn"
+                data-action="move-down"
+                title="下移">
+          ↓
+        </button>
+        <button type="button"
+                class="icon-btn danger"
+                data-action="remove"
+                title="删除">
+          删除
+        </button>
+      </div>
+    </div>
+    <div class="element-body" id="body-__IDX__">
+      <div class="control-group select-row">
+        <label>组件类型</label>
+        <div class="select-wrap">
+          <select name="elements-__IDX__-type" class="select-field" onchange="toggleExtra(__IDX__)">
+            {% for opt in ['title','text','link','quote','code','image','gallery','flipcard','faq','html'] %}
+            <option value="{{ opt }}">{{ opt }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div id="main-__IDX__" class="element-fields"></div>
+    </div>
+  </div>
+</template>
+
 <script>
+  const TYPE_LABEL_MAP = {
+    title: '标题',
+    text: '段落',
+    link: '链接',
+    quote: '引用',
+    code: '代码块',
+    image: '单图',
+    gallery: '图集',
+    flipcard: '翻转卡片',
+    faq: '问答',
+    html: '原生 HTML'
+  };
+
+  const DEFAULT_PREVIEW_COPY = '未填写内容';
+
+  function padIndex(num) {
+    return String(num).padStart(2, '0');
+  }
+
   function reindex() {
     const container = document.getElementById('elements-container');
     const cards = container.querySelectorAll('.element-card');
@@ -63,11 +140,11 @@
       const sel = card.querySelector('select');
       if (sel) sel.setAttribute('onchange', `toggleExtra(${newIdx})`);
 
-      card.querySelectorAll('.element-actions button').forEach(btn => {
-        if (btn.textContent.includes('上移'))    btn.setAttribute('onclick', `move(${newIdx}, 'up')`);
-        else if (btn.textContent.includes('下移')) btn.setAttribute('onclick', `move(${newIdx}, 'down')`);
-        else if (btn.textContent.includes('删除')) btn.setAttribute('onclick', `remove(${newIdx})`);
-      });
+      const indexLabel = card.querySelector('[data-role="index"]');
+      if (indexLabel) indexLabel.textContent = `#${padIndex(newIdx)}`;
+
+      updateTypeLabel(card);
+      updatePreview(card);
     });
 
     document.getElementById('elements_count').value = cards.length;
@@ -83,38 +160,97 @@
     const main = document.getElementById(`main-${idx}`);
     if (sel && main) {
       main.innerHTML = getTemplate(sel.value, idx);
+
+      const firstField = main.querySelector('[name]');
+      if (firstField) {
+        requestAnimationFrame(() => firstField.focus());
+      }
+    }
+
+    const card = document.querySelector(`.element-card[data-index='${idx}']`);
+    if (card) {
+      updateTypeLabel(card, sel ? sel.value : '');
+      updatePreview(card);
     }
   }
 
-  function add() {
+  function renderCardFromTemplate(idx) {
+    const tpl = document.getElementById('element-card-template');
+    if (!tpl) return null;
+    const html = tpl.innerHTML
+      .replace(/__IDX__/g, idx)
+      .replace(/__IDX_PAD__/g, padIndex(idx));
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = html.trim();
+    return wrapper.firstElementChild;
+  }
+
+  function add(preset = {}) {
     const container = document.getElementById('elements-container');
     const idx = container.children.length + 1;
-    const card = document.createElement('div');
-    card.className = 'element-card';
-    card.dataset.index = idx;
-    card.innerHTML = `
-      <div class="control-group">
-        <label>类型：</label>
-        <select name="elements-${idx}-type" class="select-field" onchange="toggleExtra(${idx})">
-          {% for opt in ['title','text','link','quote','code','image','gallery','flipcard','faq','html'] %}
-          <option value="{{ opt }}">{{ opt }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div id="main-${idx}" class="control-group"></div>
-      <div class="element-actions">
-        <button type="button" class="pill-btn neutral sm">↑ 上移</button>
-        <button type="button" class="pill-btn neutral sm">↓ 下移</button>
-        <button type="button" class="pill-btn accent-rose sm">删除</button>
-      </div>`;
-    container.appendChild(card);
+    const card = renderCardFromTemplate(idx);
+    if (!card) return;
+
+    if (preset.insertAfter instanceof Element) {
+      container.insertBefore(card, preset.insertAfter.nextElementSibling);
+    } else {
+      container.appendChild(card);
+    }
+
+    const select = card.querySelector('select');
+    if (select && preset.type) {
+      select.value = preset.type;
+    }
+
     toggleExtra(idx);
-    card.querySelectorAll('.element-actions button').forEach(btn => {
-      if (btn.textContent.includes('上移'))    btn.onclick = () => move(idx, 'up');
-      else if (btn.textContent.includes('下移')) btn.onclick = () => move(idx, 'down');
-      else if (btn.textContent.includes('删除')) btn.onclick = () => remove(idx);
-    });
+
+    if (preset.fields) {
+      applyPresetFields(card, preset.fields, idx);
+    }
+
+    card.classList.add('is-highlight');
+    setTimeout(() => card.classList.remove('is-highlight'), 600);
+
     reindex();
+
+    updatePreview(card);
+
+    const targetIdx = card.dataset.index;
+    const targetCard = document.querySelector(`.element-card[data-index='${targetIdx}']`);
+    if (targetCard) {
+      const firstField = targetCard.querySelector('.element-fields [name]');
+      if (firstField) {
+        requestAnimationFrame(() => firstField.focus());
+      }
+      targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  function applyPresetFields(card, fields, idx) {
+    Object.entries(fields).forEach(([key, value]) => {
+      const field = card.querySelector(`[name='elements-${idx}-${key}']`);
+      if (!field) return;
+      if (field.type === 'checkbox') {
+        field.checked = Boolean(value);
+      } else {
+        field.value = value;
+      }
+    });
+  }
+
+  function collectFields(card) {
+    const data = {};
+    card.querySelectorAll('[name^="elements-"]').forEach(el => {
+      const match = el.name.match(/elements-\d+-(.+)/);
+      if (!match) return;
+      const key = match[1];
+      if (el.type === 'checkbox') {
+        data[key] = el.checked;
+      } else {
+        data[key] = el.value;
+      }
+    });
+    return data;
   }
 
   function remove(idx) {
@@ -131,7 +267,160 @@
     if (sib) {
       container.insertBefore(dir === 'up' ? el : sib, dir === 'up' ? sib : el);
       reindex();
+      updatePreview(el);
+      el.classList.add('is-highlight');
+      setTimeout(() => el.classList.remove('is-highlight'), 400);
     }
   }
+
+  function duplicate(idx) {
+    const card = document.querySelector(`.element-card[data-index='${idx}']`);
+    if (!card) return;
+    const select = card.querySelector('select');
+    const preset = {
+      type: select ? select.value : 'title',
+      fields: collectFields(card),
+      insertAfter: card
+    };
+    add(preset);
+  }
+
+  function updateTypeLabel(card, providedType) {
+    const label = card.querySelector('[data-role="type-label"]');
+    if (!label) return;
+    const select = card.querySelector('select');
+    const type = providedType || (select ? select.value : '');
+    label.dataset.type = type;
+    label.textContent = TYPE_LABEL_MAP[type] || type || '模块';
+  }
+
+  function truncateText(text, limit = 56) {
+    const value = (text || '').toString().trim();
+    if (value.length <= limit) return value;
+    return `${value.slice(0, limit - 1)}…`;
+  }
+
+  function updatePreview(card) {
+    const previewEl = card.querySelector('[data-role="preview"]');
+    if (!previewEl) return;
+    const select = card.querySelector('select');
+    const type = select ? select.value : '';
+
+    const pickValue = suffix => {
+      const field = card.querySelector(`[name$='-${suffix}']`);
+      if (!field) return '';
+      if (field.type === 'checkbox') return field.checked ? '已启用' : '';
+      return field.value || '';
+    };
+
+    let summary = '';
+    switch (type) {
+      case 'title':
+      case 'text':
+      case 'quote':
+      case 'html':
+        summary = pickValue('content');
+        break;
+      case 'code': {
+        const language = pickValue('language');
+        const body = pickValue('content');
+        summary = language ? `${language} · ${body}` : body;
+        break;
+      }
+      case 'link':
+        summary = pickValue('text') || pickValue('href');
+        break;
+      case 'image':
+        summary = pickValue('alt') || pickValue('src');
+        break;
+      case 'gallery': {
+        const raw = pickValue('images');
+        const items = raw.split(',').map(item => item.trim()).filter(Boolean);
+        summary = items.length ? `${items.length} 张图片` : '';
+        break;
+      }
+      case 'flipcard':
+        summary = pickValue('front');
+        break;
+      case 'faq':
+        summary = pickValue('question');
+        break;
+      default:
+        summary = pickValue('content');
+    }
+
+    const cleanSummary = truncateText(summary);
+    if (cleanSummary) {
+      previewEl.textContent = cleanSummary;
+      previewEl.classList.remove('muted');
+    } else {
+      previewEl.textContent = DEFAULT_PREVIEW_COPY;
+      previewEl.classList.add('muted');
+    }
+  }
+
+  function toggleCard(card, trigger) {
+    const isCollapsed = card.classList.toggle('is-collapsed');
+    const body = card.querySelector('.element-body');
+    if (body) {
+      body.setAttribute('aria-hidden', isCollapsed ? 'true' : 'false');
+    }
+    if (trigger) {
+      trigger.setAttribute('aria-expanded', (!isCollapsed).toString());
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('elements-container');
+    if (!container) return;
+
+    container.addEventListener('click', event => {
+      const btn = event.target.closest('[data-action]');
+      if (!btn) return;
+      const card = btn.closest('.element-card');
+      if (!card) return;
+      const idx = Number(card.dataset.index);
+      switch (btn.dataset.action) {
+        case 'move-up':
+          move(idx, 'up');
+          break;
+        case 'move-down':
+          move(idx, 'down');
+          break;
+        case 'remove':
+          remove(idx);
+          break;
+        case 'duplicate':
+          duplicate(idx);
+          break;
+        case 'collapse':
+          toggleCard(card, btn);
+          break;
+      }
+    });
+
+    container.addEventListener('input', event => {
+      if (!event.target.closest('.element-card')) return;
+      const card = event.target.closest('.element-card');
+      updatePreview(card);
+    });
+
+    container.addEventListener('change', event => {
+      const target = event.target;
+      if (!target.closest('.element-card')) return;
+      if (target.matches('select[name^="elements-"][name$="-type"]')) return;
+      const card = target.closest('.element-card');
+      updatePreview(card);
+    });
+
+    container.querySelectorAll('.element-card').forEach(card => {
+      const body = card.querySelector('.element-body');
+      if (body) {
+        body.setAttribute('aria-hidden', 'false');
+      }
+      updateTypeLabel(card);
+      updatePreview(card);
+    });
+  });
 </script>
 {% endblock %}

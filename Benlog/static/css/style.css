@@ -721,14 +721,19 @@ main.container {
 
 .select-field {
   width: 100%;
+  appearance: none;
   border-radius: 16px;
   border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(255, 255, 255, 0.9);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(241, 245, 249, 0.68));
   color: var(--text-color);
-  padding: 12px 18px;
+  padding: 12px 48px 12px 18px;
   font-size: 1rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
   box-sizing: border-box;
+}
+
+.select-field:hover {
+  border-color: rgba(59, 130, 246, 0.48);
 }
 
 .select-field:focus {
@@ -736,6 +741,30 @@ main.container {
   border-color: rgba(59, 130, 246, 0.68);
   box-shadow: 0 0 0 4px rgba(147, 197, 253, 0.32);
   transform: translateY(-1px);
+}
+
+.select-wrap {
+  position: relative;
+  display: grid;
+}
+
+.select-wrap::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 18px;
+  width: 10px;
+  height: 10px;
+  border: solid rgba(100, 116, 139, 0.72);
+  border-width: 0 2px 2px 0;
+  transform: translateY(-60%) rotate(45deg);
+  pointer-events: none;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.select-wrap:focus-within::after {
+  border-color: rgba(37, 99, 235, 0.75);
+  transform: translateY(-50%) rotate(45deg);
 }
 
 .form-control-file,
@@ -767,25 +796,75 @@ main.container {
 }
 
 .checkbox-chip {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.72);
+  gap: 12px;
+  padding: 12px 18px 12px 48px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(241, 245, 249, 0.68));
   border: 1px solid rgba(148, 163, 184, 0.34);
   cursor: pointer;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.checkbox-chip input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.18s ease;
+  min-width: 0;
 }
 
 .checkbox-chip:hover {
-  border-color: rgba(59, 130, 246, 0.68);
-  box-shadow: 0 8px 18px rgba(59, 130, 246, 0.16);
+  border-color: rgba(59, 130, 246, 0.65);
+  box-shadow: 0 16px 30px rgba(59, 130, 246, 0.18);
+  transform: translateY(-1px);
+}
+
+.checkbox-chip:active {
+  transform: scale(0.98);
+}
+
+.checkbox-chip input[type="checkbox"] {
+  appearance: none;
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.9), rgba(226, 232, 240, 0.7));
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  display: grid;
+  place-items: center;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.18s ease;
+}
+
+.checkbox-chip input[type="checkbox"]::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #2563eb, #38bdf8);
+  transform: scale(0);
+  transition: transform 0.18s ease;
+}
+
+.checkbox-chip input[type="checkbox"]:checked {
+  border-color: rgba(37, 99, 235, 0.65);
+  box-shadow: 0 12px 20px rgba(37, 99, 235, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.42);
+}
+
+.checkbox-chip input[type="checkbox"]:checked::before {
+  transform: scale(1);
+}
+
+.checkbox-chip input[type="checkbox"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(147, 197, 253, 0.28), 0 12px 20px rgba(37, 99, 235, 0.22);
+}
+
+.checkbox-chip span {
+  color: var(--text-color);
+  font-weight: 600;
+  font-size: 0.92rem;
+  min-width: 0;
 }
 
 .form-switch {
@@ -871,6 +950,67 @@ main.container {
   background: rgba(15, 23, 42, 0.76);
   border-color: rgba(100, 116, 139, 0.45);
   color: rgba(226, 232, 240, 0.88);
+}
+
+[data-theme="dark"] .select-field:hover {
+  border-color: rgba(129, 140, 248, 0.6);
+}
+
+[data-theme="dark"] .select-wrap::after {
+  border-color: rgba(148, 163, 184, 0.7);
+}
+
+[data-theme="dark"] .select-wrap:focus-within::after {
+  border-color: rgba(96, 165, 250, 0.85);
+}
+
+[data-theme="dark"] .element-index {
+  color: rgba(226, 232, 240, 0.82);
+  background: rgba(71, 85, 105, 0.42);
+}
+
+[data-theme="dark"] .element-type-badge {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.26), rgba(14, 165, 233, 0.24));
+  color: rgba(226, 232, 240, 0.92);
+}
+
+[data-theme="dark"] .element-preview {
+  color: rgba(148, 163, 184, 0.72);
+}
+
+[data-theme="dark"] .element-preview.muted {
+  color: rgba(100, 116, 139, 0.68);
+}
+
+[data-theme="dark"] .icon-btn {
+  background: rgba(59, 130, 246, 0.14);
+  color: rgba(226, 232, 240, 0.92);
+}
+
+[data-theme="dark"] .icon-btn:hover {
+  background: rgba(59, 130, 246, 0.22);
+  box-shadow: 0 12px 22px rgba(37, 99, 235, 0.28);
+}
+
+[data-theme="dark"] .icon-btn.ghost {
+  background: rgba(71, 85, 105, 0.32);
+  color: rgba(226, 232, 240, 0.78);
+}
+
+[data-theme="dark"] .icon-btn.ghost:hover {
+  background: rgba(71, 85, 105, 0.4);
+  box-shadow: 0 12px 22px rgba(15, 23, 42, 0.38);
+}
+
+[data-theme="dark"] .icon-btn.danger {
+  background: rgba(248, 113, 113, 0.16);
+  color: rgba(252, 165, 165, 0.95);
+}
+
+[data-theme="dark"] .icon-btn.danger:hover {
+  background: rgba(248, 113, 113, 0.2);
+  box-shadow: 0 12px 22px rgba(248, 113, 113, 0.28);
+  color: rgba(254, 202, 202, 0.98);
 }
 .pill-btn {
   --pill-bg-start: #2563eb;
@@ -1092,8 +1232,8 @@ main.container {
 }
 
 .checkbox-chip.compact {
-  padding: 6px 12px;
-  border-radius: 12px;
+  padding: 10px 16px 10px 44px;
+  border-radius: 14px;
   font-size: 0.85rem;
 }
 
@@ -1951,10 +2091,169 @@ main.container {
   gap: 16px;
 }
 
+.element-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.element-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 220px;
+}
+
+.element-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.72);
+  background: rgba(148, 163, 184, 0.28);
+  border-radius: 999px;
+  padding: 4px 10px;
+  letter-spacing: 0.02em;
+}
+
+.element-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(14, 165, 233, 0.2));
+  color: rgba(15, 23, 42, 0.85);
+  letter-spacing: 0.01em;
+}
+
+.element-preview {
+  flex: 1;
+  min-width: 140px;
+  font-size: 0.88rem;
+  color: var(--meta-text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.element-preview.muted {
+  font-style: italic;
+  color: rgba(148, 163, 184, 0.8);
+}
+
+.element-fields {
+  display: grid;
+  gap: 14px;
+}
+
+.select-row {
+  align-items: center;
+  gap: 10px;
+}
+
+.select-row label {
+  font-size: 0.9rem;
+  color: var(--meta-text-color);
+}
+
+.icon-btn {
+  border: none;
+  border-radius: 14px;
+  background: rgba(59, 130, 246, 0.08);
+  color: var(--text-color);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 8px 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.icon-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 20px rgba(59, 130, 246, 0.18);
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.icon-btn:active {
+  transform: scale(0.97);
+}
+
+.icon-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(147, 197, 253, 0.28);
+}
+
+.icon-btn.ghost {
+  background: rgba(148, 163, 184, 0.12);
+  color: rgba(71, 85, 105, 0.9);
+}
+
+.icon-btn.ghost:hover {
+  background: rgba(148, 163, 184, 0.2);
+  box-shadow: 0 10px 18px rgba(71, 85, 105, 0.18);
+}
+
+.icon-btn.danger {
+  background: rgba(244, 63, 94, 0.1);
+  color: #e11d48;
+}
+
+.icon-btn.danger:hover {
+  background: rgba(244, 63, 94, 0.16);
+  box-shadow: 0 12px 20px rgba(244, 63, 94, 0.22);
+  color: #be123c;
+}
+
+.icon-chevron {
+  width: 10px;
+  height: 10px;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  transition: transform 0.25s ease;
+  display: inline-block;
+  margin-top: -2px;
+}
+
+.element-card.is-collapsed .element-body {
+  display: none;
+}
+
+.element-card.is-collapsed .icon-chevron {
+  transform: rotate(-135deg);
+}
+
+.element-card.is-highlight {
+  animation: cardGlow 0.6s ease;
+}
+
+@keyframes cardGlow {
+  0% {
+    box-shadow: 0 0 0 rgba(59, 130, 246, 0);
+  }
+  50% {
+    box-shadow: 0 18px 32px rgba(59, 130, 246, 0.22);
+  }
+  100% {
+    box-shadow: 0 20px 35px rgba(15, 23, 42, 0.08);
+  }
+}
+
 .element-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+  justify-content: flex-end;
 }
 
 .element-actions .pill-btn {
@@ -2219,6 +2518,34 @@ main.container {
 
 [data-theme="dark"] .modern-table tbody tr:hover {
   background: rgba(59, 130, 246, 0.12);
+}
+
+[data-theme="dark"] .checkbox-chip {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.82), rgba(15, 23, 42, 0.76));
+  border-color: rgba(71, 85, 105, 0.52);
+}
+
+[data-theme="dark"] .checkbox-chip span {
+  color: rgba(226, 232, 240, 0.88);
+}
+
+[data-theme="dark"] .checkbox-chip:hover {
+  border-color: rgba(96, 165, 250, 0.58);
+  box-shadow: 0 18px 34px rgba(37, 99, 235, 0.24);
+}
+
+[data-theme="dark"] .checkbox-chip input[type="checkbox"] {
+  border-color: rgba(71, 85, 105, 0.65);
+  background: linear-gradient(160deg, rgba(30, 41, 59, 0.88), rgba(15, 23, 42, 0.74));
+  box-shadow: 0 12px 24px rgba(2, 6, 23, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .checkbox-chip input[type="checkbox"]:checked {
+  box-shadow: 0 14px 26px rgba(37, 99, 235, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+[data-theme="dark"] .checkbox-chip input[type="checkbox"]:focus-visible {
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.28), 0 14px 26px rgba(37, 99, 235, 0.3);
 }
 
 [data-theme="dark"] .toggle-item {

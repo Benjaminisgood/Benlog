@@ -1,45 +1,156 @@
+{% set type_labels = {
+  'title': '标题',
+  'text': '段落',
+  'link': '链接',
+  'quote': '引用',
+  'code': '代码块',
+  'image': '单图',
+  'gallery': '图集',
+  'flipcard': '翻转卡片',
+  'faq': '问答',
+  'html': '原生 HTML'
+} %}
+{% set preview = '' %}
+{% if comp.type in ['title', 'text', 'quote', 'code', 'html'] %}
+  {% set preview = comp.content %}
+{% elif comp.type == 'link' %}
+  {% set preview = comp.text or comp.href %}
+{% elif comp.type == 'image' %}
+  {% set preview = comp.alt or comp.src %}
+{% elif comp.type == 'gallery' %}
+  {% set preview = comp.images|join(', ') %}
+{% elif comp.type == 'flipcard' %}
+  {% set preview = comp.front %}
+{% elif comp.type == 'faq' %}
+  {% set preview = comp.question %}
+{% endif %}
+{% set preview = preview|default('', true) %}
 <div class="element-card" data-index="{{ idx }}">
-  <div class="control-group">
-    <label>类型：</label>
-    <select name="elements-{{ idx }}-type" class="select-field" onchange="toggleExtra({{ idx }})">
-      {% for opt in ['title','text','link','quote','code','image','gallery','flipcard','faq','html'] %}
-      <option value="{{ opt }}" {% if comp.type==opt %}selected{% endif %}>{{ opt }}</option>
-      {% endfor %}
-    </select>
+  <div class="element-head">
+    <div class="element-meta">
+      <span class="element-index" data-role="index">#{{ "%02d"|format(idx) }}</span>
+      <span class="element-type-badge" data-role="type-label" data-type="{{ comp.type }}">{{ type_labels.get(comp.type, comp.type) }}</span>
+      <span class="element-preview{% if not preview %} muted{% endif %}" data-role="preview">{% if preview %}{{ preview }}{% else %}未填写内容{% endif %}</span>
+    </div>
+    <div class="element-actions">
+      <button type="button"
+              class="icon-btn ghost"
+              data-action="collapse"
+              aria-expanded="true"
+              title="展开/收起">
+        <span class="icon-chevron"></span>
+      </button>
+      <button type="button"
+              class="icon-btn"
+              data-action="duplicate"
+              title="复制此模块">
+        复制
+      </button>
+      <button type="button"
+              class="icon-btn"
+              data-action="move-up"
+              title="上移">
+        ↑
+      </button>
+      <button type="button"
+              class="icon-btn"
+              data-action="move-down"
+              title="下移">
+        ↓
+      </button>
+      <button type="button"
+              class="icon-btn danger"
+              data-action="remove"
+              title="删除">
+        删除
+      </button>
+    </div>
   </div>
 
-  <div id="main-{{ idx }}" class="control-group">
-    {% if comp.type == 'title' %}
-      <input name="elements-{{ idx }}-content" class="input-field" value="{{ comp.content }}">
-    {% elif comp.type == 'text' %}
-      <textarea name="elements-{{ idx }}-content" class="textarea-field">{{ comp.content }}</textarea>
-    {% elif comp.type == 'link' %}
-      <input name="elements-{{ idx }}-href" class="input-field" value="{{ comp.href }}">
-      <input name="elements-{{ idx }}-text" class="input-field" value="{{ comp.text }}">
-    {% elif comp.type == 'quote' %}
-      <textarea name="elements-{{ idx }}-content" class="textarea-field">{{ comp.content }}</textarea>
-    {% elif comp.type == 'code' %}
-      <textarea name="elements-{{ idx }}-content" class="textarea-field">{{ comp.content }}</textarea>
-      <input name="elements-{{ idx }}-language" class="input-field" value="{{ comp.language }}">
-    {% elif comp.type == 'image' %}
-      <input name="elements-{{ idx }}-src" class="input-field" value="{{ comp.src }}">
-      <input name="elements-{{ idx }}-alt" class="input-field" value="{{ comp.alt }}">
-    {% elif comp.type == 'gallery' %}
-      <input name="elements-{{ idx }}-images" class="input-field" value="{{ comp.images|join(',') }}">
-    {% elif comp.type == 'flipcard' %}
-      <input name="elements-{{ idx }}-front" class="input-field" value="{{ comp.front }}">
-      <input name="elements-{{ idx }}-back" class="input-field" value="{{ comp.back }}">
-    {% elif comp.type == 'faq' %}
-      <input name="elements-{{ idx }}-question" class="input-field" value="{{ comp.question }}">
-      <textarea name="elements-{{ idx }}-answer" class="textarea-field">{{ comp.answer }}</textarea>
-    {% elif comp.type == 'html' %}
-      <textarea name="elements-{{ idx }}-content" class="textarea-field">{{ comp.content }}</textarea>
-    {% endif %}
-  </div>
+  <div class="element-body" id="body-{{ idx }}">
+    <div class="control-group select-row">
+      <label>组件类型</label>
+      <div class="select-wrap">
+        <select name="elements-{{ idx }}-type" class="select-field" onchange="toggleExtra({{ idx }})">
+          {% for opt in ['title','text','link','quote','code','image','gallery','flipcard','faq','html'] %}
+          <option value="{{ opt }}" {% if comp.type==opt %}selected{% endif %}>{{ opt }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
 
-  <div class="element-actions">
-    <button type="button" class="pill-btn neutral sm" onclick="move({{ idx }}, 'up')">↑ 上移</button>
-    <button type="button" class="pill-btn neutral sm" onclick="move({{ idx }}, 'down')">↓ 下移</button>
-    <button type="button" class="pill-btn accent-rose sm" onclick="remove({{ idx }})">删除</button>
+    <div id="main-{{ idx }}" class="element-fields">
+      {% if comp.type == 'title' %}
+        <div class="control-group">
+          <label>标题内容</label>
+          <input name="elements-{{ idx }}-content" class="input-field" value="{{ comp.content }}">
+        </div>
+      {% elif comp.type == 'text' %}
+        <div class="control-group">
+          <label>文本内容</label>
+          <textarea name="elements-{{ idx }}-content" class="textarea-field">{{ comp.content }}</textarea>
+        </div>
+      {% elif comp.type == 'link' %}
+        <div class="control-group">
+          <label>链接地址</label>
+          <input name="elements-{{ idx }}-href" class="input-field" value="{{ comp.href }}">
+        </div>
+        <div class="control-group">
+          <label>链接文本</label>
+          <input name="elements-{{ idx }}-text" class="input-field" value="{{ comp.text }}">
+        </div>
+      {% elif comp.type == 'quote' %}
+        <div class="control-group">
+          <label>引用内容</label>
+          <textarea name="elements-{{ idx }}-content" class="textarea-field">{{ comp.content }}</textarea>
+        </div>
+      {% elif comp.type == 'code' %}
+        <div class="control-group">
+          <label>代码内容</label>
+          <textarea name="elements-{{ idx }}-content" class="textarea-field">{{ comp.content }}</textarea>
+        </div>
+        <div class="control-group">
+          <label>代码语言</label>
+          <input name="elements-{{ idx }}-language" class="input-field" value="{{ comp.language }}">
+        </div>
+      {% elif comp.type == 'image' %}
+        <div class="control-group">
+          <label>图片 URL</label>
+          <input name="elements-{{ idx }}-src" class="input-field" value="{{ comp.src }}">
+        </div>
+        <div class="control-group">
+          <label>图片描述</label>
+          <input name="elements-{{ idx }}-alt" class="input-field" value="{{ comp.alt }}">
+        </div>
+      {% elif comp.type == 'gallery' %}
+        <div class="control-group">
+          <label>图片列表 (逗号分隔)</label>
+          <input name="elements-{{ idx }}-images" class="input-field" value="{{ comp.images|join(',') }}">
+        </div>
+      {% elif comp.type == 'flipcard' %}
+        <div class="control-group">
+          <label>正面内容</label>
+          <input name="elements-{{ idx }}-front" class="input-field" value="{{ comp.front }}">
+        </div>
+        <div class="control-group">
+          <label>背面内容</label>
+          <input name="elements-{{ idx }}-back" class="input-field" value="{{ comp.back }}">
+        </div>
+      {% elif comp.type == 'faq' %}
+        <div class="control-group">
+          <label>问题</label>
+          <input name="elements-{{ idx }}-question" class="input-field" value="{{ comp.question }}">
+        </div>
+        <div class="control-group">
+          <label>回答</label>
+          <textarea name="elements-{{ idx }}-answer" class="textarea-field">{{ comp.answer }}</textarea>
+        </div>
+      {% elif comp.type == 'html' %}
+        <div class="control-group">
+          <label>HTML 代码</label>
+          <textarea name="elements-{{ idx }}-content" class="textarea-field">{{ comp.content }}</textarea>
+        </div>
+      {% endif %}
+    </div>
   </div>
 </div>
