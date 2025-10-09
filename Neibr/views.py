@@ -11,7 +11,7 @@ from PIL import UnidentifiedImageError
 from PIL import ImageOps, ImageDraw
 from werkzeug.utils import secure_filename  # type: ignore
 import yaml
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from flask import send_from_directory, abort  # type: ignore
 from flask import session
 from flask import jsonify, request
@@ -22,7 +22,7 @@ from unidecode import unidecode
 from urllib.parse import urlparse
 from sqlalchemy import and_, or_
 import requests
-from typing import Optional
+from typing import Any, Optional
 
 
 def convert_rich_text(text):
@@ -71,6 +71,42 @@ AUDIO_EXTENSIONS = {'mp3', 'wav', 'flac'}
 DOCUMENT_EXTENSIONS = {'pdf', 'docx', 'xlsx', 'pptx'}
 ALLOWED_LINK_SCHEMES = {'http', 'https'}
 FRONT_MATTER_DELIM = '---'
+CHINA_TZ = timezone(timedelta(hours=8))
+
+
+def _coerce_datetime(value: Any) -> Optional[datetime]:
+    """将字符串或 datetime 对象转换为 datetime，解析常见格式。"""
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, str):
+        for pattern in ('%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y/%m/%d %H:%M:%S'):
+            try:
+                return datetime.strptime(value, pattern)
+            except ValueError:
+                continue
+    return None
+
+
+def convert_to_china_tz(dt: Optional[datetime]) -> Optional[datetime]:
+    """将时间转换为中国标准时间（假定原始值为 UTC 或无时区）。"""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(CHINA_TZ)
+
+
+def format_china_datetime(dt: Optional[datetime], fmt: str = '%Y-%m-%d %H:%M') -> str:
+    localized = convert_to_china_tz(dt)
+    return localized.strftime(fmt) if localized else ''
+
+
+@neibr_bp.app_template_filter('bjt_format')
+def bjt_format(value: Any, fmt: str = '%Y-%m-%d %H:%M') -> str:
+    dt = _coerce_datetime(value)
+    if dt is None:
+        return value or ''
+    return format_china_datetime(dt, fmt)
 
 
 def allowed_file(filename):
@@ -248,7 +284,7 @@ def extract_post_summary(post: Post, limit: int = 140) -> str:
         snippet_source = meta.get('Summary') or meta.get('Excerpt') or ''
         if not snippet_source:
             author = meta.get('Author') or '邻居'
-            created = post.creation_time.strftime('%Y-%m-%d %H:%M')
+            created = format_china_datetime(post.creation_time)
             snippet_source = f"{author} · 发布于 {created}"
 
     snippet = _clean_summary_text(snippet_source)
@@ -344,8 +380,8 @@ def build_post_file_content(post: Post, body_text: str, author_name: str, update
         f"Author: {author_name}",
         f"Tags: {post.tags or ''}",
         f"Hidden: {'Yes' if post.is_hidden else 'No'}",
-        f"Created: {timestamp.strftime('%Y-%m-%d %H:%M:%S')}",
-        f"Updated: {updated_ts.strftime('%Y-%m-%d %H:%M:%S')}",
+        f"Created: {format_china_datetime(timestamp, '%Y-%m-%d %H:%M:%S')}",
+        f"Updated: {format_china_datetime(updated_ts, '%Y-%m-%d %H:%M:%S')}",
         FRONT_MATTER_DELIM,
         ""
     ]
@@ -382,7 +418,7 @@ def build_post_card(post: Post, src: str, author_name: str):
         'id': post.id,
         'title': post.title,
         'author': author_name,
-        'created_at': post.creation_time.strftime('%Y-%m-%d %H:%M'),
+        'created_at': format_china_datetime(post.creation_time),
         'tags': tags,
         'summary': extract_post_summary(post),
         'thumbnail': ensure_post_cover(post),
@@ -629,22 +665,31 @@ def post_detail(title):
     comments_file = os.path.join(folder_path, 'comments.yaml')
     if os.path.exists(comments_file):
         with open(comments_file, 'r') as f:
-            comments = yaml.safe_load(f) or []
+            raw_comments = yaml.safe_load(f) or []
     else:
-        comments = []
+        raw_comments = []
+
+    formatted_comments = []
+    for item in raw_comments:
+        entry = dict(item)
+        ts_raw = entry.get('timestamp')
+        dt = _coerce_datetime(ts_raw)
+        entry['timestamp_display'] = format_china_datetime(dt, '%Y-%m-%d %H:%M') if dt else (ts_raw or '')
+        formatted_comments.append(entry)
+    comments = formatted_comments
 
     # 处理评论提交
     if request.method == 'POST':
         new_comment = {
             'username': current_user.username,
             'content': request.form['comment'],
-            'timestamp': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+            'timestamp': format_china_datetime(datetime.utcnow(), '%Y-%m-%d %H:%M:%S')
         }
-        comments.append(new_comment)
+        raw_comments.append(new_comment)
 
         # 写入评论到 YAML 文件
         with open(comments_file, 'w') as f:
-            yaml.safe_dump(comments, f)
+            yaml.safe_dump(raw_comments, f)
 
         flash('评论已提交！', 'success')
         return redirect(url_for('neibr.post_detail', title=post.title, src=src, pid=post.id))

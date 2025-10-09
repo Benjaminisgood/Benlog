@@ -14,7 +14,7 @@
         <span>当前标题</span>
       </div>
       <div class="hero-stats">
-        <strong>{{ post.creation_time.strftime('%Y-%m-%d') if post.creation_time else '未记录' }}</strong>
+        <strong>{{ post.creation_time|bjt_format('%Y-%m-%d') if post.creation_time else '未记录' }}</strong>
         <span>创建日期</span>
       </div>
     </div>

@@ -10,7 +10,7 @@
         <div class="author-meta">
           <div class="author-name">{{ author }}</div>
           <div class="author-time">
-            {{ post.creation_time.strftime('%Y-%m-%d %H:%M') }}
+            {{ post.creation_time|bjt_format }}
           </div>
         </div>
       </div>
@@ -177,7 +177,7 @@
             <div class="comment-body">
               <div class="comment-meta">
                 <span class="comment-author">{{ comment.username }}</span>
-                <span class="comment-time">{{ comment.timestamp }}</span>
+                <span class="comment-time">{{ comment.timestamp_display }}</span>
               </div>
               <p class="comment-text">{{ comment.content }}</p>
             </div>
