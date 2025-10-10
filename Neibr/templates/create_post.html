@@ -33,12 +33,6 @@
   </section>
 
   <section class="card-panel form-card">
-  {% set cover_preview = form_values.cover_preview if form_values and form_values.cover_preview else cover_placeholder %}
-  {% set form_title = form_values.title if form_values else '' %}
-  {% set form_tags = form_values.tags if form_values else '' %}
-  {% set form_text = form_values.post_text if form_values else '' %}
-  {% set form_hidden = form_values.is_hidden if form_values else False %}
-  {% set initial_media = form_values.initial_media if form_values and form_values.initial_media else {'local': [], 'remote': []} %}
     <form
       method="POST"
       enctype="multipart/form-data"
