@@ -349,7 +349,7 @@ function createCardElement(data, src) {
   const avatarInitial = data.author ? data.author.charAt(0).toUpperCase() : 'N';
   const thumb = data.thumbnail
     ? `<div class="feed-thumb">
-        <img src="${data.thumbnail}" alt="${data.title}">
+        <img src="${data.thumbnail}" alt="${data.title}" loading="lazy" decoding="async">
         ${data.is_hidden ? '<span class="hidden-tag">仅自己可见</span>' : ''}
       </div>`
     : `<div class="feed-thumb">

@@ -7,19 +7,6 @@
       <h1>欢迎继续创作</h1>
       <p class="auth-sub">输入邮箱与密码，开启今日的工作流。</p>
     </header>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="flash-stack">
-        {% for category, message in messages %}
-          {% if category == 'login' %}
-            <p class="flash-item">{{ message }}</p>
-          {% endif %}
-        {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
-
     <form method="POST" class="auth-form">
       <label for="email">邮箱</label>
       <input type="email" name="email" id="email" required placeholder="name@example.com">

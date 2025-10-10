@@ -6,6 +6,8 @@ from .models import User, Post  # 从本地 models.py 导入 User 和 Post 模�
 from werkzeug.security import generate_password_hash, check_password_hash  # type: ignore # 用于密码加密和验证
 import os
 import io
+import base64
+import binascii
 from PIL import Image
 from PIL import UnidentifiedImageError
 from PIL import ImageOps, ImageDraw
@@ -14,13 +16,14 @@ import yaml
 from datetime import datetime, timezone, timedelta
 from flask import send_from_directory, abort  # type: ignore
 from flask import session
-from flask import jsonify, request
+from flask import jsonify
 from math import ceil
 from markupsafe import Markup, escape  # 新增此行
 import re
 from unidecode import unidecode
 from urllib.parse import urlparse
 from sqlalchemy import and_, or_
+from sqlalchemy.exc import IntegrityError
 import requests
 from typing import Any, Optional
 
@@ -63,6 +66,8 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 UPLOAD_BASE_PATH = os.path.join(BASE_DIR, 'Neibr', 'neibr')
 IMAGE_QUALITY = 22
 REMOTE_LINKS_FILENAME = 'media_links.yaml'
+MAX_REMOTE_COVER_BYTES = 5 * 1024 * 1024
+COVER_DATA_URI_PREFIX = 'data:image/jpeg;base64,'
 
 COMPRESSIBLE_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 IMAGE_EXTENSIONS = COMPRESSIBLE_IMAGE_EXTENSIONS | {'nef'}
@@ -252,6 +257,15 @@ def resolve_visible_post(post_id: int) -> Optional[Post]:
     return post
 
 
+def ensure_post_owner(post: Post):
+    """确保当前用户有权限修改帖子。"""
+    if post.user_id == current_user.id:
+        return
+    if getattr(current_user, 'is_admin', False):
+        return
+    abort(403)
+
+
 def _clean_summary_text(text: str) -> str:
     """轻量清洗 Markdown / HTML，压缩空白。"""
     if not text:
@@ -295,17 +309,18 @@ def extract_post_summary(post: Post, limit: int = 140) -> str:
     return snippet[:limit].rstrip() + '…'
 
 
-def save_cover_from_image(image: Image.Image, cover_path: str):
-    """将任意图像裁剪成 16:9 封面并写入磁盘。"""
+def generate_cover_base64(image: Image.Image) -> str:
+    """裁剪为 16:9 并返回 Base64 编码的 JPEG 字符串。"""
     target_size = (1280, 720)
     image = image.convert('RGB')
     cover = ImageOps.fit(image, target_size, method=Image.LANCZOS)
-    os.makedirs(os.path.dirname(cover_path), exist_ok=True)
-    cover.save(cover_path, format='JPEG', quality=86, optimize=True)
+    buffer = io.BytesIO()
+    cover.save(buffer, format='JPEG', quality=86, optimize=True)
+    return base64.b64encode(buffer.getvalue()).decode('ascii')
 
 
-def create_placeholder_cover(cover_path: str):
-    """生成一个渐变背景的占位封面，便于分享。"""
+def build_placeholder_cover_base64() -> str:
+    """生成渐变占位封面并返回 Base64 字符串。"""
     width, height = 1280, 720
     top_color = (255, 77, 103)
     bottom_color = (91, 134, 229)
@@ -317,55 +332,107 @@ def create_placeholder_cover(cover_path: str):
         g = int(top_color[1] + (bottom_color[1] - top_color[1]) * ratio)
         b = int(top_color[2] + (bottom_color[2] - top_color[2]) * ratio)
         draw.line([(0, y), (width, y)], fill=(r, g, b))
-    img.save(cover_path, format='JPEG', quality=85, optimize=True)
+    buffer = io.BytesIO()
+    img.save(buffer, format='JPEG', quality=85, optimize=True)
+    return base64.b64encode(buffer.getvalue()).decode('ascii')
 
 
-def ensure_post_cover(post: Post, refresh: bool = False):
+def _build_cover_from_local(path: str) -> Optional[str]:
+    try:
+        with Image.open(path) as img:
+            return generate_cover_base64(img)
+    except Exception:
+        return None
+
+
+def _build_cover_from_remote(url: str) -> Optional[str]:
+    try:
+        response = requests.get(url, timeout=8, stream=True)
+        response.raise_for_status()
+
+        buffer = io.BytesIO()
+        for chunk in response.iter_content(chunk_size=8192):
+            if chunk:
+                buffer.write(chunk)
+            if buffer.tell() > MAX_REMOTE_COVER_BYTES:
+                raise ValueError('remote image too large')
+
+        buffer.seek(0)
+        with Image.open(buffer) as img:
+            return generate_cover_base64(img)
+    except Exception:
+        return None
+
+
+def _build_cover_from_base64(data: str) -> Optional[str]:
+    if not data:
+        return None
+    payload = data
+    if data.startswith('data:'):
+        _, _, payload = data.partition(',')
+    try:
+        decoded = base64.b64decode(payload, validate=True)
+    except (binascii.Error, ValueError):
+        return None
+    buffer = io.BytesIO(decoded)
+    try:
+        with Image.open(buffer) as img:
+            return generate_cover_base64(img)
+    except Exception:
+        return None
+
+
+def ensure_post_cover(post: Post, refresh: bool = False) -> str:
     """
-    生成并缓存帖子封面图片，避免重复计算：
+    生成并缓存帖子封面图片 Base64：
     1. 优先使用本地上传图片；
     2. 其次尝试下载外链图片；
     3. 若均没有，则生成占位封面。
     """
+    if post.cover_image and not refresh:
+        return COVER_DATA_URI_PREFIX + post.cover_image
+
     folder = get_post_folder(post)
     os.makedirs(folder, exist_ok=True)
-    cover_filename = 'cover.jpg'
-    cover_path = os.path.join(folder, cover_filename)
 
-    if os.path.exists(cover_path) and not refresh:
-        return url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=cover_filename)
+    cover_b64: Optional[str] = None
 
     # 1) 查找本地图片
-    local_candidate = None
     if os.path.isdir(folder):
         for fname in sorted(os.listdir(folder)):
-            if fname in {'post.txt', 'comments.yaml', REMOTE_LINKS_FILENAME, cover_filename}:
+            if fname in {'post.txt', 'comments.yaml', REMOTE_LINKS_FILENAME}:
                 continue
             full_path = os.path.join(folder, fname)
             if not os.path.isfile(full_path):
                 continue
             ext = fname.rsplit('.', 1)[-1].lower()
             if ext in {'jpg', 'jpeg', 'png', 'gif', 'webp'}:
-                local_candidate = full_path
-                break
+                cover_b64 = _build_cover_from_local(full_path)
+                if cover_b64:
+                    break
 
-    if local_candidate:
-        try:
-            with Image.open(local_candidate) as img:
-                save_cover_from_image(img, cover_path)
-            return url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=cover_filename)
-        except Exception:
-            pass
-
-    # 2) 远程图片 (直接使用外链 URL)
-    remote_links = load_remote_links(folder)
-    for item in remote_links:
-        if item.get('type') == 'image':
-            return item['url']
+    # 2) 远程图片
+    if not cover_b64:
+        remote_links = load_remote_links(folder)
+        for item in remote_links:
+            if item.get('type') == 'image':
+                cover_b64 = _build_cover_from_remote(item['url'])
+                if cover_b64:
+                    break
 
     # 3) 占位封面
-    create_placeholder_cover(cover_path)
-    return url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=cover_filename)
+    if not cover_b64:
+        cover_b64 = build_placeholder_cover_base64()
+
+    post.cover_image = cover_b64
+    return COVER_DATA_URI_PREFIX + cover_b64
+
+
+def get_cover_data_uri(post: Post) -> str:
+    """返回封面 Data URI，没有则生成并返回空字符串。"""
+    if not post.cover_image:
+        return ensure_post_cover(post)
+    return COVER_DATA_URI_PREFIX + post.cover_image
 
 
 def build_post_file_content(post: Post, body_text: str, author_name: str, updated_at: Optional[datetime] = None) -> str:
@@ -421,11 +488,105 @@ def build_post_card(post: Post, src: str, author_name: str):
         'created_at': format_china_datetime(post.creation_time),
         'tags': tags,
         'summary': extract_post_summary(post),
-        'thumbnail': ensure_post_cover(post),
+        'thumbnail': get_cover_data_uri(post),
         'detail_url': url_for('neibr.post_detail', title=post.title, src=src, pid=post.id),
         'edit_url': url_for('neibr.edit_post', title=post.title) if post.user_id == current_user.id else None,
         'is_hidden': post.is_hidden
     }
+
+
+def _cover_error_response(message: str, status_code: int = 400):
+    response = jsonify({'status': 'error', 'message': message})
+    response.status_code = status_code
+    return response
+
+
+@neibr_bp.route('/api/posts/<int:post_id>/cover', methods=['POST'])
+@login_required
+def api_set_cover(post_id: int):
+    post = Post.query.get_or_404(post_id)
+    ensure_post_owner(post)
+
+    payload = request.get_json(silent=True) or {}
+    source = (payload.get('source') or '').lower()
+
+    if source not in {'local', 'remote', 'data'}:
+        return _cover_error_response('不支持的封面来源类型。')
+
+    cover_b64: Optional[str] = None
+
+    if source == 'local':
+        filename = payload.get('filename')
+        if not filename:
+            return _cover_error_response('缺少要设为封面的文件名。')
+        safe_name = os.path.basename(filename)
+        folder = get_post_folder(post)
+        file_path = os.path.join(folder, safe_name)
+        if not os.path.isfile(file_path):
+            return _cover_error_response('指定的本地文件不存在。')
+        ext = safe_name.rsplit('.', 1)[-1].lower() if '.' in safe_name else ''
+        if ext not in IMAGE_EXTENSIONS:
+            return _cover_error_response('只能使用图片文件作为封面。')
+        cover_b64 = _build_cover_from_local(file_path)
+    elif source == 'remote':
+        url = (payload.get('url') or '').strip()
+        if not url:
+            return _cover_error_response('缺少远程图片链接。')
+        parsed = urlparse(url)
+        if parsed.scheme not in ALLOWED_LINK_SCHEMES:
+            return _cover_error_response('远程链接协议不受支持。')
+        cover_b64 = _build_cover_from_remote(url)
+    else:
+        raw = payload.get('data') or payload.get('base64')
+        cover_b64 = _build_cover_from_base64(raw or '')
+
+    if not cover_b64:
+        return _cover_error_response('无法解析图片，请确认文件或链接有效。')
+
+    post.cover_image = cover_b64
+    db.session.commit()
+
+    message = '封面更新成功。'
+    flash(message, 'success')
+    return jsonify({
+        'status': 'ok',
+        'cover': COVER_DATA_URI_PREFIX + cover_b64,
+        'message': message
+    })
+
+
+@neibr_bp.route('/api/posts/<int:post_id>/cover/auto', methods=['POST'])
+@login_required
+def api_auto_cover(post_id: int):
+    post = Post.query.get_or_404(post_id)
+    ensure_post_owner(post)
+
+    cover_uri = ensure_post_cover(post, refresh=True)
+    db.session.commit()
+    message = '已根据最新媒体自动选定封面。'
+    flash(message, 'success')
+    return jsonify({
+        'status': 'ok',
+        'cover': cover_uri,
+        'message': message
+    })
+
+
+@neibr_bp.route('/api/posts/<int:post_id>/cover', methods=['DELETE'])
+@login_required
+def api_delete_cover(post_id: int):
+    post = Post.query.get_or_404(post_id)
+    ensure_post_owner(post)
+
+    post.cover_image = build_placeholder_cover_base64()
+    db.session.commit()
+    message = '封面已重置为默认图。'
+    flash(message, 'info')
+    return jsonify({
+        'status': 'ok',
+        'cover': COVER_DATA_URI_PREFIX + post.cover_image,
+        'message': message
+    })
 
 
 @neibr_bp.route('/')
@@ -464,6 +625,12 @@ def index():
     random_cards = [build_post_card(p, 'random', user_map.get(p.user_id, '神秘邻居')) for p in random_posts]
     my_cards = [build_post_card(p, 'my', user_map.get(p.user_id, current_user.username)) for p in my_posts]
 
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
+
     return render_template(
         'neibr_index.html',
         latest_cards=latest_cards,
@@ -484,21 +651,93 @@ def create_post():
         GET - 渲染 create_post.html 模板。
         POST - 成功则重定向到帖子详情页。
     """
-    if request.method == 'POST':
-        title = request.form['title']
-        tags = request.form['tags']
-        post_text = request.form.get('post_text', '')
-        files = request.files.getlist('files')
-        remote_links_raw = request.form.get('media_links', '')
+    placeholder_uri = COVER_DATA_URI_PREFIX + build_placeholder_cover_base64()
+    base_form_values = {
+        'title': '',
+        'tags': '',
+        'post_text': '',
+        'is_hidden': False,
+        'remote_links_text': '',
+        'remote_input': '',
+        'cover_preview': None,
+        'initial_media': {'local': [], 'remote': []}
+    }
 
-        is_hidden = request.form.get('is_hidden')
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        tags = request.form.get('tags', '').strip()
+        post_text = request.form.get('post_text', '')
+        files = request.files.getlist('media_files')
+        if not files:
+            files = request.files.getlist('files')
+        remote_links_raw = request.form.get('media_links', '')
+        is_hidden = bool(request.form.get('is_hidden'))
+        cover_data_raw = (request.form.get('cover_data') or '').strip()
+        cover_remote_url = (request.form.get('cover_remote_url') or '').strip()
+        remote_input_value = request.form.get('remote_input', '').strip()
+
+        remote_links = sanitize_remote_links(remote_links_raw)
+
+        form_values = {
+            'title': title,
+            'tags': tags,
+            'post_text': post_text,
+            'is_hidden': is_hidden,
+            'remote_links_text': "\n".join(link['url'] for link in remote_links),
+            'remote_input': remote_input_value,
+            'cover_preview': None,
+            'initial_media': {'local': [], 'remote': remote_links}
+        }
+
+        if cover_data_raw:
+            form_values['cover_preview'] = f"{COVER_DATA_URI_PREFIX}{cover_data_raw}"
+        elif cover_remote_url:
+            form_values['cover_preview'] = cover_remote_url
+
+        if not title:
+            flash('标题不能为空。', 'warning')
+            return render_template(
+                'create_post.html',
+                title='创建帖子',
+                cover_placeholder=placeholder_uri,
+                form_values=form_values
+            )
+
+        existing = Post.query.filter_by(title=title).first()
+        if existing:
+            flash('标题已存在，请换一个新的标题。', 'warning')
+            return render_template(
+                'create_post.html',
+                title='创建帖子',
+                cover_placeholder=placeholder_uri,
+                form_values=form_values
+            )
 
         # 创建帖子记录
         post = Post(title=title, tags=tags, user_id=current_user.id)
-        post.is_hidden = True if is_hidden else False
+        post.is_hidden = is_hidden
 
         db.session.add(post)
-        db.session.flush()  # 获取 post.id
+        try:
+            db.session.flush()  # 获取 post.id
+        except IntegrityError:
+            db.session.rollback()
+            flash('标题已存在，请换一个新的标题。', 'warning')
+            return render_template(
+                'create_post.html',
+                title='创建帖子',
+                cover_placeholder=placeholder_uri,
+                form_values=form_values
+            )
+        except Exception:
+            db.session.rollback()
+            flash('创建帖子时发生错误，请稍后重试。', 'danger')
+            return render_template(
+                'create_post.html',
+                title='创建帖子',
+                cover_placeholder=placeholder_uri,
+                form_values=form_values
+            )
 
         # 构建帖子文件夹路径：static/neibr/user_id/post_id
         folder_path = os.path.join(UPLOAD_BASE_PATH, str(current_user.id), str(post.id))
@@ -521,9 +760,28 @@ def create_post():
                 else:
                     file.save(file_path)
 
-        remote_links = sanitize_remote_links(remote_links_raw)
         save_remote_links(folder_path, remote_links)
-        ensure_post_cover(post, refresh=True)
+
+        cover_selected = False
+
+        if cover_data_raw:
+            cover_b64 = _build_cover_from_base64(cover_data_raw)
+            if cover_b64:
+                post.cover_image = cover_b64
+                cover_selected = True
+            else:
+                flash('封面数据解析失败，已自动生成封面。', 'warning')
+
+        if not cover_selected and cover_remote_url:
+            cover_b64 = _build_cover_from_remote(cover_remote_url)
+            if cover_b64:
+                post.cover_image = cover_b64
+                cover_selected = True
+            else:
+                flash('封面链接不可用，已自动生成封面。', 'warning')
+
+        if not cover_selected:
+            ensure_post_cover(post, refresh=True)
 
         # 保存帖子文案到 post.txt（包含元数据）
         text_path = os.path.join(folder_path, 'post.txt')
@@ -536,7 +794,7 @@ def create_post():
         flash('帖子创建成功。', 'create_post')
         return redirect(url_for('neibr.post_detail', title=post.title, pid=post.id))
     
-    return render_template('create_post.html', title='创建帖子')
+    return render_template('create_post.html', title='创建帖子', cover_placeholder=placeholder_uri, form_values=base_form_values)
 
 @neibr_bp.route('/post/<string:title>', methods=['GET', 'POST'])
 @login_required
@@ -580,7 +838,7 @@ def post_detail(title):
     post_text = convert_rich_text(post_body) if post_body else Markup('')
 
     # 获取媒体文件列表，排除配置文件
-    excluded_files = {'post.txt', 'comments.yaml', REMOTE_LINKS_FILENAME, 'cover.jpg'}
+    excluded_files = {'post.txt', 'comments.yaml', REMOTE_LINKS_FILENAME}
     media_files = []
     if os.path.isdir(folder_path):
         media_files = [
@@ -784,7 +1042,29 @@ def edit_post(title):
 
         remote_links = sanitize_remote_links(remote_links_raw)
         save_remote_links(folder_path, remote_links)
-        ensure_post_cover(post, refresh=True)
+
+        cover_selected = False
+        cover_data_raw = (request.form.get('cover_data') or '').strip()
+        cover_remote_url = (request.form.get('cover_remote_url') or '').strip()
+
+        if cover_data_raw:
+            cover_b64 = _build_cover_from_base64(cover_data_raw)
+            if cover_b64:
+                post.cover_image = cover_b64
+                cover_selected = True
+            else:
+                flash('封面数据解析失败，已保留原封面。', 'warning')
+
+        if not cover_selected and cover_remote_url:
+            cover_b64 = _build_cover_from_remote(cover_remote_url)
+            if cover_b64:
+                post.cover_image = cover_b64
+                cover_selected = True
+            else:
+                flash('封面链接不可用，已保留原封面。', 'warning')
+
+        if not cover_selected and not post.cover_image:
+            ensure_post_cover(post, refresh=True)
 
         db.session.commit()
         flash('帖子已更新。', 'success')
@@ -806,14 +1086,55 @@ def edit_post(title):
     if os.path.isdir(folder_path):
         media_files = [
             f for f in os.listdir(folder_path)
-            if f not in {'post.txt', 'comments.yaml', REMOTE_LINKS_FILENAME, 'cover.jpg'}
+            if f not in {'post.txt', 'comments.yaml', REMOTE_LINKS_FILENAME}
         ]
         remote_media = load_remote_links(folder_path)
     else:
         remote_media = []
     remote_links_text = '\n'.join(link['url'] for link in remote_media)
 
-    return render_template('edit_post.html', post=post, post_text=post_text, media_files=media_files, remote_media=remote_media, remote_links_text=remote_links_text)
+    local_media_payload = [
+        {
+            'filename': fname,
+            'url': url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=fname),
+            'kind': detect_media_type(fname)
+        }
+        for fname in media_files
+    ]
+
+    remote_media_payload = [
+        {
+            'url': item['url'],
+            'type': item.get('type') or detect_media_type(item.get('url', ''))
+        }
+        for item in remote_media
+    ]
+
+    initial_media = {
+        'local': local_media_payload,
+        'remote': remote_media_payload
+    }
+
+    cover_uri = get_cover_data_uri(post)
+    placeholder_uri = COVER_DATA_URI_PREFIX + build_placeholder_cover_base64()
+
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
+
+    return render_template(
+        'edit_post.html',
+        post=post,
+        post_text=post_text,
+        media_files=media_files,
+        remote_media=remote_media,
+        remote_links_text=remote_links_text,
+        initial_media=initial_media,
+        cover_uri=cover_uri,
+        cover_placeholder=placeholder_uri
+    )
 
 
 
@@ -882,6 +1203,12 @@ def api_posts():
         'edit_url': card['edit_url'],
         'is_hidden': card['is_hidden']
     } for card in cards]
+
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
 
     return jsonify({
         'posts': items,

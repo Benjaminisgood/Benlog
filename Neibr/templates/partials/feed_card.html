@@ -1,7 +1,7 @@
 <article class="feed-card" data-url="{{ card.detail_url }}">
   {% if card.thumbnail %}
     <div class="feed-thumb">
-      <img src="{{ card.thumbnail }}" alt="{{ card.title }}">
+      <img src="{{ card.thumbnail }}" alt="{{ card.title }}" loading="lazy" decoding="async">
       {% if card.is_hidden %}
         <span class="hidden-tag">仅自己可见</span>
       {% endif %}

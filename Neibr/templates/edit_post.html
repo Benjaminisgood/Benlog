@@ -17,11 +17,35 @@
         <strong>{{ post.creation_time|bjt_format('%Y-%m-%d') if post.creation_time else '未记录' }}</strong>
         <span>创建日期</span>
       </div>
+      <div class="hero-cover-preview">
+        <span>封面预览</span>
+        <div class="hero-cover-thumb">
+          <img src="{{ cover_uri }}" alt="帖子封面" loading="lazy" decoding="async" data-neibr-cover-hero>
+        </div>
+      </div>
     </div>
   </section>
 
   <section class="card-panel form-card">
-    <form method="POST" enctype="multipart/form-data" class="form-stack" id="edit-post-form">
+    <form
+      method="POST"
+      enctype="multipart/form-data"
+      class="form-stack"
+      id="edit-post-form"
+      data-neibr-media-form
+      data-mode="edit"
+      data-post-id="{{ post.id }}"
+      data-initial-media='{{ initial_media|tojson }}'
+      data-cover-uri="{{ cover_uri }}"
+      data-cover-placeholder="{{ cover_placeholder }}"
+      data-api-cover="{{ url_for('neibr.api_set_cover', post_id=post.id) }}"
+      data-api-cover-auto="{{ url_for('neibr.api_auto_cover', post_id=post.id) }}"
+      data-api-cover-reset="{{ url_for('neibr.api_delete_cover', post_id=post.id) }}"
+    >
+      <input type="hidden" name="cover_data" data-neibr-cover-data>
+      <input type="hidden" name="cover_remote_url" data-neibr-cover-remote>
+      <div data-neibr-delete-bucket></div>
+
       <div class="form-group">
         <label for="title">标题</label>
         <input type="text" id="title" name="title" class="form-control" value="{{ post.title }}" required>
@@ -44,151 +68,457 @@
         </label>
       </div>
 
-      <div class="form-group">
-        <label for="media_files">上传新的媒体文件</label>
-        <input type="file" id="media_files" name="media_files" class="input-file" multiple>
-        <small>新的文件会追加到列表中；如需删除旧文件请在下方勾选。</small>
+      <div class="cover-manager" data-neibr-cover-card>
+        <div class="cover-card">
+          <div class="cover-thumb">
+            <img src="{{ cover_uri }}" alt="帖子封面预览" data-neibr-cover-image loading="lazy" decoding="async">
+          </div>
+          <div class="cover-body">
+            <h3>封面管理</h3>
+            <p>点击下方媒体卡片可通过气泡菜单设置封面，亦可使用快速动作自动挑选或重置。</p>
+            <div class="cover-actions">
+              <button type="button" class="media-btn" data-neibr-cover-auto>自动挑选</button>
+              <button type="button" class="media-btn ghost" data-neibr-cover-reset>重置封面</button>
+            </div>
+            <small class="cover-tip">支持本地上传与 OSS 外链图片，选择后即时反馈，或保存后统一生效。</small>
+          </div>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label for="media_links">媒体链接（每行一个）</label>
-        <textarea id="media_links" name="media_links" class="form-control textarea-field" rows="4" placeholder="https://your-cdn.com/sample.jpg&#10;https://video.aliyun.com/clip.mp4">{{ remote_links_text }}</textarea>
-        <small>删除对应链接即可移除外链，支持 OSS、图床、短视频平台等公开链接。</small>
+      <div class="media-sections">
+        <section class="media-panel upload-panel">
+          <header>
+            <h3>媒体资源</h3>
+            <p>上传新的图片、视频、音频或文档，新增文件会出现在媒体库中。</p>
+          </header>
+          <div class="media-panel-body">
+            <button type="button" class="media-btn" data-neibr-upload-btn>上传本地媒体</button>
+            <small>支持 JPG · PNG · GIF · MP4 · WAV · PDF 等常见格式。</small>
+          </div>
+          <input
+            type="file"
+            id="media_files"
+            name="media_files"
+            class="input-file"
+            multiple
+            hidden
+            data-neibr-file-input
+          >
+        </section>
+
+        <section class="media-panel link-panel" data-neibr-remote-panel>
+          <header>
+            <h3>媒体链接</h3>
+            <p>粘贴 OSS、图床或短视频的公开链接，系统会自动识别类型。</p>
+          </header>
+          <div class="media-link-form">
+            <input type="url" id="remote-input" placeholder="https://your-cdn.com/sample.jpg" name="remote_input" data-neibr-remote-input>
+            <button type="button" class="media-btn ghost" data-neibr-remote-submit>添加链接</button>
+          </div>
+          <small class="media-hint">添加成功后将显示在下方媒体库，可继续追加或删除。</small>
+          <textarea id="media_links" name="media_links" hidden data-neibr-remote-textarea>{{ remote_links_text }}</textarea>
+        </section>
       </div>
 
-      {% set image_files = [] %}
-      {% set video_files = [] %}
-      {% set audio_files = [] %}
-
-      {% for file in media_files %}
-        {% set ext = file.rsplit('.', 1)[-1].lower() %}
-        {% if ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}
-          {% set _ = image_files.append(file) %}
-        {% elif ext in ['mp4', 'webm', 'mov'] %}
-          {% set _ = video_files.append(file) %}
-        {% elif ext in ['mp3', 'wav'] %}
-          {% set _ = audio_files.append(file) %}
-        {% endif %}
-      {% endfor %}
-
-      {% if image_files or video_files or audio_files or remote_media %}
-      <div class="media-review">
-        {% if image_files %}
-          <div>
-            <h3>图片</h3>
-            <div class="media-review-grid">
-              {% for file in image_files %}
-                <div class="card-tile media-preview">
-                  <img src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}" alt="{{ file }}">
-                  <label class="checkbox-chip compact">
-                    <input type="checkbox" name="delete_files" value="{{ file }}">
-                    <span>标记删除</span>
-                  </label>
-                </div>
-              {% endfor %}
-            </div>
-          </div>
-        {% endif %}
-
-        {% if video_files %}
-          <div>
-            <h3>视频</h3>
-            <div class="media-review-grid">
-              {% for file in video_files %}
-                <div class="card-tile media-preview">
-                  <video controls preload="metadata">
-                    <source src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}"
-                            type="{{ 'video/mp4' if file.endswith('mp4') else 'video/webm' if file.endswith('webm') else 'video/quicktime' }}">
-                  </video>
-                  <label class="checkbox-chip compact">
-                    <input type="checkbox" name="delete_files" value="{{ file }}">
-                    <span>标记删除</span>
-                  </label>
-                </div>
-              {% endfor %}
-            </div>
-          </div>
-        {% endif %}
-
-        {% if audio_files %}
-          <div>
-            <h3>音频</h3>
-            <div class="media-review-grid">
-              {% for file in audio_files %}
-                <div class="card-tile media-preview">
-                  <audio controls preload="metadata">
-                    <source src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}"
-                            type="{{ 'audio/mpeg' if file.endswith('mp3') else 'audio/wav' }}">
-                  </audio>
-                  <label class="checkbox-chip compact">
-                    <input type="checkbox" name="delete_files" value="{{ file }}">
-                    <span>标记删除</span>
-                  </label>
-                </div>
-              {% endfor %}
-            </div>
-          </div>
-        {% endif %}
-
-        {% if remote_media %}
-          <div>
-            <h3>外链媒体</h3>
-            <div class="media-review-grid">
-              {% for item in remote_media %}
-                <div class="card-tile media-preview">
-                  {% if item.type == 'image' %}
-                    <img src="{{ item.url }}" alt="remote image preview">
-                  {% elif item.type == 'video' %}
-                    <video controls preload="metadata">
-                      <source src="{{ item.url }}">
-                    </video>
-                  {% elif item.type == 'audio' %}
-                    <audio controls preload="metadata">
-                      <source src="{{ item.url }}">
-                    </audio>
-                  {% else %}
-                    <div class="chip-muted">外链 {{ item.type|capitalize }}</div>
-                  {% endif %}
-                  <a class="remote-url" href="{{ item.url }}" target="_blank" rel="noopener">{{ item.url }}</a>
-                </div>
-              {% endfor %}
-            </div>
-          </div>
-        {% endif %}
-      </div>
-      {% endif %}
+      <div class="media-gallery" data-neibr-gallery></div>
 
       <div class="form-footer">
         <a href="{{ url_for('neibr.post_detail', title=post.title) }}" class="glass-btn ghost align-left">取消</a>
-        <button type="submit" class="glass-btn">
+        <button type="submit" class="glass-btn form-primary-btn">
           <span class="btn-text">保存更改</span>
-          <span aria-hidden="true">💾</span>
+          <span class="btn-icon" aria-hidden="true">💾</span>
         </button>
       </div>
     </form>
   </section>
 </div>
 
-<div class="form-overlay" id="edit-post-overlay" aria-hidden="true">
-  <div class="overlay-card">
-    <p>正在保存，请稍候...</p>
-  </div>
-</div>
+<style>
+.hero-cover-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
+.hero-cover-thumb {
+  width: 160px;
+  aspect-ratio: 16 / 9;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.16);
+}
+
+.hero-cover-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cover-manager {
+  margin-top: 12px;
+}
+
+.cover-card {
+  display: flex;
+  gap: 24px;
+  background: linear-gradient(135deg, rgba(255, 109, 132, 0.18), rgba(91, 134, 229, 0.18));
+  border-radius: 24px;
+  padding: 20px 24px;
+  align-items: stretch;
+  border: 1px solid rgba(255, 77, 103, 0.16);
+}
+
+.cover-thumb {
+  flex: 0 0 280px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.cover-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  aspect-ratio: 16 / 9;
+}
+
+.cover-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  justify-content: center;
+}
+
+.cover-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.cover-tip {
+  color: var(--meta-text-color);
+}
+
+.media-sections {
+  margin-top: 32px;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.media-panel {
+  padding: 20px 22px;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: var(--card-bg-color);
+  box-shadow: 0 14px 26px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.media-panel header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.media-panel header p {
+  margin: 6px 0 0;
+  color: var(--meta-text-color);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.media-panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.media-btn {
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff2442, #ff7a85);
+  color: #fff;
+  padding: 10px 22px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.2s ease;
+}
+
+.media-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(255, 77, 103, 0.24);
+}
+
+.media-btn.ghost {
+  background: transparent;
+  color: var(--text-color);
+  border: 1px solid rgba(255, 77, 103, 0.36);
+  padding: 9px 21px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.media-link-form {
+  display: flex;
+  gap: 10px;
+}
+
+.media-link-form input {
+  flex: 1;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.media-hint {
+  color: var(--meta-text-color);
+  font-size: 0.8rem;
+}
+
+.media-gallery {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.media-card-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: var(--card-bg-color);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1);
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.media-card-tile:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.16);
+}
+
+.media-card-tile.is-cover::after {
+  content: "当前封面";
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 77, 103, 0.92);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 12px 20px rgba(255, 77, 103, 0.25);
+}
+
+.media-thumb {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.media-thumb img,
+.media-thumb video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.media-type-chip {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.media-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px 18px;
+}
+
+.media-meta strong {
+  font-weight: 600;
+  font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.media-meta .media-src {
+  font-size: 0.78rem;
+  color: var(--meta-text-color);
+}
+
+.media-bubble {
+  position: absolute;
+  z-index: 9999;
+  min-width: 220px;
+  max-width: 260px;
+  background: var(--card-bg-color);
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.media-bubble.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.media-bubble-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.media-bubble-header span {
+  font-weight: 600;
+}
+
+.media-bubble-header small {
+  color: var(--meta-text-color);
+  font-size: 0.78rem;
+  word-break: break-all;
+}
+
+.media-bubble-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.media-bubble-actions button {
+  border: none;
+  border-radius: 12px;
+  padding: 9px 12px;
+  text-align: left;
+  font-weight: 600;
+  background: rgba(15, 23, 42, 0.05);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.media-bubble-actions button:hover {
+  background: rgba(255, 77, 103, 0.15);
+}
+
+.media-bubble-actions button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.form-footer {
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.form-primary-btn {
+  min-width: clamp(220px, 36%, 320px);
+  justify-content: center;
+  font-size: 1.05rem;
+  padding: 14px 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-primary-btn .btn-icon {
+  font-size: 1.25rem;
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 960px) {
+  .cover-card {
+    flex-direction: column;
+  }
+
+  .cover-thumb {
+    width: 100%;
+  }
+
+  .media-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+
+  .hero-cover-preview {
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .hero-cover-thumb {
+    width: 140px;
+  }
+}
+
+[data-theme="dark"] .media-panel {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .cover-card {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .media-card-tile {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 18px 32px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .media-btn.ghost {
+  border-color: rgba(255, 109, 132, 0.4);
+}
+</style>
+
+<script defer src="{{ url_for('static', filename='js/neibr-media.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('edit-post-form');
-  const overlay = document.getElementById('edit-post-overlay');
-  if (!form || !overlay) return;
+  if (!form) return;
 
   form.addEventListener('submit', () => {
-    overlay.classList.add('show');
-    overlay.setAttribute('aria-hidden', 'false');
-    const submitBtn = form.querySelector('button[type=\"submit\"]');
+    const submitBtn = form.querySelector('button[type="submit"]');
     if (submitBtn) {
       submitBtn.disabled = true;
       const text = submitBtn.querySelector('.btn-text');
       if (text) text.textContent = '保存中...';
+    }
+    if (window.neibrPushFlash) {
+      window.neibrPushFlash('正在保存，请稍候...', 'info');
     }
   }, { once: true });
 });

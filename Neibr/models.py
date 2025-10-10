@@ -14,7 +14,7 @@ class Post(db.Model):
     tags          = db.Column(db.String(255), nullable=True)
     creation_time = db.Column(db.DateTime, default=db.func.current_timestamp())
     is_hidden     = db.Column(db.Boolean, default=False)
+    cover_image   = db.Column(db.Text, nullable=True)  # Base64 编码的封面 JPEG
 
     def __repr__(self):
         return f'<Post {self.title}>'
-
