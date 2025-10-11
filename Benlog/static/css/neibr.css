@@ -753,6 +753,7 @@
 
 .form-footer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 16px;
   align-items: center;
@@ -762,13 +763,38 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 160px;
+  min-width: 0;
   min-height: 44px;
+  padding: 12px 22px;
   text-align: center;
 }
 
-.form-footer .align-left {
-  margin-right: auto;
+.form-footer .form-primary-btn {
+  padding: 12px 28px;
+  box-shadow: 0 20px 40px rgba(37, 99, 235, 0.32);
+}
+
+.form-footer .form-secondary-btn {
+  background: rgba(148, 163, 184, 0.16);
+  color: rgba(15, 23, 42, 0.82);
+  border: 1px solid rgba(148, 163, 184, 0.42);
+  box-shadow: none;
+  transition: background 0.24s ease, color 0.24s ease, border-color 0.24s ease;
+}
+
+.form-footer .form-secondary-btn::after {
+  opacity: 0;
+}
+
+.form-footer .form-secondary-btn:hover {
+  background: rgba(148, 163, 184, 0.24);
+  border-color: rgba(148, 163, 184, 0.45);
+  color: rgba(15, 23, 42, 0.88);
+  transform: translateY(-1px);
+}
+
+.form-footer .form-secondary-btn:active {
+  transform: translateY(0);
 }
 
 @media (max-width: 960px) {
@@ -814,15 +840,17 @@
   .form-footer {
     flex-direction: column-reverse;
     align-items: stretch;
-  }
-
-  .form-footer .align-left {
-    margin-right: 0;
+    gap: 12px;
   }
 
   .form-footer .glass-btn {
     width: 100%;
     min-width: 0;
+    justify-content: center;
+  }
+
+  .form-footer .form-secondary-btn {
+    order: 2;
   }
 }
 
@@ -861,6 +889,18 @@
 [data-theme="dark"] .media-panel {
   background: rgba(30, 41, 59, 0.8);
   border-color: rgba(148, 163, 184, 0.22);
+}
+
+[data-theme="dark"] .form-footer .form-secondary-btn {
+  background: rgba(30, 41, 59, 0.62);
+  color: rgba(226, 232, 240, 0.88);
+  border-color: rgba(148, 163, 184, 0.35);
+}
+
+[data-theme="dark"] .form-footer .form-secondary-btn:hover {
+  background: rgba(51, 65, 85, 0.74);
+  border-color: rgba(148, 163, 184, 0.42);
+  color: rgba(226, 232, 240, 0.94);
 }
 
 [data-theme="dark"] .media-link-field .form-control {
