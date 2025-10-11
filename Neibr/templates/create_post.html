@@ -120,7 +120,10 @@
             <p>粘贴 OSS、图床或短视频的公开链接，系统会自动识别类型。</p>
           </header>
           <div class="media-link-form">
-            <input type="url" id="remote-input" placeholder="https://your-cdn.com/sample.jpg" name="remote_input" data-neibr-remote-input value="{{ form_remote_input }}">
+            <div class="media-link-field">
+              <span class="media-link-icon" aria-hidden="true">&#128279;</span>
+              <input type="url" id="remote-input" placeholder="https://your-cdn.com/sample.jpg" name="remote_input" data-neibr-remote-input value="{{ form_remote_input }}" class="form-control">
+            </div>
             <button type="button" class="media-btn ghost" data-neibr-remote-submit>添加链接</button>
           </div>
           <small class="media-hint">添加成功后将显示在下方媒体库，可继续追加。</small>

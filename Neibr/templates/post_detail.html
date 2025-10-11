@@ -190,24 +190,37 @@
   </section>
 </div>
 
-<button class="floating-comment" type="button" onclick="toggleCommentBox()" title="写评论">💬</button>
-{% if can_edit %}
-<a class="floating-edit" href="{{ url_for('neibr.edit_post', title=post.title) }}" title="编辑帖子" aria-label="编辑帖子">✏️</a>
-{% endif %}
+<div class="comment-floating-actions">
+  <button class="floating-comment" type="button" onclick="toggleCommentBox()" title="写评论" aria-haspopup="dialog">💬</button>
+  {% if can_edit %}
+    <a class="floating-edit" href="{{ url_for('neibr.edit_post', title=post.title) }}" title="编辑帖子" aria-label="编辑帖子">✏️</a>
+  {% endif %}
+</div>
 
 <!-- 评论弹窗 -->
-<div id="comment-box" class="comment-box" style="display:none;">
+<div id="comment-box-backdrop" class="comment-backdrop" hidden></div>
+<div id="comment-box" class="comment-box" hidden role="dialog" aria-modal="true" aria-labelledby="comment-box-title">
   <form method="POST" class="comment-form">
-    <textarea name="comment" rows="4" placeholder="在这里输入你的评论..." required></textarea>
+    <header class="comment-header">
+      <h2 id="comment-box-title">发布评论</h2>
+      <button type="button" class="comment-close" onclick="toggleCommentBox()" aria-label="关闭评论面板">×</button>
+    </header>
+    <label class="comment-field">
+      <span class="comment-label">内容</span>
+      <textarea name="comment" rows="4" placeholder="在这里输入你的评论..." required></textarea>
+    </label>
     <div class="comment-actions">
-      <button type="submit" class="submit-comment">提交评论</button>
+      <button type="submit" class="submit-comment">
+        <span class="btn-text">提交评论</span>
+        <span aria-hidden="true">🚀</span>
+      </button>
       <button type="button" class="close-comment" onclick="toggleCommentBox()">取消</button>
     </div>
   </form>
 </div>
 
 <!-- 图片灯箱 -->
-<div id="image-preview-overlay" onclick="closeLightbox()">
+<div id="image-preview-overlay" class="lightbox-overlay" onclick="closeLightbox()">
   <img id="image-preview" alt="preview">
 </div>
 
@@ -596,92 +609,148 @@
   padding: 40px 0;
 }
 
-.floating-comment {
+.comment-floating-actions {
   position: fixed;
-  bottom: 28px;
-  right: 32px;
+  right: clamp(24px, 6vw, 40px);
+  bottom: clamp(24px, 6vw, 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  z-index: 2050;
+}
+
+.floating-comment,
+.floating-edit {
   width: 58px;
   height: 58px;
   border-radius: 50%;
   border: none;
-  background: linear-gradient(135deg, #ff2442, #ff7a85);
-  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1.6rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 16px 32px rgba(255, 77, 103, 0.28);
   cursor: pointer;
-  z-index: 1080;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.floating-comment:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 22px 36px rgba(255, 77, 103, 0.34);
-}
-
-.floating-edit {
-  position: fixed;
-  bottom: 28px;
-  right: 104px;
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  border: none;
-  background: linear-gradient(135deg, #34d399, #0f766e);
-  color: #fff;
-  font-size: 1.3rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 16px 32px rgba(15, 118, 110, 0.28);
-  cursor: pointer;
-  z-index: 1080;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 18px 32px rgba(15, 23, 42, 0.28);
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
   text-decoration: none;
 }
 
+.floating-comment {
+  background: linear-gradient(135deg, #ff4d67, #f472b6);
+  color: #fff;
+}
+
+.floating-edit {
+  background: rgba(15, 23, 42, 0.92);
+  color: #fefefe;
+}
+
+.floating-comment:hover,
 .floating-edit:hover {
   transform: translateY(-3px);
-  box-shadow: 0 22px 36px rgba(15, 118, 110, 0.34);
+  box-shadow: 0 24px 36px rgba(15, 23, 42, 0.36);
+}
+
+.comment-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 2090;
 }
 
 .comment-box {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--card-bg-color);
+  right: clamp(24px, 6vw, 40px);
+  bottom: clamp(110px, 13vw, 160px);
+  width: min(420px, calc(100vw - 32px));
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 24px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: 0 32px 56px rgba(15, 23, 42, 0.24);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 2100;
+  opacity: 0;
+  transform: translateY(18px) scale(0.98);
+  transition: opacity 0.26s ease, transform 0.26s ease;
+}
+
+.comment-box.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.comment-form {
+  display: grid;
+  gap: 18px;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.comment-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
   color: var(--text-color);
-  border-radius: 18px;
-  padding: 28px;
-  box-shadow: 0 30px 50px rgba(15, 23, 42, 0.25);
-  z-index: 1100;
-  width: min(520px, 90vw);
+}
+
+.comment-close {
+  border: none;
+  background: rgba(148, 163, 184, 0.18);
+  color: rgba(15, 23, 42, 0.72);
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.comment-close:hover {
+  background: rgba(148, 163, 184, 0.26);
+}
+
+.comment-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.comment-label {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--meta-text-color);
 }
 
 .comment-form textarea {
   width: 100%;
-  border-radius: 12px;
-  border: 1px solid var(--card-border-color);
-  background: var(--input-bg-color);
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(255, 255, 255, 0.9);
   color: var(--text-color);
-  padding: 12px 14px;
+  padding: 14px 16px;
   resize: vertical;
+  min-height: 120px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .comment-form textarea:focus {
   outline: none;
-  border-color: #ff4d67;
-  box-shadow: 0 0 0 3px rgba(255, 77, 103, 0.12);
+  border-color: rgba(59, 130, 246, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 .comment-actions {
-  margin-top: 16px;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .submit-comment,
@@ -691,38 +760,53 @@
   padding: 10px 22px;
   font-weight: 600;
   cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .submit-comment {
-  background: linear-gradient(135deg, #36d1dc, #5b86e5);
+  background: linear-gradient(135deg, #4ade80, #22c55e);
   color: #fff;
+  box-shadow: 0 18px 32px rgba(34, 197, 94, 0.35);
+}
+
+.submit-comment:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 24px 36px rgba(34, 197, 94, 0.45);
 }
 
 .close-comment {
-  background: var(--input-bg-color);
-  color: var(--text-color);
-  border: 1px solid var(--card-border-color);
+  background: rgba(148, 163, 184, 0.16);
+  color: rgba(15, 23, 42, 0.75);
 }
 
-#image-preview-overlay {
+.close-comment:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 30px rgba(148, 163, 184, 0.25);
+}
+
+.lightbox-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.8);
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 1200;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.85);
+  z-index: 2200;
 }
 
-#image-preview-overlay.active {
+.lightbox-overlay.is-active {
   display: flex;
 }
 
-#image-preview {
-  max-width: 92vw;
-  max-height: 92vh;
-  border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+.lightbox-overlay img {
+  max-width: min(960px, 90vw);
+  max-height: 90vh;
+  border-radius: 18px;
+  box-shadow: 0 28px 48px rgba(3, 7, 18, 0.6);
 }
 
 @media (max-width: 768px) {
@@ -761,18 +845,33 @@
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   }
 
-  .floating-comment {
+  .comment-floating-actions {
     right: 18px;
     bottom: 18px;
-    width: 52px;
-    height: 52px;
+    gap: 12px;
   }
 
+  .floating-comment,
   .floating-edit {
-    right: 82px;
-    bottom: 18px;
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
+    font-size: 1.4rem;
+  }
+
+  .comment-box {
+    left: 18px;
+    right: 18px;
+    width: auto;
+    bottom: clamp(96px, 12vw, 140px);
+  }
+
+  .comment-actions {
+    justify-content: stretch;
+  }
+
+  .comment-actions button {
+    flex: 1;
+    justify-content: center;
   }
 }
 
@@ -822,12 +921,47 @@
   background: rgba(91, 134, 229, 0.85);
 }
 
+[data-theme="dark"] .comment-backdrop {
+  background: rgba(15, 23, 42, 0.6);
+}
+
+[data-theme="dark"] .comment-box {
+  background: rgba(17, 24, 39, 0.92);
+  border-color: rgba(148, 163, 184, 0.22);
+  box-shadow: 0 36px 60px rgba(3, 7, 18, 0.6);
+}
+
+[data-theme="dark"] .comment-close {
+  background: rgba(148, 163, 184, 0.16);
+  color: rgba(226, 232, 240, 0.78);
+}
+
+[data-theme="dark"] .comment-close:hover {
+  background: rgba(148, 163, 184, 0.24);
+}
+
+[data-theme="dark"] .comment-form textarea {
+  background: rgba(17, 24, 39, 0.86);
+  border-color: rgba(148, 163, 184, 0.3);
+  color: rgba(226, 232, 240, 0.92);
+}
+
+[data-theme="dark"] .submit-comment {
+  box-shadow: 0 20px 34px rgba(34, 197, 94, 0.35);
+}
+
+[data-theme="dark"] .close-comment {
+  background: rgba(148, 163, 184, 0.2);
+  color: rgba(226, 232, 240, 0.9);
+}
+
+[data-theme="dark"] .floating-comment,
 [data-theme="dark"] .floating-edit {
   box-shadow: 0 16px 32px rgba(0, 0, 0, 0.45);
 }
 
-[data-theme="dark"] .floating-comment {
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.45);
+[data-theme="dark"] .lightbox-overlay {
+  background: rgba(3, 7, 18, 0.88);
 }
 
 [data-theme="dark"] .comment-item {
@@ -837,31 +971,67 @@
 
 <script>
 const commentBox = document.getElementById('comment-box');
+const commentBackdrop = document.getElementById('comment-box-backdrop');
+const commentTextarea = commentBox ? commentBox.querySelector('textarea') : null;
 const overlay = document.getElementById('image-preview-overlay');
 const overlayImg = document.getElementById('image-preview');
+let commentHideTimer = null;
 
-function toggleCommentBox() {
+function toggleCommentBox(forceState) {
   if (!commentBox) return;
-  commentBox.style.display = (commentBox.style.display === 'none' || !commentBox.style.display) ? 'block' : 'none';
+  const isOpen = commentBox.classList.contains('show');
+  const shouldOpen = forceState === true || (!forceState && !isOpen);
+
+  if (shouldOpen) {
+    if (commentHideTimer) {
+      clearTimeout(commentHideTimer);
+      commentHideTimer = null;
+    }
+    commentBox.hidden = false;
+    if (commentBackdrop) {
+      commentBackdrop.hidden = false;
+    }
+    requestAnimationFrame(() => {
+      commentBox.classList.add('show');
+      if (commentTextarea) {
+        setTimeout(() => commentTextarea.focus(), 180);
+      }
+    });
+  } else {
+    commentBox.classList.remove('show');
+    if (commentHideTimer) {
+      clearTimeout(commentHideTimer);
+    }
+    commentHideTimer = setTimeout(() => {
+      commentBox.hidden = true;
+      if (commentBackdrop) {
+        commentBackdrop.hidden = true;
+      }
+    }, 220);
+  }
+}
+
+if (commentBackdrop) {
+  commentBackdrop.addEventListener('click', () => toggleCommentBox(false));
 }
 
 function openLightbox(src) {
   if (!overlay || !overlayImg) return;
   overlayImg.src = src;
-  overlay.classList.add('active');
+  overlay.classList.add('is-active');
 }
 
 function closeLightbox() {
-  if (!overlay) return;
-  overlay.classList.remove('active');
+  if (!overlay || !overlayImg) return;
+  overlay.classList.remove('is-active');
   overlayImg.src = '';
 }
 
 document.addEventListener('keydown', (evt) => {
   if (evt.key === 'Escape') {
     closeLightbox();
-    if (commentBox && commentBox.style.display === 'block') {
-      toggleCommentBox();
+    if (commentBox && commentBox.classList.contains('show')) {
+      toggleCommentBox(false);
     }
   }
 });

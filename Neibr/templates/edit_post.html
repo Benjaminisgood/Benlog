@@ -20,12 +20,6 @@
         <strong>{{ post.creation_time|bjt_format('%Y-%m-%d') if post.creation_time else '未记录' }}</strong>
         <span>创建日期</span>
       </div>
-      <div class="hero-cover-preview">
-        <span>封面预览</span>
-        <div class="hero-cover-thumb">
-          <img src="{{ cover_uri }}" alt="帖子封面" loading="lazy" decoding="async" width="1600" height="900" data-neibr-cover-hero>
-        </div>
-      </div>
     </div>
   </section>
 
@@ -115,7 +109,10 @@
             <p>粘贴 OSS、图床或短视频的公开链接，系统会自动识别类型。</p>
           </header>
           <div class="media-link-form">
-            <input type="url" id="remote-input" placeholder="https://your-cdn.com/sample.jpg" name="remote_input" data-neibr-remote-input>
+            <div class="media-link-field">
+              <span class="media-link-icon" aria-hidden="true">&#128279;</span>
+              <input type="url" id="remote-input" placeholder="https://your-cdn.com/sample.jpg" name="remote_input" data-neibr-remote-input class="form-control">
+            </div>
             <button type="button" class="media-btn ghost" data-neibr-remote-submit>添加链接</button>
           </div>
           <small class="media-hint">添加成功后将显示在下方媒体库，可继续追加或删除。</small>
