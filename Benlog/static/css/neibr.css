@@ -767,17 +767,38 @@
   padding: 14px 22px;
   text-align: center;
   border-radius: 20px;
+  box-sizing: border-box;
 }
 
 .form-footer .form-primary-btn {
-  box-shadow: 0 20px 40px rgba(37, 99, 235, 0.32);
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.85), rgba(244, 63, 94, 0.92));
+  border: 1px solid rgba(248, 113, 113, 0.58);
+  color: #fff;
+  box-shadow: 0 22px 44px rgba(248, 113, 113, 0.45);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease, border-color 0.22s ease;
+}
+
+.form-footer .form-primary-btn::after {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.28), transparent 70%);
+}
+
+.form-footer .form-primary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 28px 48px rgba(248, 113, 113, 0.5);
+  border-color: rgba(248, 113, 113, 0.7);
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.92), rgba(239, 68, 68, 0.95));
+}
+
+.form-footer .form-primary-btn:active {
+  transform: translateY(-1px);
+  box-shadow: 0 20px 32px rgba(248, 113, 113, 0.4);
 }
 
 .form-footer .form-secondary-btn {
-  background: rgba(255, 255, 255, 0.16);
-  color: rgba(15, 23, 42, 0.78);
-  border: 1px solid rgba(148, 163, 184, 0.34);
-  box-shadow: 0 16px 28px rgba(15, 23, 42, 0.18);
+  background: linear-gradient(135deg, rgba(248, 187, 205, 0.24), rgba(251, 113, 133, 0.18));
+  color: rgba(190, 18, 60, 0.92);
+  border: 1px solid rgba(248, 113, 113, 0.32);
+  box-shadow: 0 18px 32px rgba(248, 113, 113, 0.22);
   transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease, color 0.22s ease, border-color 0.22s ease;
 }
 
@@ -786,16 +807,16 @@
 }
 
 .form-footer .form-secondary-btn:hover {
-  background: rgba(255, 255, 255, 0.22);
-  border-color: rgba(148, 163, 184, 0.42);
-  color: rgba(15, 23, 42, 0.86);
+  background: linear-gradient(135deg, rgba(248, 187, 205, 0.32), rgba(251, 113, 133, 0.24));
+  border-color: rgba(248, 113, 113, 0.45);
+  color: rgba(190, 18, 60, 0.98);
   transform: translateY(-2px);
-  box-shadow: 0 22px 32px rgba(15, 23, 42, 0.22);
+  box-shadow: 0 24px 38px rgba(248, 113, 113, 0.26);
 }
 
 .form-footer .form-secondary-btn:active {
   transform: translateY(-1px);
-  box-shadow: 0 18px 26px rgba(15, 23, 42, 0.18);
+  box-shadow: 0 20px 30px rgba(248, 113, 113, 0.22);
 }
 
 .form-footer .btn-text {
@@ -889,16 +910,29 @@
   border-color: rgba(148, 163, 184, 0.22);
 }
 
+[data-theme="dark"] .form-footer .form-primary-btn {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.78), rgba(239, 68, 68, 0.88));
+  border-color: rgba(248, 113, 113, 0.6);
+  box-shadow: 0 24px 46px rgba(248, 113, 113, 0.45);
+}
+
+[data-theme="dark"] .form-footer .form-primary-btn:hover {
+  box-shadow: 0 30px 52px rgba(248, 113, 113, 0.5);
+  border-color: rgba(248, 113, 113, 0.72);
+}
+
 [data-theme="dark"] .form-footer .form-secondary-btn {
-  background: rgba(30, 41, 59, 0.62);
-  color: rgba(226, 232, 240, 0.88);
-  border-color: rgba(148, 163, 184, 0.35);
+  background: linear-gradient(135deg, rgba(248, 187, 205, 0.26), rgba(248, 113, 113, 0.22));
+  color: rgba(255, 241, 242, 0.92);
+  border-color: rgba(248, 113, 113, 0.46);
+  box-shadow: 0 20px 36px rgba(248, 113, 113, 0.28);
 }
 
 [data-theme="dark"] .form-footer .form-secondary-btn:hover {
-  background: rgba(51, 65, 85, 0.74);
-  border-color: rgba(148, 163, 184, 0.42);
-  color: rgba(226, 232, 240, 0.94);
+  background: linear-gradient(135deg, rgba(248, 187, 205, 0.34), rgba(248, 113, 113, 0.3));
+  border-color: rgba(248, 113, 113, 0.6);
+  color: rgba(254, 242, 242, 0.98);
+  box-shadow: 0 26px 40px rgba(248, 113, 113, 0.32);
 }
 
 [data-theme="dark"] .media-link-field .form-control {
