@@ -105,38 +105,27 @@ function createCardElement(data, src) {
   const summary = data.summary || '这个帖子还没有添加文案摘要。';
 
   article.innerHTML = `
-    ${thumb}
-    <div class="feed-card-body">
-      <div class="feed-card-header">
-        <div class="feed-avatar">${avatarInitial}</div>
-        <div class="feed-card-title">
-          <h3>${data.title}</h3>
-          <div class="feed-meta">
-            <span>${data.author}</span>
-            <span>${data.date}</span>
+    <a class="feed-card-link" href="${data.url}">
+      ${thumb}
+      <div class="feed-card-body">
+        <div class="feed-card-header">
+          <div class="feed-avatar">${avatarInitial}</div>
+          <div class="feed-card-title">
+            <h3>${data.title}</h3>
+            <div class="feed-meta">
+              <span>${data.author}</span>
+              <span>${data.date}</span>
+            </div>
           </div>
         </div>
+        ${tagsHtml}
+        <p class="feed-summary">${summary}</p>
       </div>
-      ${tagsHtml}
-      <p class="feed-summary">${summary}</p>
-    </div>
+    </a>
   `;
-
-  article.addEventListener('click', () => {
-    window.location.href = data.url;
-  });
 
   return article;
 }
-
-document.querySelectorAll('.feed-card').forEach(card => {
-  card.addEventListener('click', () => {
-    const url = card.dataset.url;
-    if (url) {
-      window.location.href = url;
-    }
-  });
-});
 
 function appendCards(panel, posts, src) {
   posts.forEach(item => {

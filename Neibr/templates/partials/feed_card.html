@@ -1,41 +1,43 @@
 <article class="feed-card" data-url="{{ card.detail_url }}">
-  {% if card.thumbnail %}
-    <div class="feed-thumb">
-      <img src="{{ card.thumbnail }}" alt="{{ card.title }}" loading="lazy" decoding="async" width="1200" height="900">
-      {% if card.is_hidden %}
-        <span class="hidden-tag">仅自己可见</span>
-      {% endif %}
-    </div>
-  {% else %}
-    <div class="feed-thumb">
-      {% if card.is_hidden %}
-        <span class="hidden-tag">仅自己可见</span>
-      {% endif %}
-    </div>
-  {% endif %}
-
-  <div class="feed-card-body">
-    <div class="feed-card-header">
-      <div class="feed-avatar">{{ card.author[:1]|upper }}</div>
-      <div class="feed-card-title">
-        <h3>{{ card.title }}</h3>
-        <div class="feed-meta">
-          <span>{{ card.author }}</span>
-          <span>{{ card.created_at }}</span>
-        </div>
+  <a class="feed-card-link" href="{{ card.detail_url }}">
+    {% if card.thumbnail %}
+      <div class="feed-thumb">
+        <img src="{{ card.thumbnail }}" alt="{{ card.title }}" loading="lazy" decoding="async" width="1200" height="900">
+        {% if card.is_hidden %}
+          <span class="hidden-tag">仅自己可见</span>
+        {% endif %}
       </div>
-    </div>
-
-    {% if card.tags %}
-      <div class="feed-tags">
-        {% for tag in card.tags %}
-          <span>#{{ tag }}</span>
-        {% endfor %}
+    {% else %}
+      <div class="feed-thumb">
+        {% if card.is_hidden %}
+          <span class="hidden-tag">仅自己可见</span>
+        {% endif %}
       </div>
     {% endif %}
 
-    <p class="feed-summary">
-      {{ card.summary if card.summary else "这个帖子还没有添加文案摘要。" }}
-    </p>
-  </div>
+    <div class="feed-card-body">
+      <div class="feed-card-header">
+        <div class="feed-avatar">{{ card.author[:1]|upper }}</div>
+        <div class="feed-card-title">
+          <h3>{{ card.title }}</h3>
+          <div class="feed-meta">
+            <span>{{ card.author }}</span>
+            <span>{{ card.created_at }}</span>
+          </div>
+        </div>
+      </div>
+
+      {% if card.tags %}
+        <div class="feed-tags">
+          {% for tag in card.tags %}
+            <span>#{{ tag }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <p class="feed-summary">
+        {{ card.summary if card.summary else "这个帖子还没有添加文案摘要。" }}
+      </p>
+    </div>
+  </a>
 </article>
