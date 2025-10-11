@@ -753,33 +753,32 @@
 
 .form-footer {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 16px;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
 }
 
 .form-footer .glass-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 0;
-  min-height: 44px;
-  padding: 12px 22px;
+  width: 100%;
+  min-height: 48px;
+  padding: 14px 22px;
   text-align: center;
+  border-radius: 20px;
 }
 
 .form-footer .form-primary-btn {
-  padding: 12px 28px;
   box-shadow: 0 20px 40px rgba(37, 99, 235, 0.32);
 }
 
 .form-footer .form-secondary-btn {
-  background: rgba(148, 163, 184, 0.16);
-  color: rgba(15, 23, 42, 0.82);
-  border: 1px solid rgba(148, 163, 184, 0.42);
-  box-shadow: none;
-  transition: background 0.24s ease, color 0.24s ease, border-color 0.24s ease;
+  background: rgba(255, 255, 255, 0.16);
+  color: rgba(15, 23, 42, 0.78);
+  border: 1px solid rgba(148, 163, 184, 0.34);
+  box-shadow: 0 16px 28px rgba(15, 23, 42, 0.18);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease, color 0.22s ease, border-color 0.22s ease;
 }
 
 .form-footer .form-secondary-btn::after {
@@ -787,14 +786,21 @@
 }
 
 .form-footer .form-secondary-btn:hover {
-  background: rgba(148, 163, 184, 0.24);
-  border-color: rgba(148, 163, 184, 0.45);
-  color: rgba(15, 23, 42, 0.88);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(148, 163, 184, 0.42);
+  color: rgba(15, 23, 42, 0.86);
+  transform: translateY(-2px);
+  box-shadow: 0 22px 32px rgba(15, 23, 42, 0.22);
 }
 
 .form-footer .form-secondary-btn:active {
-  transform: translateY(0);
+  transform: translateY(-1px);
+  box-shadow: 0 18px 26px rgba(15, 23, 42, 0.18);
+}
+
+.form-footer .btn-text {
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
 }
 
 @media (max-width: 960px) {
@@ -838,19 +844,11 @@
   }
 
   .form-footer {
-    flex-direction: column-reverse;
-    align-items: stretch;
     gap: 12px;
   }
 
   .form-footer .glass-btn {
     width: 100%;
-    min-width: 0;
-    justify-content: center;
-  }
-
-  .form-footer .form-secondary-btn {
-    order: 2;
   }
 }
 
