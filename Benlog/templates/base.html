@@ -13,6 +13,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ title if title else "My Personal Site" }}</title>
+  {% block extra_styles %}{% endblock %}
 </head>
 <body data-user-id="{{ current_user.id }}">
   {% with messages = get_flashed_messages(with_categories=True) %}
