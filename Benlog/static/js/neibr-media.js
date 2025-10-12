@@ -25,6 +25,12 @@
     error: '<svg viewBox="0 0 24 24" focusable="false"><path d="M12 5a1 1 0 0 1 .9.55l6.5 12.5A1 1 0 0 1 18.5 20h-13a1 1 0 0 1-.9-1.45L11 5.55A1 1 0 0 1 12 5zm0 5a1 1 0 0 0-1 1v3a1 1 0 1 0 2 0v-3a1 1 0 0 0-1-1zm0 7.25a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5z"></path></svg>',
   };
 
+  const COVER_TARGET = {
+    width: 1280,
+    height: 720,
+    quality: 0.82,
+  };
+
   const KIND_LABEL = {
     image: '图片',
     video: '视频',
@@ -515,22 +521,22 @@
       }
 
       if (item.file && this.elements.coverDataInput) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const result = reader.result || '';
-          const payload = typeof result === 'string' && result.includes(',') ? result.split(',')[1] : '';
-          if (payload) {
-            this.elements.coverDataInput.value = payload;
+        this.prepareCoverFromFile(item.file)
+          .then(({ dataUrl, base64 }) => {
+            if (!base64) {
+              pushFlash('无法解析压缩后的封面。', 'error');
+              return;
+            }
+            this.elements.coverDataInput.value = base64;
             this.elements.coverRemoteInput.value = '';
-            this.setCoverPreview(result);
+            this.setCoverPreview(dataUrl);
             this.highlightCover(item.key);
             pushFlash('封面将随保存同步。', 'info');
-          } else {
-            pushFlash('无法读取图片数据，请尝试其他文件。', 'error');
-          }
-        };
-        reader.onerror = () => pushFlash('读取图片数据失败。', 'error');
-        reader.readAsDataURL(item.file);
+          })
+          .catch((error) => {
+            console.error('Failed to compress cover image:', error);
+            pushFlash('封面处理失败，请尝试其他文件。', 'error');
+          });
       }
     }
 
@@ -656,7 +662,84 @@
       if (!key) {
         this.currentCoverKey = null;
       }
-  }
+    }
+
+    prepareCoverFromFile(file) {
+      return new Promise((resolve, reject) => {
+        if (!file) {
+          reject(new Error('missing file'));
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+          const dataUrl = typeof reader.result === 'string' ? reader.result : '';
+          if (!dataUrl) {
+            reject(new Error('empty data url'));
+            return;
+          }
+          const img = new Image();
+          img.onload = () => {
+            try {
+              const canvas = document.createElement('canvas');
+              canvas.width = COVER_TARGET.width;
+              canvas.height = COVER_TARGET.height;
+              const ctx = canvas.getContext('2d');
+              if (!ctx) {
+                reject(new Error('canvas context unavailable'));
+                return;
+              }
+              const sourceWidth = img.naturalWidth || img.width;
+              const sourceHeight = img.naturalHeight || img.height;
+              if (!sourceWidth || !sourceHeight) {
+                reject(new Error('invalid image dimensions'));
+                return;
+              }
+              const sourceRatio = sourceWidth / sourceHeight;
+              const targetRatio = COVER_TARGET.width / COVER_TARGET.height;
+              let sx = 0;
+              let sy = 0;
+              let sw = sourceWidth;
+              let sh = sourceHeight;
+
+              if (sourceRatio > targetRatio) {
+                sw = Math.round(sourceHeight * targetRatio);
+                sx = Math.round((sourceWidth - sw) / 2);
+              } else if (sourceRatio < targetRatio) {
+                sh = Math.round(sourceWidth / targetRatio);
+                sy = Math.round((sourceHeight - sh) / 2);
+              }
+
+              ctx.drawImage(img, sx, sy, sw, sh, 0, 0, COVER_TARGET.width, COVER_TARGET.height);
+
+              canvas.toBlob(
+                (blob) => {
+                  if (!blob) {
+                    reject(new Error('failed to create blob'));
+                    return;
+                  }
+                  const blobReader = new FileReader();
+                  blobReader.onload = () => {
+                    const result = typeof blobReader.result === 'string' ? blobReader.result : '';
+                    const payload = result && result.includes(',') ? result.split(',')[1] : '';
+                    resolve({ dataUrl: result, base64: payload });
+                  };
+                  blobReader.onerror = () => reject(new Error('blob read error'));
+                  blobReader.readAsDataURL(blob);
+                },
+                'image/jpeg',
+                COVER_TARGET.quality,
+              );
+            } catch (error) {
+              reject(error);
+            }
+          };
+          img.onerror = () => reject(new Error('image decode error'));
+          img.src = dataUrl;
+        };
+        reader.onerror = () => reject(new Error('file read error'));
+        reader.readAsDataURL(file);
+      });
+    }
 
     addRemoteFromInput() {
       const { remoteInput } = this.elements;
