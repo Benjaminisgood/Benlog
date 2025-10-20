@@ -48,7 +48,7 @@
                       {% elif group.module == 'Edu' and (current_user.is_admin or current_user.id == 1) and item.slug %}
                         <a class="search-edit-link" href="{{ url_for('edu.edit_note', slug=item.slug) }}">✎ 编辑</a>
                       {% elif group.module == 'Neibr' and item.owner_id is defined and item.owner_id == current_user.id %}
-                        <a class="search-edit-link" href="{{ url_for('neibr.edit_post', title=item.title) }}">✎ 编辑</a>
+                        <a class="search-edit-link" href="{{ url_for('neibr.edit_post', post_id=item.post_id) }}">✎ 编辑</a>
                       {% endif %}
                     {% endif %}
                   </footer>

@@ -490,7 +490,7 @@ def build_post_card(post: Post, src: str, author_name: str):
         'summary': extract_post_summary(post),
         'thumbnail': get_cover_data_uri(post),
         'detail_url': url_for('neibr.post_detail', title=post.title, src=src, pid=post.id),
-        'edit_url': url_for('neibr.edit_post', title=post.title) if post.user_id == current_user.id else None,
+        'edit_url': url_for('neibr.edit_post', post_id=post.id) if post.user_id == current_user.id else None,
         'is_hidden': post.is_hidden
     }
 
@@ -980,22 +980,17 @@ def post_detail(title):
     )
 
 
-@neibr_bp.route('/edit_post/<string:title>', methods=['GET', 'POST'])
-@login_required
-def edit_post(title):
-    post = Post.query.filter_by(title=title).first_or_404()
-
-    # 确保当前用户是帖子作者
+def _handle_edit_post(post: Post):
+    """共用的帖子编辑处理逻辑，支持按 ID 或旧标题访问。"""
     if post.user_id != current_user.id:
         flash('您无权编辑此帖子。', 'error')
         return redirect(url_for('neibr.index'))
 
-    folder_path = os.path.join(UPLOAD_BASE_PATH, str(current_user.id), str(post.id))
+    folder_path = os.path.join(UPLOAD_BASE_PATH, str(post.user_id), str(post.id))
 
     if request.method == 'POST':
-        # 更新标题和正文内容
         post.title = request.form['title']
-        post.tags = request.form['tags']  # 添加更新标签
+        post.tags = request.form['tags']
 
         body_text = request.form['post_text']
         remote_links_raw = request.form.get('media_links', '')
@@ -1003,15 +998,11 @@ def edit_post(title):
         is_hidden = request.form.get('is_hidden')
         post.is_hidden = True if is_hidden else False
 
-        # 更新帖子文案
-        folder_path = os.path.join(UPLOAD_BASE_PATH, str(current_user.id), str(post.id))
-
         author_name = User.query.get(post.user_id).username
         file_content = build_post_file_content(post, body_text, author_name, updated_at=datetime.utcnow())
         with open(os.path.join(folder_path, 'post.txt'), 'w') as f:
             f.write(file_content)
 
-        # 处理媒体文件上传
         if 'media_files' in request.files:
             for file in request.files.getlist('media_files'):
                 if file and file.filename:
@@ -1033,7 +1024,6 @@ def edit_post(title):
                     else:
                         file.save(file_path)
 
-        # 处理删除媒体文件请求
         delete_files = request.form.getlist('delete_files')
         for filename in delete_files:
             file_path = os.path.join(folder_path, filename)
@@ -1070,8 +1060,6 @@ def edit_post(title):
         flash('帖子已更新。', 'success')
         return redirect(url_for('neibr.post_detail', title=post.title, pid=post.id))
 
-    # 读取帖子文案
-    folder_path = os.path.join(UPLOAD_BASE_PATH, str(current_user.id), str(post.id))
     text_path = os.path.join(folder_path, 'post.txt')
     if os.path.exists(text_path):
         with open(text_path, 'r') as f:
@@ -1080,8 +1068,6 @@ def edit_post(title):
     else:
         post_text = ''
 
-        
-    # 获取媒体文件列表
     media_files = []
     if os.path.isdir(folder_path):
         media_files = [
@@ -1135,6 +1121,22 @@ def edit_post(title):
         cover_uri=cover_uri,
         cover_placeholder=placeholder_uri
     )
+
+
+@neibr_bp.route('/edit_post/<int:post_id>', methods=['GET', 'POST'])
+@login_required
+def edit_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    return _handle_edit_post(post)
+
+
+@neibr_bp.route('/edit_post/<string:title>', methods=['GET', 'POST'])
+@login_required
+def edit_post_legacy(title):
+    post = Post.query.filter_by(title=title).first_or_404()
+    if request.method == 'GET':
+        return redirect(url_for('neibr.edit_post', post_id=post.id))
+    return _handle_edit_post(post)
 
 
 

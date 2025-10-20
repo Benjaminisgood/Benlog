@@ -289,12 +289,13 @@ def search_neibr_posts(query: str):
         results.append({
             'module': 'Neibr',
             'title': post.title,
-            'url': url_for('neibr.post_detail', title=post.title),
+            'url': url_for('neibr.post_detail', title=post.title, pid=post.id),
             'snippet': snippet,
             'timestamp': post.creation_time,
             'tags': tags_text,
             'author': author,
             'owner_id': post.user_id,
+            'post_id': post.id,
         })
 
     return results
@@ -579,7 +580,6 @@ def home():
         friend_links=friend_links,
         title="首页"
     )
-
 
 
 

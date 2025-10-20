@@ -193,7 +193,7 @@
 <div class="comment-floating-actions">
   <button class="floating-comment" type="button" onclick="toggleCommentBox()" title="写评论" aria-haspopup="dialog">💬</button>
   {% if can_edit %}
-    <a class="floating-edit" href="{{ url_for('neibr.edit_post', title=post.title) }}" title="编辑帖子" aria-label="编辑帖子">✏️</a>
+    <a class="floating-edit" href="{{ url_for('neibr.edit_post', post_id=post.id) }}" title="编辑帖子" aria-label="编辑帖子">✏️</a>
   {% endif %}
 </div>
 
