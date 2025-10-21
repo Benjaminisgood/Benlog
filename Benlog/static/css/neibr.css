@@ -12,7 +12,6 @@
   border-radius: 24px;
   padding: clamp(20px, 4vw, 32px);
   box-shadow: 0 16px 30px rgba(15, 23, 42, 0.08);
-  pointer-events: none;
 }
 
 .neibr-hero {
@@ -21,14 +20,12 @@
   align-items: center;
   gap: 20px;
   background: linear-gradient(135deg, rgba(255, 77, 103, 0.12), rgba(248, 198, 220, 0.18));
-  pointer-events: none;
 }
 
 .hero-left {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  pointer-events: none;
 }
 
 .hero-left h1 {
@@ -46,7 +43,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  pointer-events: none;
 }
 
 .hero-tabs {
@@ -57,7 +53,6 @@
   background: rgba(15, 23, 42, 0.05);
   align-items: center;
   flex-wrap: wrap;
-  pointer-events: none;
 }
 
 .feed-tab {
