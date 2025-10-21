@@ -80,6 +80,14 @@ const feedRequests = {
 const renderJobs = new WeakMap();
 let activeFeed = 'latest';
 
+function getPanel(feed) {
+  return document.querySelector(`.feed-panel[data-feed="${feed}"]`);
+}
+
+function getLoadButton(panel) {
+  return panel ? panel.querySelector('.load-more-btn') : null;
+}
+
 function cancelPanelRender(panel) {
   const job = renderJobs.get(panel);
   if (job && typeof job.cancel === 'function') {
@@ -88,11 +96,25 @@ function cancelPanelRender(panel) {
   }
 }
 
-function abortFeedFetch(src) {
-  const controller = feedRequests[src];
+function abortFeedFetch(feed) {
+  if (!feed) return;
+  const controller = feedRequests[feed];
   if (controller) {
     controller.abort();
-    feedRequests[src] = null;
+    feedRequests[feed] = null;
+  }
+}
+
+function resetPanelState(panel) {
+  if (!panel) return;
+  panel.removeAttribute('data-loading');
+  cancelPanelRender(panel.querySelector('.feed-grid'));
+  const loadBtn = getLoadButton(panel);
+  if (loadBtn) {
+    if (loadBtn.dataset.originalText) {
+      loadBtn.textContent = loadBtn.dataset.originalText;
+    }
+    loadBtn.disabled = false;
   }
 }
 
@@ -110,34 +132,37 @@ function requestFeed(src, url) {
   return request;
 }
 
-tabButtons.forEach(btn => {
-  btn.addEventListener('click', () => {
-    const target = btn.dataset.feedTab;
-    if (!target || target === activeFeed) {
-      return;
-    }
-    activeFeed = target;
-    tabButtons.forEach(b => b.classList.toggle('active', b === btn));
-    panels.forEach(panel => {
-      const isTarget = panel.dataset.feed === target;
-      panel.classList.toggle('active', isTarget);
-      if (!isTarget) {
-        const grid = panel.querySelector('.feed-grid');
-        if (grid) {
-          cancelPanelRender(grid);
-        }
-        abortFeedFetch(panel.dataset.feed);
-        panel.removeAttribute('data-loading');
-        const loadBtn = panel.querySelector('.load-more-btn');
-        if (loadBtn) {
-          if (loadBtn.dataset.originalText) {
-            loadBtn.textContent = loadBtn.dataset.originalText;
-          }
-          loadBtn.disabled = false;
-        }
-      }
-    });
+function activateFeed(target) {
+  if (!target || target === activeFeed) {
+    return;
+  }
+
+  const previousFeed = activeFeed;
+  const previousPanel = getPanel(previousFeed);
+  const nextPanel = getPanel(target);
+
+  activeFeed = target;
+
+  tabButtons.forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.feedTab === target);
   });
+  panels.forEach(panel => {
+    panel.classList.toggle('active', panel === nextPanel);
+  });
+
+  abortFeedFetch(previousFeed);
+  resetPanelState(previousPanel);
+}
+
+tabButtons.forEach(btn => {
+  const handleInteraction = (event) => {
+    if (event.type === 'pointerdown') {
+      event.preventDefault();
+    }
+    activateFeed(btn.dataset.feedTab);
+  };
+  btn.addEventListener('pointerdown', handleInteraction);
+  btn.addEventListener('click', handleInteraction);
 });
 
 function createCardElement(data, src) {
