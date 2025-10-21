@@ -20,12 +20,14 @@
   align-items: center;
   gap: 20px;
   background: linear-gradient(135deg, rgba(255, 77, 103, 0.12), rgba(248, 198, 220, 0.18));
+  pointer-events: none;
 }
 
 .hero-left {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  pointer-events: none;
 }
 
 .hero-left h1 {
