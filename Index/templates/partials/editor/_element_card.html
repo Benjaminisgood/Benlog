@@ -25,7 +25,7 @@
   {% set preview = comp.question %}
 {% endif %}
 {% set preview = preview|default('', true) %}
-<div class="element-card" data-index="{{ idx }}">
+<div class="element-card is-collapsed" data-index="{{ idx }}">
   <div class="element-head">
     <div class="element-meta">
       <span class="element-index" data-role="index">#{{ "%02d"|format(idx) }}</span>
@@ -36,38 +36,62 @@
       <button type="button"
               class="icon-btn ghost"
               data-action="collapse"
-              aria-expanded="true"
+              aria-expanded="false"
+              aria-label="展开或收起模块"
               title="展开/收起">
-        <span class="icon-chevron"></span>
+        <svg class="icon icon-chevron" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 9l6 6 6-6"></path>
+        </svg>
       </button>
       <button type="button"
               class="icon-btn"
               data-action="duplicate"
+              aria-label="复制此模块"
               title="复制此模块">
-        复制
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="9" y="9" width="10" height="10" rx="2"></rect>
+          <path d="M5 5h8a2 2 0 012 2v8"></path>
+        </svg>
       </button>
       <button type="button"
               class="icon-btn"
               data-action="move-up"
+              aria-label="向上移动"
               title="上移">
-        ↑
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 6l-5 5"></path>
+          <path d="M12 6l5 5"></path>
+          <path d="M12 6v12"></path>
+        </svg>
       </button>
       <button type="button"
               class="icon-btn"
               data-action="move-down"
+              aria-label="向下移动"
               title="下移">
-        ↓
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 18l-5-5"></path>
+          <path d="M12 18l5-5"></path>
+          <path d="M12 6v12"></path>
+        </svg>
       </button>
       <button type="button"
               class="icon-btn danger"
               data-action="remove"
+              aria-label="删除此模块"
               title="删除">
-        删除
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 7h14"></path>
+          <path d="M10 11v6"></path>
+          <path d="M14 11v6"></path>
+          <path d="M8.5 7l.75-2h5.5l.75 2"></path>
+          <path d="M6.5 7v10a2 2 0 002 2h7a2 2 0 002-2V7"></path>
+        </svg>
       </button>
     </div>
   </div>
 
-  <div class="element-body" id="body-{{ idx }}">
+  <div class="element-body" id="body-{{ idx }}" aria-hidden="true">
     <div class="control-group select-row">
       <label>组件类型</label>
       <div class="type-picker" data-type-picker data-index="{{ idx }}">

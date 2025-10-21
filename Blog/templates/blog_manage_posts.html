@@ -30,7 +30,15 @@
         <form method="POST"
               action="{{ url_for('blog.new_post') }}"
               class="action-form">
-          <button type="submit" class="glass-btn">＋ 新建文章</button>
+          <button type="submit" class="glass-btn accent-sky">
+            <span class="btn-icon" aria-hidden="true">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M12 5v14"></path>
+                <path d="M5 12h14"></path>
+              </svg>
+            </span>
+            <span class="btn-text">新建文章</span>
+          </button>
         </form>
 
         <form method="POST"
@@ -42,9 +50,25 @@
                    name="post_file"
                    accept=".md,.html"
                    required>
-            选择文件
+            <span class="btn-icon" aria-hidden="true">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M8 7l4-4 4 4"></path>
+                <path d="M12 3v14"></path>
+                <path d="M5 17h14"></path>
+              </svg>
+            </span>
+            <span class="btn-text">选择文件</span>
           </label>
-          <button type="submit" class="glass-btn alt">⤴ 上传</button>
+          <button type="submit" class="glass-btn alt">
+            <span class="btn-icon" aria-hidden="true">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M12 5v12"></path>
+                <path d="M7 10l5-5 5 5"></path>
+                <path d="M5 19h14"></path>
+              </svg>
+            </span>
+            <span class="btn-text">上传</span>
+          </button>
         </form>
       </div>
     </div>
@@ -60,7 +84,7 @@
       <input type="search"
              id="post-filter"
              class="filter-control"
-             placeholder="🔍 输入关键词搜索"
+             placeholder="输入关键词搜索"
              aria-label="筛选博客文章">
       {% endif %}
     </div>
@@ -80,12 +104,31 @@
           </div>
         </div>
         <div class="tile-actions">
-          <a href="{{ url_for('blog.edit_post', slug=post.slug) }}" class="glass-btn ghost">✎ 编辑</a>
+          <a href="{{ url_for('blog.edit_post', slug=post.slug) }}" class="glass-btn ghost">
+            <span class="btn-icon" aria-hidden="true">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M5 17.5V19h1.5l9-9-1.5-1.5-9 9z"></path>
+                <path d="M14 6.5l1.5-1.5 3 3-1.5 1.5z"></path>
+              </svg>
+            </span>
+            <span class="btn-text">编辑</span>
+          </a>
           <form method="POST"
                 action="{{ url_for('blog.delete_post', slug=post.slug) }}"
                 class="inline-form"
                 onsubmit="return confirm('确定要删除此文章？此操作不可恢复！');">
-            <button type="submit" class="glass-btn danger">🗑 删除</button>
+            <button type="submit" class="glass-btn danger">
+              <span class="btn-icon" aria-hidden="true">
+                <svg class="icon" viewBox="0 0 24 24">
+                  <path d="M5 7h14"></path>
+                  <path d="M10 11v6"></path>
+                  <path d="M14 11v6"></path>
+                  <path d="M8.5 7l.75-2h5.5l.75 2"></path>
+                  <path d="M6.5 7v10a2 2 0 002 2h7a2 2 0 002-2V7"></path>
+                </svg>
+              </span>
+              <span class="btn-text">删除</span>
+            </button>
           </form>
         </div>
       </article>

@@ -20,7 +20,17 @@
       <p class="editor-subtitle">拖拽式模块组合，快速打造属于你的动态页面。</p>
     </div>
     <div class="editor-toolbar">
-      <button type="button" class="pill-btn accent-sky" onclick="add()">+ 添加元素</button>
+      <button type="button"
+              class="glass-btn accent-sky compact"
+              onclick="add()">
+        <span class="btn-icon" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+        </span>
+        <span class="btn-text">新建模块</span>
+      </button>
     </div>
   </section>
 
@@ -46,8 +56,26 @@
     </div>
 
     <div class="editor-actions">
-      <button type="button" class="pill-btn neutral sm" onclick="add()">+ 添加元素</button>
-      <button type="submit" class="pill-btn accent-sky">保存更改</button>
+      <button type="button"
+              class="glass-btn ghost compact"
+              onclick="add()">
+        <span class="btn-icon" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+        </span>
+        <span class="btn-text">插入模块</span>
+      </button>
+      <button type="submit" class="glass-btn accent-sky">
+        <span class="btn-icon" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M5 7a2 2 0 012-2h8.59a2 2 0 011.41.59l1.41 1.41a2 2 0 01.59 1.41V17a2 2 0 01-2 2H7a2 2 0 01-2-2z"></path>
+            <path d="M9 13.5l2 2 4-4"></path>
+          </svg>
+        </span>
+        <span class="btn-text">保存更改</span>
+      </button>
     </div>
   </form>
 </div>
@@ -55,7 +83,7 @@
 {% include 'partials/editor/_editor_templates.html' %}
 
 <template id="element-card-template">
-  <div class="element-card" data-index="__IDX__">
+  <div class="element-card is-collapsed" data-index="__IDX__">
     <div class="element-head">
       <div class="element-meta">
         <span class="element-index" data-role="index">#__IDX_PAD__</span>
@@ -66,37 +94,61 @@
         <button type="button"
                 class="icon-btn ghost"
                 data-action="collapse"
-                aria-expanded="true"
+                aria-expanded="false"
+                aria-label="展开或收起模块"
                 title="展开/收起">
-          <span class="icon-chevron"></span>
+          <svg class="icon icon-chevron" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 9l6 6 6-6"></path>
+          </svg>
         </button>
         <button type="button"
                 class="icon-btn"
                 data-action="duplicate"
+                aria-label="复制此模块"
                 title="复制此模块">
-          复制
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="9" y="9" width="10" height="10" rx="2"></rect>
+            <path d="M5 5h8a2 2 0 012 2v8"></path>
+          </svg>
         </button>
         <button type="button"
                 class="icon-btn"
                 data-action="move-up"
+                aria-label="向上移动"
                 title="上移">
-          ↑
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 6l-5 5"></path>
+            <path d="M12 6l5 5"></path>
+            <path d="M12 6v12"></path>
+          </svg>
         </button>
         <button type="button"
                 class="icon-btn"
                 data-action="move-down"
+                aria-label="向下移动"
                 title="下移">
-          ↓
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 18l-5-5"></path>
+            <path d="M12 18l5-5"></path>
+            <path d="M12 6v12"></path>
+          </svg>
         </button>
         <button type="button"
                 class="icon-btn danger"
                 data-action="remove"
+                aria-label="删除此模块"
                 title="删除">
-          删除
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 7h14"></path>
+            <path d="M10 11v6"></path>
+            <path d="M14 11v6"></path>
+            <path d="M8.5 7l.75-2h5.5l.75 2"></path>
+            <path d="M6.5 7v10a2 2 0 002 2h7a2 2 0 002-2V7"></path>
+          </svg>
         </button>
       </div>
     </div>
-    <div class="element-body" id="body-__IDX__">
+    <div class="element-body" id="body-__IDX__" aria-hidden="true">
       <div class="control-group select-row">
         <label>组件类型</label>
         <div class="type-picker" data-type-picker data-index="__IDX__">
@@ -285,6 +337,8 @@
     const targetIdx = card.dataset.index;
     const targetCard = document.querySelector(`.element-card[data-index='${targetIdx}']`);
     if (targetCard) {
+      const toggleBtn = targetCard.querySelector('[data-action="collapse"]');
+      setCardCollapsed(targetCard, toggleBtn, false);
       const firstField = targetCard.querySelector('.element-fields [name]');
       if (firstField) {
         requestAnimationFrame(() => firstField.focus());
@@ -426,15 +480,21 @@
     }
   }
 
-  function toggleCard(card, trigger) {
-    const isCollapsed = card.classList.toggle('is-collapsed');
+  function setCardCollapsed(card, trigger, collapsed) {
+    if (!card) return;
+    card.classList.toggle('is-collapsed', collapsed);
     const body = card.querySelector('.element-body');
     if (body) {
-      body.setAttribute('aria-hidden', isCollapsed ? 'true' : 'false');
+      body.setAttribute('aria-hidden', collapsed ? 'true' : 'false');
     }
     if (trigger) {
-      trigger.setAttribute('aria-expanded', (!isCollapsed).toString());
+      trigger.setAttribute('aria-expanded', (!collapsed).toString());
     }
+  }
+
+  function toggleCard(card, trigger) {
+    const isCollapsed = card.classList.contains('is-collapsed');
+    setCardCollapsed(card, trigger, !isCollapsed);
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -480,13 +540,11 @@
     });
 
     container.querySelectorAll('.element-card').forEach(card => {
-      const body = card.querySelector('.element-body');
-      if (body) {
-        body.setAttribute('aria-hidden', 'false');
-      }
+      const toggleBtn = card.querySelector('[data-action="collapse"]');
       updateTypeLabel(card);
       updatePreview(card);
       syncTypePicker(card);
+      setCardCollapsed(card, toggleBtn, true);
     });
   });
 </script>

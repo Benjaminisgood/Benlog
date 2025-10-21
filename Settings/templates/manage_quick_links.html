@@ -22,7 +22,15 @@
         <p class="card-panel-subtitle">支持图标、概要与子链接管理，鼠标悬停可预览详情，删除操作会立即生效。</p>
       </div>
       <div class="card-panel-actions">
-        <button type="button" class="glass-btn small" data-quick-link-open>＋ 添加快捷链接</button>
+        <button type="button" class="glass-btn accent-sky small" data-quick-link-open>
+          <span class="btn-icon" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M12 5v14"></path>
+              <path d="M5 12h14"></path>
+            </svg>
+          </span>
+          <span class="btn-text">添加快捷链接</span>
+        </button>
       </div>
     </div>
 
@@ -47,12 +55,29 @@
                   data-quick-link-edit
                   data-index="{{ loop.index0 }}"
                   data-link='{{ link|tojson|e }}'>
-            编辑
+            <span class="btn-icon" aria-hidden="true">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M5 17.5V19h1.5l9-9-1.5-1.5-9 9z"></path>
+                <path d="M14 6.5l1.5-1.5 3 3-1.5 1.5z"></path>
+              </svg>
+            </span>
+            <span class="btn-text">编辑</span>
           </button>
           <form action="{{ url_for('setting.manage_quick_links') }}" method="POST" class="inline-form" onsubmit="return confirm('确认删除快捷链接 {{ link.label }}？');">
             <input type="hidden" name="index" value="{{ loop.index0 }}">
             <input type="hidden" name="action" value="delete">
-            <button type="submit" class="glass-btn danger small">删除</button>
+            <button type="submit" class="glass-btn danger small">
+              <span class="btn-icon" aria-hidden="true">
+                <svg class="icon" viewBox="0 0 24 24">
+                  <path d="M5 7h14"></path>
+                  <path d="M10 11v6"></path>
+                  <path d="M14 11v6"></path>
+                  <path d="M8.5 7l.75-2h5.5l.75 2"></path>
+                  <path d="M6.5 7v10a2 2 0 002 2h7a2 2 0 002-2V7"></path>
+                </svg>
+              </span>
+              <span class="btn-text">删除</span>
+            </button>
           </form>
         </div>
         <div class="link-hover-card" role="note">
@@ -80,7 +105,15 @@
     {% endif %}
   </section>
 
-  <a href="{{ url_for('setting.index') }}" class="glass-btn ghost">← 返回管理首页</a>
+  <a href="{{ url_for('setting.index') }}" class="glass-btn ghost">
+    <span class="btn-icon" aria-hidden="true">
+      <svg class="icon" viewBox="0 0 24 24">
+        <path d="M15 5l-7 7 7 7"></path>
+        <path d="M8 12h13"></path>
+      </svg>
+    </span>
+    <span class="btn-text">返回管理首页</span>
+  </a>
 </div>
 
 <div class="form-overlay" id="quick-link-overlay" aria-hidden="true">
@@ -108,12 +141,26 @@
       <div class="form-group">
         <label>附加子链接（可选）</label>
         <div class="child-links" data-child-links></div>
-        <button type="button" class="glass-btn ghost small" data-child-add>＋ 添加子链接</button>
+        <button type="button" class="glass-btn ghost small" data-child-add>
+          <span class="btn-icon" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M12 5v14"></path>
+              <path d="M5 12h14"></path>
+            </svg>
+          </span>
+          <span class="btn-text">添加子链接</span>
+        </button>
         <small>用于补充二级跳转，如帮助文档、后台入口。最多 6 条。</small>
       </div>
       <div class="form-footer">
         <button type="button" class="glass-btn ghost" data-quick-link-close>取消</button>
-        <button type="submit" class="glass-btn">
+        <button type="submit" class="glass-btn accent-sky">
+          <span class="btn-icon" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M4 5l16 7-16 7 4-7z"></path>
+              <path d="M12 12h8"></path>
+            </svg>
+          </span>
           <span class="btn-text">提交</span>
         </button>
       </div>

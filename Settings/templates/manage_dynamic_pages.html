@@ -23,7 +23,15 @@
       </div>
       <div class="card-panel-actions">
         <form action="{{ url_for('setting.new_dynamic_page') }}" method="POST" class="action-form">
-          <button type="submit" class="glass-btn small">＋ 新建动态网页</button>
+          <button type="submit" class="glass-btn accent-sky small">
+            <span class="btn-icon" aria-hidden="true">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M12 5v14"></path>
+                <path d="M5 12h14"></path>
+              </svg>
+            </span>
+            <span class="btn-text">新建动态网页</span>
+          </button>
         </form>
       </div>
     </div>
@@ -37,18 +45,51 @@
           <span class="tile-meta">{{ page.view_url }}</span>
         </div>
         <div class="tile-actions">
-          <a href="{{ page.edit_url }}" class="glass-btn small">编辑</a>
-          <a href="{{ page.view_url }}" target="_blank" rel="noopener" class="glass-btn ghost small">查看</a>
+          <a href="{{ page.edit_url }}" class="glass-btn small">
+            <span class="btn-icon" aria-hidden="true">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M5 17.5V19h1.5l9-9-1.5-1.5-9 9z"></path>
+                <path d="M14 6.5l1.5-1.5 3 3-1.5 1.5z"></path>
+              </svg>
+            </span>
+            <span class="btn-text">编辑</span>
+          </a>
+          <a href="{{ page.view_url }}" target="_blank" rel="noopener" class="glass-btn ghost small">
+            <span class="btn-icon" aria-hidden="true">
+              <svg class="icon" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"></path>
+              </svg>
+            </span>
+            <span class="btn-text">查看</span>
+          </a>
           <form action="{{ url_for('setting.delete_dynamic_page', page=page.page_name) }}"
                 method="POST"
                 class="inline-form"
                 onsubmit="return confirm('确认删除页面 {{ page.page_name }} 吗？');">
-            <button type="submit" class="glass-btn danger small">删除</button>
+            <button type="submit" class="glass-btn danger small">
+              <span class="btn-icon" aria-hidden="true">
+                <svg class="icon" viewBox="0 0 24 24">
+                  <path d="M5 7h14"></path>
+                  <path d="M10 11v6"></path>
+                  <path d="M14 11v6"></path>
+                  <path d="M8.5 7l.75-2h5.5l.75 2"></path>
+                  <path d="M6.5 7v10a2 2 0 002 2h7a2 2 0 002-2V7"></path>
+                </svg>
+              </span>
+              <span class="btn-text">删除</span>
+            </button>
           </form>
           <button type="button"
                   class="glass-btn neutral small"
                   data-copy-url="{{ page.view_url }}">
-            拷贝链接
+            <span class="btn-icon" aria-hidden="true">
+              <svg class="icon" viewBox="0 0 24 24">
+                <rect x="8" y="8" width="12" height="12" rx="2"></rect>
+                <rect x="4" y="4" width="12" height="12" rx="2"></rect>
+              </svg>
+            </span>
+            <span class="btn-text">拷贝链接</span>
           </button>
         </div>
       </article>
@@ -62,7 +103,15 @@
     {% endif %}
   </section>
 
-  <a href="{{ url_for('setting.index') }}" class="glass-btn ghost">← 返回管理首页</a>
+  <a href="{{ url_for('setting.index') }}" class="glass-btn ghost">
+    <span class="btn-icon" aria-hidden="true">
+      <svg class="icon" viewBox="0 0 24 24">
+        <path d="M15 5l-7 7 7 7"></path>
+        <path d="M8 12h13"></path>
+      </svg>
+    </span>
+    <span class="btn-text">返回管理首页</span>
+  </a>
 </div>
 
 <script>
@@ -87,14 +136,26 @@
     btn.addEventListener('click', async () => {
       const url = btn.dataset.copyUrl;
       if (!url) return;
+      const labelEl = btn.querySelector('.btn-text');
+      if (labelEl && !btn.dataset.originalLabel) {
+        btn.dataset.originalLabel = labelEl.textContent.trim();
+      }
       try {
         await copyText(url);
-        btn.textContent = '已复制 ✅';
-        setTimeout(() => { btn.textContent = '拷贝链接'; }, 1600);
+        if (labelEl) {
+          labelEl.textContent = '已复制';
+          setTimeout(() => {
+            labelEl.textContent = btn.dataset.originalLabel || '拷贝链接';
+          }, 1600);
+        }
       } catch (error) {
-        btn.textContent = '复制失败 ❌';
+        if (labelEl) {
+          labelEl.textContent = '复制失败';
+          setTimeout(() => {
+            labelEl.textContent = btn.dataset.originalLabel || '拷贝链接';
+          }, 2000);
+        }
         console.error('复制链接失败：', error);
-        setTimeout(() => { btn.textContent = '拷贝链接'; }, 2000);
       }
     });
   });

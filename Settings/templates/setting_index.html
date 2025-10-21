@@ -4,38 +4,87 @@
   <section class="settings-hero glass-card">
     <div class="hero-info">
       <p class="hero-badge">后台中心</p>
-      <h1>欢迎回来，{{ current_user.username }} 👋</h1>
+      <div class="hero-title-row">
+        <span class="hero-icon" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M12 4.5l1.8 3.6 4 .6-2.9 2.9.7 4-3.6-1.9-3.6 1.9.7-4-2.9-2.9 4-.6z"></path>
+          </svg>
+        </span>
+        <h1>欢迎回来，{{ current_user.username }}</h1>
+      </div>
       <p class="hero-sub">在这里统一管理博客、笔记与站点配置，让工作流更加轻盈顺畅。</p>
     </div>
     <div class="hero-actions">
-      <a href="{{ url_for('setting.logout') }}" class="action-btn ghost">🔒 安全退出</a>
+      <a href="{{ url_for('setting.logout') }}" class="glass-btn ghost compact">
+        <span class="btn-icon" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M15 12H8"></path>
+            <path d="M12 9l3 3-3 3"></path>
+            <path d="M10 5H8a3 3 0 00-3 3v8a3 3 0 003 3h2"></path>
+          </svg>
+        </span>
+        <span class="btn-text">安全退出</span>
+      </a>
     </div>
   </section>
 
   <section class="stats-deck">
     <article class="stat-card glow">
-      <header><span>📚</span></header>
+      <header>
+        <span class="stat-icon stat-icon--notes" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24">
+            <rect x="4.5" y="5" width="7" height="14" rx="1.5"></rect>
+            <path d="M11.5 5H17a1.5 1.5 0 011.5 1.5v10A1.5 1.5 0 0117 18H11.5"></path>
+          </svg>
+        </span>
+      </header>
       <div class="stat-body">
         <strong>{{ notes_count or '0' }}</strong>
         <p>教育笔记</p>
       </div>
     </article>
     <article class="stat-card glow">
-      <header><span>📝</span></header>
+      <header>
+        <span class="stat-icon stat-icon--posts" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M8 4.5h7l3 3v10a2 2 0 01-2 2H8a2 2 0 01-2-2v-11a2 2 0 012-2z"></path>
+            <path d="M15 4.5v4h4"></path>
+            <path d="M9.5 13h5"></path>
+            <path d="M9.5 16h3.5"></path>
+          </svg>
+        </span>
+      </header>
       <div class="stat-body">
         <strong>{{ posts_count or '0' }}</strong>
         <p>博客文章</p>
       </div>
     </article>
     <article class="stat-card glow">
-      <header><span>👥</span></header>
+      <header>
+        <span class="stat-icon stat-icon--users" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24">
+            <circle cx="12" cy="9" r="3"></circle>
+            <path d="M6 19c0-3.3 2.7-6 6-6s6 2.7 6 6"></path>
+            <path d="M4.5 19v-1a3 3 0 013-3"></path>
+            <path d="M19.5 19v-1a3 3 0 00-3-3"></path>
+          </svg>
+        </span>
+      </header>
       <div class="stat-body">
         <strong>{{ users_count or '0' }}</strong>
         <p>注册用户</p>
       </div>
     </article>
     <article class="stat-card glow">
-      <header><span>📷</span></header>
+      <header>
+        <span class="stat-icon stat-icon--media" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24">
+            <rect x="4" y="6.5" width="16" height="11" rx="2"></rect>
+            <circle cx="12" cy="12" r="3.5"></circle>
+            <path d="M8 6.5l1.3-2h5.4"></path>
+          </svg>
+        </span>
+      </header>
       <div class="stat-body">
         <strong>{{ media_files_count or '0' }}</strong>
         <p>媒体文件</p>
@@ -46,16 +95,38 @@
   {% if extra_for_admin %}
   <section class="settings-section glass-card">
     <div class="section-head">
-      <h2>⚙️ 内容管理</h2>
+      <div class="section-title">
+        <span class="section-icon section-icon--content" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24">
+            <rect x="4.5" y="5" width="6" height="6" rx="1.2"></rect>
+            <rect x="13.5" y="5" width="6" height="6" rx="1.2"></rect>
+            <rect x="4.5" y="13" width="6" height="6" rx="1.2"></rect>
+            <rect x="13.5" y="13" width="6" height="6" rx="1.2"></rect>
+          </svg>
+        </span>
+        <h2>内容管理</h2>
+      </div>
       <p>常规发布内容的快速入口。</p>
     </div>
     <div class="link-grid">
       <a href="{{ url_for('blog.manage_posts') }}" class="link-tile">
-        <span>📝</span>
+        <span class="tile-icon tile-icon--posts" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M8 5h7l2.5 2.5v10a2 2 0 01-2 2H8a2 2 0 01-2-2V7a2 2 0 012-2z"></path>
+            <path d="M15 5v4h4"></path>
+            <path d="M9.5 13h5"></path>
+          </svg>
+        </span>
         <strong>管理博客文章</strong>
       </a>
       <a href="{{ url_for('edu.manage_notes') }}" class="link-tile">
-        <span>📄</span>
+        <span class="tile-icon tile-icon--notes" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24">
+            <rect x="5" y="4.5" width="11" height="15" rx="1.8"></rect>
+            <path d="M16 4.5l3 3V18a1.5 1.5 0 01-1.5 1.5H7"></path>
+            <path d="M8.5 11h5"></path>
+          </svg>
+        </span>
         <strong>管理教育笔记</strong>
       </a>
     </div>
@@ -65,32 +136,74 @@
   {% if extra_for_user1 %}
   <section class="settings-section glass-card">
     <div class="section-head">
-      <h2>🔧 超级管理员工具</h2>
+      <div class="section-title">
+        <span class="section-icon section-icon--admin" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M12 3l7 4v6c0 4.5-3 7-7 8-4-1-7-3.5-7-8V7z"></path>
+            <path d="M9.5 12.5l2 2 3-3.5"></path>
+          </svg>
+        </span>
+        <h2>超级管理员工具</h2>
+      </div>
       <p>站点级配置、用户与资源管理。</p>
     </div>
     <div class="link-grid admin">
       <a href="{{ url_for('setting.manage_users') }}" class="link-tile">
-        <span>👤</span>
+        <span class="tile-icon tile-icon--users" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24">
+            <circle cx="12" cy="9" r="3"></circle>
+            <path d="M6 19c0-3.3 2.7-6 6-6s6 2.7 6 6"></path>
+          </svg>
+        </span>
         <strong>账号权限管理</strong>
       </a>
       <a href="{{ url_for('setting.manage_gallery_visibility') }}" class="link-tile">
-        <span>🖼️</span>
+        <span class="tile-icon tile-icon--media" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24">
+            <rect x="4.5" y="6" width="15" height="12" rx="2"></rect>
+            <path d="M7.5 15l3-3 2.5 2 2.5-3 3 4"></path>
+            <circle cx="9" cy="10" r="1.2"></circle>
+          </svg>
+        </span>
         <strong>媒体文件管理</strong>
       </a>
       <a href="{{ url_for('setting.manage_dynamic_page') }}" class="link-tile">
-        <span>📑</span>
+        <span class="tile-icon tile-icon--layout" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24">
+            <rect x="4.5" y="5" width="15" height="14" rx="1.8"></rect>
+            <line x1="9.5" y1="5" x2="9.5" y2="19"></line>
+            <line x1="4.5" y1="10.5" x2="19.5" y2="10.5"></line>
+          </svg>
+        </span>
         <strong>动态页面编写</strong>
       </a>
       <a href="{{ url_for('setting.manage_friend_links') }}" class="link-tile">
-        <span>🔗</span>
+        <span class="tile-icon tile-icon--links" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M9.5 14.5l-1.5 1.5a3.5 3.5 0 105-5l-1.2 1.2"></path>
+            <path d="M14.5 9.5l1.5-1.5a3.5 3.5 0 10-5 5l1.2-1.2"></path>
+          </svg>
+        </span>
         <strong>友情链接管理</strong>
       </a>
       <a href="{{ url_for('setting.manage_quick_links') }}" class="link-tile">
-        <span>⚡</span>
+        <span class="tile-icon tile-icon--quick" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M13 3l-6 9h5l-1 9 6-10h-5z"></path>
+          </svg>
+        </span>
         <strong>快捷链接管理</strong>
       </a>
     </div>
-    <p class="section-hint">👑 您是 ID 为 1 的超级管理员，拥有全站最高权限。</p>
+    <p class="section-hint">
+      <span class="inline-icon" aria-hidden="true">
+        <svg class="icon" viewBox="0 0 24 24">
+          <path d="M5 10l2.5-4 3 5 3-5 2.5 4 3-2v8a2 2 0 01-2 2H7a2 2 0 01-2-2z"></path>
+          <path d="M9 16h6"></path>
+        </svg>
+      </span>
+      您是 ID 为 1 的超级管理员，拥有全站最高权限。
+    </p>
   </section>
   {% endif %}
 </main>
@@ -147,6 +260,29 @@
   color: var(--text-color);
 }
 
+.hero-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hero-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(14, 165, 233, 0.18));
+  box-shadow: 0 18px 36px rgba(59, 130, 246, 0.22);
+  color: rgba(37, 99, 235, 0.92);
+}
+
+.hero-icon .icon {
+  width: 22px;
+  height: 22px;
+}
+
 .hero-sub {
   margin: 0;
   color: rgba(15, 23, 42, 0.7);
@@ -159,37 +295,15 @@
   color: rgba(226, 232, 240, 0.72);
 }
 
+[data-theme="dark"] .hero-icon {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.32), rgba(14, 165, 233, 0.22));
+  color: rgba(191, 219, 254, 0.95);
+  box-shadow: 0 20px 38px rgba(37, 99, 235, 0.38);
+}
+
 .hero-actions {
   display: flex;
   gap: 12px;
-}
-
-.action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.65rem 1.4rem;
-  border-radius: 999px;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.action-btn.ghost {
-  border: 1px solid rgba(37, 99, 235, 0.35);
-  color: #2563eb;
-  background: rgba(255, 255, 255, 0.55);
-}
-
-[data-theme="dark"] .action-btn.ghost {
-  border-color: rgba(148, 163, 184, 0.4);
-  color: #a5b4fc;
-}
-
-.action-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 18px 30px rgba(37, 99, 235, 0.22);
 }
 
 .stats-deck {
@@ -221,7 +335,44 @@
 }
 
 .stat-card header {
-  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.stat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.22), rgba(14, 165, 233, 0.12));
+  box-shadow: 0 18px 34px rgba(37, 99, 235, 0.25);
+  color: #1d4ed8;
+}
+
+.stat-icon .icon {
+  width: 26px;
+  height: 26px;
+}
+
+.stat-icon--notes {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(99, 102, 241, 0.18));
+  color: #0f172a;
+}
+
+.stat-icon--posts {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.3), rgba(249, 115, 22, 0.22));
+  color: #f97316;
+}
+
+.stat-icon--users {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(59, 130, 246, 0.22));
+  color: #0f766e;
+}
+
+.stat-icon--media {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.28), rgba(249, 168, 212, 0.22));
+  color: #be185d;
 }
 
 .stat-body {
@@ -244,10 +395,48 @@
   color: rgba(226, 232, 240, 0.68);
 }
 
+[data-theme="dark"] .stat-icon {
+  color: rgba(248, 250, 252, 0.92);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.42);
+}
+
 .settings-section .section-head h2 {
   margin: 0;
   font-size: 1.4rem;
   color: var(--text-color);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.22), rgba(14, 165, 233, 0.18));
+  box-shadow: 0 16px 30px rgba(59, 130, 246, 0.2);
+  color: rgba(37, 99, 235, 0.92);
+}
+
+.section-icon .icon {
+  width: 22px;
+  height: 22px;
+}
+
+.section-icon--admin {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.28), rgba(59, 130, 246, 0.22));
+  color: #7c3aed;
+}
+
+.section-icon--content {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.24), rgba(14, 165, 233, 0.16));
+  color: #2563eb;
 }
 
 .section-head p {
@@ -257,6 +446,11 @@
 
 [data-theme="dark"] .section-head p {
   color: rgba(226, 232, 240, 0.6);
+}
+
+[data-theme="dark"] .section-icon {
+  color: rgba(226, 232, 240, 0.92);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.38);
 }
 
 .link-grid {
@@ -274,7 +468,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 1.2rem;
+  padding: 1.25rem 1.2rem;
   border-radius: 16px;
   text-decoration: none;
   background: rgba(255, 255, 255, 0.7);
@@ -288,13 +482,66 @@
   border-color: rgba(148, 163, 184, 0.35);
 }
 
+[data-theme="dark"] .tile-icon {
+  color: rgba(226, 232, 240, 0.92);
+  box-shadow: 0 20px 36px rgba(15, 23, 42, 0.35);
+}
+
 .link-tile:hover {
   transform: translateY(-4px);
   box-shadow: 0 16px 30px rgba(15, 23, 42, 0.18);
 }
 
-.link-tile span {
-  font-size: 1.6rem;
+.tile-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(148, 163, 184, 0.25), rgba(226, 232, 240, 0.18));
+  color: rgba(30, 41, 59, 0.9);
+  box-shadow: 0 16px 28px rgba(71, 85, 105, 0.18);
+}
+
+.tile-icon .icon {
+  width: 22px;
+  height: 22px;
+}
+
+.tile-icon--posts {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.24), rgba(14, 165, 233, 0.18));
+  color: #1d4ed8;
+}
+
+.tile-icon--notes {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.24), rgba(59, 130, 246, 0.18));
+  color: #0f172a;
+}
+
+.tile-icon--users {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.28), rgba(59, 130, 246, 0.2));
+  color: #0f766e;
+}
+
+.tile-icon--media {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.28), rgba(192, 132, 252, 0.22));
+  color: #be185d;
+}
+
+.tile-icon--layout {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.26), rgba(45, 212, 191, 0.2));
+  color: #1d4ed8;
+}
+
+.tile-icon--links {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.28), rgba(59, 130, 246, 0.2));
+  color: #7c3aed;
+}
+
+.tile-icon--quick {
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.28), rgba(249, 115, 22, 0.24));
+  color: #b45309;
 }
 
 .section-hint {
@@ -303,8 +550,31 @@
   color: rgba(15, 23, 42, 0.6);
 }
 
+.inline-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  margin-right: 8px;
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.24), rgba(244, 63, 94, 0.18));
+  color: rgba(190, 18, 60, 0.9);
+  box-shadow: 0 12px 22px rgba(248, 113, 113, 0.18);
+}
+
+.inline-icon .icon {
+  width: 18px;
+  height: 18px;
+}
+
 [data-theme="dark"] .section-hint {
   color: rgba(226, 232, 240, 0.58);
+}
+
+[data-theme="dark"] .inline-icon {
+  box-shadow: 0 16px 28px rgba(248, 113, 113, 0.32);
+  color: rgba(254, 226, 226, 0.9);
 }
 
 @media (max-width: 768px) {

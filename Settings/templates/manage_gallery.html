@@ -23,7 +23,7 @@
     <form method="post" class="form-stack" id="gallery-visibility-form">
       <div class="form-group">
         <label for="album-search">路径搜索</label>
-        <input type="text" id="album-search" class="form-control" placeholder="🔍 输入关键字过滤相册">
+        <input type="text" id="album-search" class="form-control" placeholder="输入关键字过滤相册">
       </div>
 
       <ul class="toggle-list" id="album-list">
@@ -45,21 +45,34 @@
                  class="toggle-note"
                  name="note_{{ album_key }}"
                  value="{{ visible_albums[album].note if album in visible_albums else '' }}"
-                 placeholder="✏️ 添加备注（例如 婚礼、旅行、日常记录...）">
+                 placeholder="添加备注（例如 婚礼、旅行、日常记录...）">
         </li>
         {% endfor %}
       </ul>
 
       <div class="form-footer">
-        <button type="submit" class="glass-btn">
+        <button type="submit" class="glass-btn accent-sky">
+          <span class="btn-icon" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M5 7a2 2 0 012-2h8.6a2 2 0 011.4.59l1.4 1.41a2 2 0 01.6 1.41V17a2 2 0 01-2 2H7a2 2 0 01-2-2z"></path>
+              <path d="M9 13.5l2 2 4-4"></path>
+            </svg>
+          </span>
           <span class="btn-text">保存设置</span>
-          <span aria-hidden="true">💾</span>
         </button>
       </div>
     </form>
   </section>
 
-  <a href="{{ url_for('setting.index') }}" class="glass-btn ghost">← 返回管理首页</a>
+  <a href="{{ url_for('setting.index') }}" class="glass-btn ghost">
+    <span class="btn-icon" aria-hidden="true">
+      <svg class="icon" viewBox="0 0 24 24">
+        <path d="M15 5l-7 7 7 7"></path>
+        <path d="M8 12h13"></path>
+      </svg>
+    </span>
+    <span class="btn-text">返回管理首页</span>
+  </a>
 </div>
 
 <script>

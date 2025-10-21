@@ -39,7 +39,14 @@
             {% set ext = file.lower().rsplit('.', 1)[-1] %}
             {% if ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}
               <div class="media-card local-card media-type-image">
-                <span class="media-chip">📷 图片</span>
+                <span class="media-chip">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="3.5" y="6" width="17" height="12" rx="2"></rect>
+                    <path d="M7 15l3.2-3.2 2.6 2.2 2.6-3.4 3.1 4.4"></path>
+                    <circle cx="9.4" cy="9.6" r="1.2"></circle>
+                  </svg>
+                  <span class="chip-label">图片</span>
+                </span>
                 <img
                   loading="lazy"
                   src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}"
@@ -49,7 +56,13 @@
               </div>
             {% elif ext in ['mp4', 'webm', 'mov'] %}
               <div class="media-card local-card media-type-video">
-                <span class="media-chip">🎬 视频</span>
+                <span class="media-chip">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="3.5" y="6" width="17" height="12" rx="2"></rect>
+                    <path d="M11 9l5 3-5 3V9z"></path>
+                  </svg>
+                  <span class="chip-label">视频</span>
+                </span>
                 <video controls preload="metadata">
                   <source src="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}">
                   你的浏览器暂不支持视频播放。
@@ -59,7 +72,12 @@
               {% set audio_id = 'audio-local-' ~ loop.index %}
               {% set audio_mime = 'audio/mpeg' if ext == 'mp3' else 'audio/wav' if ext == 'wav' else 'audio/flac' %}
               <div class="media-card local-card media-type-audio">
-                <span class="media-chip">🎧 音频</span>
+                <span class="media-chip">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M9 5v10.5a2.5 2.5 0 11-1.5-2.3V6.5L17 5v8.5a2.5 2.5 0 11-1.5-2.3V4.5z"></path>
+                  </svg>
+                  <span class="chip-label">音频</span>
+                </span>
                 <div class="audio-station" data-audio-id="{{ audio_id }}" data-title="{{ file }}">
                   <button class="audio-control" type="button" aria-label="播放音频">
                     <span class="audio-icon">▶</span>
@@ -85,7 +103,14 @@
               <div class="media-card local-card media-type-document"
                    data-url="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}"
                    onclick="window.open(this.dataset.url, '_blank')">
-                <span class="media-chip">📄 PDF</span>
+                <span class="media-chip">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M7 4.5h7l3 3v11a1.5 1.5 0 01-1.5 1.5H7A1.5 1.5 0 015.5 18.5v-12A1.5 1.5 0 017 4.5z"></path>
+                    <path d="M14 4.5v3.5h3.5"></path>
+                    <path d="M9 13h6"></path>
+                  </svg>
+                  <span class="chip-label">PDF</span>
+                </span>
                 <div class="doc-card">
                   <span>点击查看</span>
                   <small>{{ file }}</small>
@@ -95,7 +120,12 @@
               <div class="media-card local-card media-type-document"
                    data-url="{{ url_for('neibr.media_file', user_id=post.user_id, post_id=post.id, filename=file) }}"
                    onclick="window.open(this.dataset.url, '_blank')">
-                <span class="media-chip">📁 文件</span>
+                <span class="media-chip">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4.5 6a2 2 0 012-2h4l2 2h7a2 2 0 012 2v10a2 2 0 01-2 2h-13a2 2 0 01-2-2z"></path>
+                  </svg>
+                  <span class="chip-label">文件</span>
+                </span>
                 <div class="doc-card">
                   <span>立即下载</span>
                   <small>{{ file }}</small>
@@ -107,12 +137,28 @@
           {% for item in remote_media %}
             {% if item.type == 'image' %}
               <div class="media-card remote-card media-type-image">
-                <span class="media-chip remote">🌐 图片</span>
+                <span class="media-chip remote">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 3.5a8.5 8.5 0 110 17 8.5 8.5 0 010-17z"></path>
+                    <path d="M3.5 12h17"></path>
+                    <path d="M12 3.5c3 2.5 3 11.5 0 14"></path>
+                    <path d="M12 3.5c-3 2.5-3 11.5 0 14"></path>
+                  </svg>
+                  <span class="chip-label">图片</span>
+                </span>
                 <img loading="lazy" src="{{ item.url }}" alt="remote media" onclick="openLightbox(this.src)">
               </div>
             {% elif item.type == 'video' %}
               <div class="media-card remote-card media-type-video">
-                <span class="media-chip remote">🌐 视频</span>
+                <span class="media-chip remote">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 3.5a8.5 8.5 0 110 17 8.5 8.5 0 010-17z"></path>
+                    <path d="M3.5 12h17"></path>
+                    <path d="M12 3.5c3 2.5 3 11.5 0 14"></path>
+                    <path d="M12 3.5c-3 2.5-3 11.5 0 14"></path>
+                  </svg>
+                  <span class="chip-label">视频</span>
+                </span>
                 <video controls preload="metadata">
                   <source src="{{ item.url }}">
                 </video>
@@ -123,7 +169,15 @@
               {% set remote_mime = 'audio/mpeg' if remote_ext == 'mp3' else 'audio/wav' if remote_ext == 'wav' else 'audio/flac' if remote_ext == 'flac' else 'audio/mpeg' %}
               {% set display_name = item.url.rsplit('/', 1)[-1] if '/' in item.url else item.url %}
               <div class="media-card remote-card media-type-audio">
-                <span class="media-chip remote">🌐 音频</span>
+                <span class="media-chip remote">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 3.5a8.5 8.5 0 110 17 8.5 8.5 0 010-17z"></path>
+                    <path d="M3.5 12h17"></path>
+                    <path d="M12 3.5c3 2.5 3 11.5 0 14"></path>
+                    <path d="M12 3.5c-3 2.5-3 11.5 0 14"></path>
+                  </svg>
+                  <span class="chip-label">音频</span>
+                </span>
                 <div class="audio-station" data-audio-id="{{ remote_audio_id }}" data-title="{{ display_name }}">
                   <button class="audio-control" type="button" aria-label="播放音频">
                     <span class="audio-icon">▶</span>
@@ -148,7 +202,15 @@
               <div class="media-card remote-card media-type-document"
                    data-url="{{ item.url }}"
                    onclick="window.open(this.dataset.url, '_blank')">
-                <span class="media-chip remote">🌐 {{ item.type|capitalize }}</span>
+                <span class="media-chip remote">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 3.5a8.5 8.5 0 110 17 8.5 8.5 0 010-17z"></path>
+                    <path d="M3.5 12h17"></path>
+                    <path d="M12 3.5c3 2.5 3 11.5 0 14"></path>
+                    <path d="M12 3.5c-3 2.5-3 11.5 0 14"></path>
+                  </svg>
+                  <span class="chip-label">{{ item.type|capitalize }}</span>
+                </span>
                 <div class="doc-card">
                   <span>点击访问</span>
                   <small>{{ item.url }}</small>
@@ -191,9 +253,18 @@
 </div>
 
 <div class="comment-floating-actions">
-  <button class="floating-comment" type="button" onclick="toggleCommentBox()" title="写评论" aria-haspopup="dialog">💬</button>
+  <button class="floating-comment" type="button" onclick="toggleCommentBox()" title="写评论" aria-haspopup="dialog">
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 5h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-4.5 3v-3H5a2 2 0 01-2-2V7a2 2 0 012-2z"></path>
+    </svg>
+  </button>
   {% if can_edit %}
-    <a class="floating-edit" href="{{ url_for('neibr.edit_post', post_id=post.id) }}" title="编辑帖子" aria-label="编辑帖子">✏️</a>
+    <a class="floating-edit" href="{{ url_for('neibr.edit_post', post_id=post.id) }}" title="编辑帖子" aria-label="编辑帖子">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M5 17.5V19h1.5l9-9-1.5-1.5-9 9z"></path>
+        <path d="M14 6.5l1.5-1.5 3 3-1.5 1.5z"></path>
+      </svg>
+    </a>
   {% endif %}
 </div>
 
@@ -211,8 +282,13 @@
     </label>
     <div class="comment-actions">
       <button type="submit" class="submit-comment">
+        <span class="btn-icon" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M4 5l16 7-16 7 4-7z"></path>
+            <path d="M10 12h10"></path>
+          </svg>
+        </span>
         <span class="btn-text">提交评论</span>
-        <span aria-hidden="true">🚀</span>
       </button>
       <button type="button" class="close-comment" onclick="toggleCommentBox()">取消</button>
     </div>
@@ -397,6 +473,9 @@
   position: absolute;
   top: 12px;
   left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 4px 12px;
   border-radius: 999px;
   font-size: 0.75rem;
@@ -409,6 +488,15 @@
 
 .media-chip.remote {
   background: rgba(91, 134, 229, 0.85);
+}
+
+.media-chip .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.chip-label {
+  line-height: 1;
 }
 
 .audio-station {
@@ -628,7 +716,6 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.6rem;
   cursor: pointer;
   box-shadow: 0 18px 32px rgba(15, 23, 42, 0.28);
   transition: transform 0.22s ease, box-shadow 0.22s ease;
@@ -649,6 +736,12 @@
 .floating-edit:hover {
   transform: translateY(-3px);
   box-shadow: 0 24px 36px rgba(15, 23, 42, 0.36);
+}
+
+.floating-comment .icon,
+.floating-edit .icon {
+  width: 24px;
+  height: 24px;
 }
 
 .comment-backdrop {

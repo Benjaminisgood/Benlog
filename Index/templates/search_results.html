@@ -41,14 +41,38 @@
                   </ul>
                   {% endif %}
                   <footer class="search-actions">
-                    <a class="search-view-link" href="{{ item.url }}" target="_blank" rel="noopener">👁 查看</a>
+                    <a class="search-view-link" href="{{ item.url }}" target="_blank" rel="noopener">
+                      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"></path>
+                        <circle cx="12" cy="12" r="2.5"></circle>
+                      </svg>
+                      <span>查看</span>
+                    </a>
                     {% if current_user.is_authenticated %}
                       {% if group.module == 'Blog' and (current_user.is_admin or current_user.id == 1) and item.slug %}
-                        <a class="search-edit-link" href="{{ url_for('blog.edit_post', slug=item.slug) }}">✎ 编辑</a>
+                        <a class="search-edit-link" href="{{ url_for('blog.edit_post', slug=item.slug) }}">
+                          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M5 17.5V19h1.5l9-9-1.5-1.5-9 9z"></path>
+                            <path d="M14 6.5l1.5-1.5 3 3-1.5 1.5z"></path>
+                          </svg>
+                          <span>编辑</span>
+                        </a>
                       {% elif group.module == 'Edu' and (current_user.is_admin or current_user.id == 1) and item.slug %}
-                        <a class="search-edit-link" href="{{ url_for('edu.edit_note', slug=item.slug) }}">✎ 编辑</a>
+                        <a class="search-edit-link" href="{{ url_for('edu.edit_note', slug=item.slug) }}">
+                          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M5 17.5V19h1.5l9-9-1.5-1.5-9 9z"></path>
+                            <path d="M14 6.5l1.5-1.5 3 3-1.5 1.5z"></path>
+                          </svg>
+                          <span>编辑</span>
+                        </a>
                       {% elif group.module == 'Neibr' and item.owner_id is defined and item.owner_id == current_user.id %}
-                        <a class="search-edit-link" href="{{ url_for('neibr.edit_post', post_id=item.post_id) }}">✎ 编辑</a>
+                        <a class="search-edit-link" href="{{ url_for('neibr.edit_post', post_id=item.post_id) }}">
+                          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M5 17.5V19h1.5l9-9-1.5-1.5-9 9z"></path>
+                            <path d="M14 6.5l1.5-1.5 3 3-1.5 1.5z"></path>
+                          </svg>
+                          <span>编辑</span>
+                        </a>
                       {% endif %}
                     {% endif %}
                   </footer>

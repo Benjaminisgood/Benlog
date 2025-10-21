@@ -28,7 +28,7 @@
       {% for link in friend_links %}
       <article class="card-tile">
         <div class="tile-body">
-          <a href="{{ link.url }}" target="_blank" rel="noopener" class="tile-title">🔗 {{ link.label }}</a>
+          <a href="{{ link.url }}" target="_blank" rel="noopener" class="tile-title">{{ link.label }}</a>
           <span class="tile-meta">{{ link.url }}</span>
         </div>
         <div class="tile-actions">
@@ -66,13 +66,27 @@
         <input type="text" name="label" id="fl-label" class="form-control" placeholder="站点名称 / 昵称" required>
       </div>
       <div class="form-footer">
-        <button type="submit" class="glass-btn">
+        <button type="submit" class="glass-btn accent-sky">
+          <span class="btn-icon" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M4 5l16 7-16 7 4-7z"></path>
+              <path d="M10 12l10 0"></path>
+            </svg>
+          </span>
           <span class="btn-text">提交</span>
         </button>
       </div>
     </form>
   </section>
 
-  <a href="{{ url_for('setting.index') }}" class="glass-btn ghost">← 返回管理首页</a>
+  <a href="{{ url_for('setting.index') }}" class="glass-btn ghost">
+    <span class="btn-icon" aria-hidden="true">
+      <svg class="icon" viewBox="0 0 24 24">
+        <path d="M15 5l-7 7 7 7"></path>
+        <path d="M8 12h13"></path>
+      </svg>
+    </span>
+    <span class="btn-text">返回管理首页</span>
+  </a>
 </div>
 {% endblock %}

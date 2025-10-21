@@ -72,13 +72,29 @@ const feedState = {
   random: { token: 0 },
   my: { page: 1 }
 };
+const renderJobs = new WeakMap();
+
+function cancelPanelRender(panel) {
+  const job = renderJobs.get(panel);
+  if (job && typeof job.cancel === 'function') {
+    job.cancel();
+    renderJobs.delete(panel);
+  }
+}
 
 tabButtons.forEach(btn => {
   btn.addEventListener('click', () => {
     const target = btn.dataset.feedTab;
     tabButtons.forEach(b => b.classList.toggle('active', b === btn));
     panels.forEach(panel => {
-      panel.classList.toggle('active', panel.dataset.feed === target);
+      const isTarget = panel.dataset.feed === target;
+      panel.classList.toggle('active', isTarget);
+      if (!isTarget) {
+        const grid = panel.querySelector('.feed-grid');
+        if (grid) {
+          cancelPanelRender(grid);
+        }
+      }
     });
   });
 });
@@ -132,8 +148,19 @@ function appendCards(panel, posts, src) {
     return;
   }
 
+  cancelPanelRender(panel);
+
   const BATCH_SIZE = 4;
   let index = 0;
+
+  const job = {
+    id: null,
+    cancel: () => {
+      if (job.id !== null) {
+        cancelAnimationFrame(job.id);
+      }
+    }
+  };
 
   const renderBatch = () => {
     const fragment = document.createDocumentFragment();
@@ -148,11 +175,14 @@ function appendCards(panel, posts, src) {
     panel.appendChild(fragment);
 
     if (index < posts.length) {
-      requestAnimationFrame(renderBatch);
+      job.id = requestAnimationFrame(renderBatch);
+    } else {
+      renderJobs.delete(panel);
     }
   };
 
-  requestAnimationFrame(renderBatch);
+  renderJobs.set(panel, job);
+  job.id = requestAnimationFrame(renderBatch);
 }
 
 document.querySelectorAll('.load-more-btn').forEach(btn => {
@@ -180,6 +210,7 @@ document.querySelectorAll('.load-more-btn').forEach(btn => {
         .then(res => res.json())
         .then(data => {
           if (feedState.random.token !== token) return;
+          cancelPanelRender(panel);
           panel.innerHTML = '';
           appendCards(panel, data.posts, src);
           btn.textContent = originalText;

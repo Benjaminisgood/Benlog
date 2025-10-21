@@ -22,7 +22,15 @@
         <p class="card-panel-subtitle">支持快速编辑或删除用户，管理员状态以徽章形式展示。</p>
       </div>
       <div class="card-panel-actions">
-        <a href="{{ url_for('setting.add_user') }}" class="glass-btn small">＋ 新增用户</a>
+        <a href="{{ url_for('setting.add_user') }}" class="glass-btn accent-sky small">
+          <span class="btn-icon" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M12 5v14"></path>
+              <path d="M5 12h14"></path>
+            </svg>
+          </span>
+          <span class="btn-text">新增用户</span>
+        </a>
       </div>
     </div>
 
@@ -49,9 +57,28 @@
               </span>
             </td>
             <td class="action-cell">
-              <a href="{{ url_for('setting.edit_user', user_id=user.id) }}" class="glass-btn ghost small">编辑</a>
+              <a href="{{ url_for('setting.edit_user', user_id=user.id) }}" class="glass-btn ghost small">
+                <span class="btn-icon" aria-hidden="true">
+                  <svg class="icon" viewBox="0 0 24 24">
+                    <path d="M5 17.5V19h1.5l9-9-1.5-1.5-9 9z"></path>
+                    <path d="M14 6.5l1.5-1.5 3 3-1.5 1.5z"></path>
+                  </svg>
+                </span>
+                <span class="btn-text">编辑</span>
+              </a>
               <form action="{{ url_for('setting.delete_user', user_id=user.id) }}" method="POST" class="inline-form" onsubmit="return confirm('确定删除该用户吗？');">
-                <button type="submit" class="glass-btn danger small">删除</button>
+                <button type="submit" class="glass-btn danger small">
+                  <span class="btn-icon" aria-hidden="true">
+                    <svg class="icon" viewBox="0 0 24 24">
+                      <path d="M5 7h14"></path>
+                      <path d="M10 11v6"></path>
+                      <path d="M14 11v6"></path>
+                      <path d="M8.5 7l.75-2h5.5l.75 2"></path>
+                      <path d="M6.5 7v10a2 2 0 002 2h7a2 2 0 002-2V7"></path>
+                    </svg>
+                  </span>
+                  <span class="btn-text">删除</span>
+                </button>
               </form>
             </td>
           </tr>
@@ -61,6 +88,14 @@
     </div>
   </section>
 
-  <a href="{{ url_for('setting.index') }}" class="glass-btn ghost">← 返回管理首页</a>
+  <a href="{{ url_for('setting.index') }}" class="glass-btn ghost">
+    <span class="btn-icon" aria-hidden="true">
+      <svg class="icon" viewBox="0 0 24 24">
+        <path d="M15 5l-7 7 7 7"></path>
+        <path d="M8 12h13"></path>
+      </svg>
+    </span>
+    <span class="btn-text">返回管理首页</span>
+  </a>
 </div>
 {% endblock %}
