@@ -72,7 +72,13 @@ const feedState = {
   random: { token: 0 },
   my: { page: 1 }
 };
+const feedRequests = {
+  latest: null,
+  random: null,
+  my: null
+};
 const renderJobs = new WeakMap();
+let activeFeed = 'latest';
 
 function cancelPanelRender(panel) {
   const job = renderJobs.get(panel);
@@ -82,9 +88,35 @@ function cancelPanelRender(panel) {
   }
 }
 
+function abortFeedFetch(src) {
+  const controller = feedRequests[src];
+  if (controller) {
+    controller.abort();
+    feedRequests[src] = null;
+  }
+}
+
+function requestFeed(src, url) {
+  const controller = new AbortController();
+  abortFeedFetch(src);
+  feedRequests[src] = controller;
+  const request = fetch(url, { signal: controller.signal })
+    .finally(() => {
+      if (feedRequests[src] === controller) {
+        feedRequests[src] = null;
+      }
+    });
+  request._controller = controller;
+  return request;
+}
+
 tabButtons.forEach(btn => {
   btn.addEventListener('click', () => {
     const target = btn.dataset.feedTab;
+    if (!target || target === activeFeed) {
+      return;
+    }
+    activeFeed = target;
     tabButtons.forEach(b => b.classList.toggle('active', b === btn));
     panels.forEach(panel => {
       const isTarget = panel.dataset.feed === target;
@@ -93,6 +125,15 @@ tabButtons.forEach(btn => {
         const grid = panel.querySelector('.feed-grid');
         if (grid) {
           cancelPanelRender(grid);
+        }
+        abortFeedFetch(panel.dataset.feed);
+        panel.removeAttribute('data-loading');
+        const loadBtn = panel.querySelector('.load-more-btn');
+        if (loadBtn) {
+          if (loadBtn.dataset.originalText) {
+            loadBtn.textContent = loadBtn.dataset.originalText;
+          }
+          loadBtn.disabled = false;
         }
       }
     });
@@ -206,7 +247,9 @@ document.querySelectorAll('.load-more-btn').forEach(btn => {
         feedPanel.setAttribute('data-loading', 'true');
       }
 
-      fetch(`${apiBase}?src=random&page=1&nonce=${token}`)
+      let aborted = false;
+      const request = requestFeed(src, `${apiBase}?src=random&page=1&nonce=${token}`);
+      request
         .then(res => res.json())
         .then(data => {
           if (feedState.random.token !== token) return;
@@ -215,18 +258,26 @@ document.querySelectorAll('.load-more-btn').forEach(btn => {
           appendCards(panel, data.posts, src);
           btn.textContent = originalText;
         })
-        .catch(() => {
+        .catch((error) => {
+          if (error.name === 'AbortError') {
+            aborted = true;
+            return;
+          }
           if (feedState.random.token !== token) return;
           btn.textContent = '加载失败，重试';
         })
         .finally(() => {
           if (feedState.random.token !== token) return;
+          const isLatest = !feedRequests[src] || feedRequests[src] === request._controller;
+          if (!isLatest) {
+            return;
+          }
           if (feedPanel) {
             feedPanel.removeAttribute('data-loading');
           }
           if (btn.style.display !== 'none') {
             btn.disabled = false;
-            if (btn.textContent !== '加载失败，重试') {
+            if (aborted || btn.textContent !== '加载失败，重试') {
               btn.textContent = originalText;
             }
           }
@@ -240,7 +291,9 @@ document.querySelectorAll('.load-more-btn').forEach(btn => {
       feedPanel.setAttribute('data-loading', 'true');
     }
 
-    fetch(`${apiBase}?src=${src}&page=${nextPage}`)
+    let aborted = false;
+    const request = requestFeed(src, `${apiBase}?src=${src}&page=${nextPage}`);
+    request
       .then(res => res.json())
       .then(data => {
         appendCards(panel, data.posts, src);
@@ -251,16 +304,24 @@ document.querySelectorAll('.load-more-btn').forEach(btn => {
         }
         btn.textContent = originalText;
       })
-      .catch(() => {
+      .catch((error) => {
+        if (error.name === 'AbortError') {
+          aborted = true;
+          return;
+        }
         btn.textContent = '加载失败，重试';
       })
       .finally(() => {
+        const isLatest = !feedRequests[src] || feedRequests[src] === request._controller;
+        if (!isLatest) {
+          return;
+        }
         if (feedPanel) {
           feedPanel.removeAttribute('data-loading');
         }
         if (btn.style.display !== 'none') {
           btn.disabled = false;
-          if (btn.textContent !== '加载失败，重试') {
+          if (aborted || btn.textContent !== '加载失败，重试') {
             btn.textContent = originalText;
           }
         }
