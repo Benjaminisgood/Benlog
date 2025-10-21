@@ -1596,6 +1596,16 @@ main.container {
   margin-right: auto;
 }
 
+.form-footer > .glass-btn:only-child,
+.form-footer > a.glass-btn:only-child {
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 48px;
+  justify-content: center;
+  border-radius: 20px;
+  box-sizing: border-box;
+}
+
 .glass-btn {
   position: relative;
   display: inline-flex;

@@ -128,10 +128,31 @@ function createCardElement(data, src) {
 }
 
 function appendCards(panel, posts, src) {
-  posts.forEach(item => {
-    const node = createCardElement(item, src);
-    panel.appendChild(node);
-  });
+  if (!panel || !Array.isArray(posts) || posts.length === 0) {
+    return;
+  }
+
+  const BATCH_SIZE = 4;
+  let index = 0;
+
+  const renderBatch = () => {
+    const fragment = document.createDocumentFragment();
+    let count = 0;
+
+    while (index < posts.length && count < BATCH_SIZE) {
+      fragment.appendChild(createCardElement(posts[index], src));
+      index += 1;
+      count += 1;
+    }
+
+    panel.appendChild(fragment);
+
+    if (index < posts.length) {
+      requestAnimationFrame(renderBatch);
+    }
+  };
+
+  requestAnimationFrame(renderBatch);
 }
 
 document.querySelectorAll('.load-more-btn').forEach(btn => {
@@ -141,17 +162,19 @@ document.querySelectorAll('.load-more-btn').forEach(btn => {
     if (!panel) {
       return;
     }
-    const originalText = btn.dataset.originalText || btn.textContent;
+    const feedPanel = panel.parentElement;
+    const originalText = btn.dataset.originalText || btn.textContent.trim();
     btn.dataset.originalText = originalText;
-    if (src !== 'random') {
-      btn.textContent = originalText;
-    }
+    const loadingText = src === 'random' ? '换一批中...' : '加载中...';
+    btn.disabled = true;
+    btn.textContent = loadingText;
 
     if (src === 'random') {
-      btn.disabled = true;
-      btn.textContent = '换一批中...';
       const token = Date.now();
       feedState.random.token = token;
+      if (feedPanel) {
+        feedPanel.setAttribute('data-loading', 'true');
+      }
 
       fetch(`${apiBase}?src=random&page=1&nonce=${token}`)
         .then(res => res.json())
@@ -160,18 +183,31 @@ document.querySelectorAll('.load-more-btn').forEach(btn => {
           panel.innerHTML = '';
           appendCards(panel, data.posts, src);
           btn.textContent = originalText;
-          btn.disabled = false;
         })
         .catch(() => {
           if (feedState.random.token !== token) return;
           btn.textContent = '加载失败，重试';
-          btn.disabled = false;
+        })
+        .finally(() => {
+          if (feedState.random.token !== token) return;
+          if (feedPanel) {
+            feedPanel.removeAttribute('data-loading');
+          }
+          if (btn.style.display !== 'none') {
+            btn.disabled = false;
+            if (btn.textContent !== '加载失败，重试') {
+              btn.textContent = originalText;
+            }
+          }
         });
       return;
     }
 
     const state = feedState[src];
     const nextPage = (state.page || 1) + 1;
+    if (feedPanel) {
+      feedPanel.setAttribute('data-loading', 'true');
+    }
 
     fetch(`${apiBase}?src=${src}&page=${nextPage}`)
       .then(res => res.json())
@@ -180,10 +216,23 @@ document.querySelectorAll('.load-more-btn').forEach(btn => {
         state.page = nextPage;
         if (!data.has_more) {
           btn.style.display = 'none';
+          return;
         }
+        btn.textContent = originalText;
       })
       .catch(() => {
         btn.textContent = '加载失败，重试';
+      })
+      .finally(() => {
+        if (feedPanel) {
+          feedPanel.removeAttribute('data-loading');
+        }
+        if (btn.style.display !== 'none') {
+          btn.disabled = false;
+          if (btn.textContent !== '加载失败，重试') {
+            btn.textContent = originalText;
+          }
+        }
       });
   });
 });
