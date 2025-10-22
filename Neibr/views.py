@@ -5,6 +5,7 @@ from flask_login import login_required, current_user, login_user  # type: ignore
 from .models import User, Post  # 从本地 models.py 导入 User 和 Post 模型
 from werkzeug.security import generate_password_hash, check_password_hash  # type: ignore # 用于密码加密和验证
 import os
+import shutil
 import io
 import base64
 import binascii
@@ -1137,6 +1138,28 @@ def edit_post_legacy(title):
     if request.method == 'GET':
         return redirect(url_for('neibr.edit_post', post_id=post.id))
     return _handle_edit_post(post)
+
+
+@neibr_bp.route('/delete_post/<int:post_id>', methods=['POST'])
+@login_required
+def delete_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    ensure_post_owner(post)
+
+    folder_path = get_post_folder(post)
+    if os.path.isdir(folder_path):
+        shutil.rmtree(folder_path, ignore_errors=True)
+
+    try:
+        db.session.delete(post)
+        db.session.commit()
+        flash('帖子已删除。', 'success')
+    except Exception:
+        db.session.rollback()
+        flash('删除帖子时出现问题，请稍后重试。', 'error')
+        return redirect(url_for('neibr.edit_post', post_id=post_id))
+
+    return redirect(url_for('neibr.index'))
 
 
 

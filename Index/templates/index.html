@@ -2,42 +2,48 @@
 {% block content %}
 <div class="home-shell">
   <section class="card-panel home-hero">
+    <span class="home-hero-glow" aria-hidden="true"></span>
     <h1>Welcome to My Personal Site</h1>
     <p>欢迎来逛逛啊</p>
+    <div class="home-search">
+      <span class="home-search-icon" aria-hidden="true">
+        <svg class="icon" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="6"></circle>
+          <path d="M20 20l-2.6-2.6"></path>
+        </svg>
+      </span>
+      <form action="{{ url_for('index.search') }}" method="get">
+        <input type="text" name="q" value="{{ request.args.get('q', '') }}" placeholder="支持站内搜索，暂不支持 AGI 和 LLM 聊天" required>
+      </form>
+    </div>
   </section>
-
-  <div class="home-search">
-    <form action="{{ url_for('index.search') }}" method="get">
-      <input type="text" name="q" value="{{ request.args.get('q', '') }}" placeholder="支持站内搜索，暂不支持 AGI 和 LLM 聊天" required>
-    </form>
-  </div>
 
   {% if quick_links %}
     <section class="quick-grid">
       {% for link in quick_links %}
-        <article class="quick-card">
-          <a href="{{ link.url }}" class="quick-card-link" target="_blank" rel="noopener">
-            {% if link.icon %}
-              <img src="{{ link.icon }}" alt="{{ link.label }}" class="quick-icon">
-            {% else %}
-              <div class="quick-icon quick-icon-fallback" aria-hidden="true">
-                {{ link.label[:1]|upper }}
+        <article class="quick-card" data-quick-card>
+          <div class="quick-card-surface">
+            <a href="{{ link.url }}" class="quick-card-link" target="_blank" rel="noopener">
+              <div class="quick-card-art" aria-hidden="true">
+                {% if link.icon %}
+                  <img src="{{ link.icon }}" alt="" class="quick-icon" loading="lazy" decoding="async">
+                {% else %}
+                  <div class="quick-icon quick-icon-fallback">{{ link.label[:1]|upper }}</div>
+                {% endif %}
               </div>
-            {% endif %}
-            <span class="quick-label">{{ link.label }}</span>
-          </a>
-          {% if link.summary or link.children %}
-          <div class="quick-card-pop">
+              <span class="quick-label">{{ link.label }}</span>
+            </a>
             {% if link.summary %}
-            <p class="quick-card-summary">{{ link.summary | e | replace('\n', '<br>') | safe }}</p>
-            {% endif %}
-            {% if link.children %}
-            <div class="quick-card-sub">
-              {% for child in link.children %}
-              <a href="{{ child.url }}" class="quick-sub-link" target="_blank" rel="noopener">{{ child.label }}</a>
-              {% endfor %}
+            <div class="quick-card-details">
+              <p class="quick-card-summary">{{ link.summary | e | replace('\n', '<br>') | safe }}</p>
             </div>
             {% endif %}
+          </div>
+          {% if link.children %}
+          <div class="quick-orbit" data-quick-orbit>
+            {% for child in link.children %}
+            <a href="{{ child.url }}" class="quick-orbit-chip" target="_blank" rel="noopener" data-orbit-chip>{{ child.label }}</a>
+            {% endfor %}
           </div>
           {% endif %}
         </article>
@@ -54,4 +60,88 @@
     </p>
   {% endif %}
 </div>
+
+<script>
+  (() => {
+    const prefersHover = window.matchMedia('(hover: hover)').matches;
+    if (!prefersHover) {
+      return;
+    }
+
+    const cards = document.querySelectorAll('[data-quick-card]');
+    cards.forEach(card => {
+      const orbit = card.querySelector('[data-quick-orbit]');
+      if (!orbit) return;
+      const chips = orbit.querySelectorAll('[data-orbit-chip]');
+      if (!chips.length) return;
+
+      const placeChips = () => {
+        const rect = card.getBoundingClientRect();
+        const radius = Math.max(rect.width, rect.height) * 0.55 + 16;
+        const baseAngle = -Math.PI / 2;
+
+        chips.forEach((chip, index) => {
+          const angle = baseAngle + (index - (chips.length - 1) / 2) * (Math.PI / Math.max(chips.length, 2));
+          const offsetX = radius * Math.cos(angle);
+          const offsetY = radius * Math.sin(angle);
+
+          chip.style.setProperty('--orbit-x', `${offsetX}px`);
+          chip.style.setProperty('--orbit-y', `${offsetY}px`);
+          chip.style.visibility = 'hidden';
+        });
+
+        requestAnimationFrame(() => {
+          chips.forEach(chip => {
+            chip.style.visibility = 'visible';
+            const chipRect = chip.getBoundingClientRect();
+            let shiftX = 0;
+            let shiftY = 0;
+
+            if (chipRect.left < 12) {
+              shiftX = 12 - chipRect.left;
+            } else if (chipRect.right > window.innerWidth - 12) {
+              shiftX = (window.innerWidth - 12) - chipRect.right;
+            }
+
+            if (chipRect.top < 12) {
+              shiftY = 12 - chipRect.top;
+            } else if (chipRect.bottom > window.innerHeight - 12) {
+              shiftY = (window.innerHeight - 12) - chipRect.bottom;
+            }
+
+            chip.style.setProperty('--orbit-shift-x', `${shiftX}px`);
+            chip.style.setProperty('--orbit-shift-y', `${shiftY}px`);
+            chip.style.zIndex = '999';
+          });
+        });
+      };
+
+      const activate = () => {
+        card.classList.add('is-active');
+        placeChips();
+      };
+      const deactivate = () => {
+        card.classList.remove('is-active');
+        chips.forEach(chip => {
+          chip.style.visibility = 'hidden';
+        });
+      };
+
+      card.addEventListener('mouseenter', activate);
+      card.addEventListener('focusin', activate);
+      card.addEventListener('mouseleave', deactivate);
+      card.addEventListener('focusout', () => {
+        if (!card.contains(document.activeElement)) {
+          deactivate();
+        }
+      });
+
+      window.addEventListener('resize', () => {
+        if (card.classList.contains('is-active')) {
+          placeChips();
+        }
+      });
+    });
+  })();
+</script>
 {% endblock %}

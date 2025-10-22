@@ -130,6 +130,33 @@
       </div>
     </form>
   </section>
+
+  <section class="card-panel danger">
+    <div class="card-panel-header">
+      <div>
+        <h2 class="card-panel-title">危险操作</h2>
+        <p class="card-panel-subtitle">删除后无法恢复，请谨慎执行此操作。</p>
+      </div>
+    </div>
+    <form method="POST"
+          action="{{ url_for('neibr.delete_post', post_id=post.id) }}"
+          onsubmit="return confirm('确定要删除此帖子吗？该操作不可撤销。');">
+      <div class="form-footer">
+        <button type="submit" class="glass-btn danger">
+          <span class="btn-icon" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M5 7h14"></path>
+              <path d="M10 11v6"></path>
+              <path d="M14 11v6"></path>
+              <path d="M8.5 7l.75-2h5.5l.75 2"></path>
+              <path d="M6.5 7v10a2 2 0 002 2h7a2 2 0 002-2V7"></path>
+            </svg>
+          </span>
+          <span class="btn-text">删除帖子</span>
+        </button>
+      </div>
+    </form>
+  </section>
 </div>
 
 
