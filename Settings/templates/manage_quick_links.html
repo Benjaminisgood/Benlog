@@ -15,41 +15,51 @@
     </div>
   </section>
 
-  <section class="card-panel">
-    <div class="card-panel-header">
+  <section class="card-panel quick-admin">
+    <div class="quick-admin-head">
       <div>
-        <h2 class="card-panel-title">快捷入口列表</h2>
-        <p class="card-panel-subtitle">支持图标、概要与子链接管理，鼠标悬停可预览详情，删除操作会立即生效。</p>
+        <h2 class="quick-admin-title">快捷入口</h2>
+        <p class="quick-admin-sub">集中管理常用站点，支持编辑、排序与删除。</p>
       </div>
-      <div class="card-panel-actions">
-        <button type="button" class="glass-btn accent-sky small" data-quick-link-open>
-          <span class="btn-icon" aria-hidden="true">
-            <svg class="icon" viewBox="0 0 24 24">
-              <path d="M12 5v14"></path>
-              <path d="M5 12h14"></path>
-            </svg>
-          </span>
-          <span class="btn-text">添加快捷链接</span>
-        </button>
-      </div>
+      <button type="button" class="glass-btn accent-sky small" data-quick-link-open>
+        <span class="btn-icon" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+        </span>
+        <span class="btn-text">添加快捷链接</span>
+      </button>
     </div>
 
     {% if quick_links %}
-    <div class="card-collection compact">
+    <div class="quick-admin-list">
       {% for link in quick_links %}
-      <article class="card-tile icon-tile quick-link-item" data-hover-card>
-        <div class="icon-avatar" aria-hidden="true">
-          {% if link.icon %}
+      <article class="quick-admin-item">
+        <div class="quick-admin-row">
+          <div class="quick-admin-icon" aria-hidden="true">
+            {% if link.icon %}
             <img src="{{ link.icon }}" alt="{{ link.label }}">
-          {% else %}
-            <span class="chip-muted">Icon</span>
-          {% endif %}
+            {% else %}
+            <span>{{ link.label[:1]|upper }}</span>
+            {% endif %}
+          </div>
+          <div class="quick-admin-body">
+            <a href="{{ link.url }}" target="_blank" rel="noopener" class="quick-admin-name">{{ link.label }}</a>
+            <span class="quick-admin-url">{{ link.url }}</span>
+            {% if link.summary %}
+            <p class="quick-admin-note">{{ link.summary | e }}</p>
+            {% endif %}
+            {% if link.children %}
+            <div class="quick-admin-children">
+              {% for child in link.children %}
+              <a href="{{ child.url }}" target="_blank" rel="noopener" class="quick-admin-chip">{{ child.label }}</a>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
         </div>
-        <div class="tile-body">
-          <a href="{{ link.url }}" target="_blank" rel="noopener" class="tile-title">{{ link.label }}</a>
-          <span class="tile-meta">{{ link.url }}</span>
-        </div>
-        <div class="tile-actions">
+        <div class="quick-admin-actions">
           <button type="button"
                   class="glass-btn ghost small"
                   data-quick-link-edit
@@ -79,20 +89,6 @@
               <span class="btn-text">删除</span>
             </button>
           </form>
-        </div>
-        <div class="link-hover-card" role="note">
-          {% if link.summary %}
-          <p class="link-summary-text">{{ link.summary | e | replace('\n', '<br>') | safe }}</p>
-          {% else %}
-          <p class="link-summary-text muted">暂无概要，点击卡片快速访问。</p>
-          {% endif %}
-          {% if link.children %}
-          <div class="link-sub-links">
-            {% for child in link.children %}
-            <a href="{{ child.url }}" target="_blank" rel="noopener" class="link-sub-chip">{{ child.label }}</a>
-            {% endfor %}
-          </div>
-          {% endif %}
         </div>
       </article>
       {% endfor %}

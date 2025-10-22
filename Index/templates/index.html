@@ -116,24 +116,53 @@
         });
       };
 
+      let hideTimer = null;
+      const ACTIVE_DELAY = 120;
+      const HIDE_DELAY = 220;
+
       const activate = () => {
+        if (hideTimer) {
+          clearTimeout(hideTimer);
+          hideTimer = null;
+        }
         card.classList.add('is-active');
         placeChips();
       };
-      const deactivate = () => {
-        card.classList.remove('is-active');
-        chips.forEach(chip => {
-          chip.style.visibility = 'hidden';
-        });
+
+      const scheduleDeactivate = () => {
+        if (hideTimer) {
+          clearTimeout(hideTimer);
+        }
+        hideTimer = setTimeout(() => {
+          card.classList.remove('is-active');
+          chips.forEach(chip => {
+            chip.style.visibility = 'hidden';
+          });
+        }, HIDE_DELAY);
+      };
+
+      const cancelDeactivate = () => {
+        if (hideTimer) {
+          clearTimeout(hideTimer);
+          hideTimer = null;
+        }
       };
 
       card.addEventListener('mouseenter', activate);
       card.addEventListener('focusin', activate);
-      card.addEventListener('mouseleave', deactivate);
+      card.addEventListener('mouseleave', scheduleDeactivate);
       card.addEventListener('focusout', () => {
         if (!card.contains(document.activeElement)) {
-          deactivate();
+          scheduleDeactivate();
         }
+      });
+
+      orbit.addEventListener('mouseenter', activate);
+      orbit.addEventListener('mouseleave', scheduleDeactivate);
+
+      chips.forEach(chip => {
+        chip.addEventListener('mouseenter', cancelDeactivate);
+        chip.addEventListener('mouseleave', scheduleDeactivate);
       });
 
       window.addEventListener('resize', () => {

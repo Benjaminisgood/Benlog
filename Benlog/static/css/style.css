@@ -625,6 +625,138 @@ svg.icon.is-solid {
   border-color: rgba(59, 130, 246, 0.45);
 }
 
+.quick-admin {
+  display: grid;
+  gap: 22px;
+}
+
+.quick-admin-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.quick-admin-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.quick-admin-sub {
+  margin: 4px 0 0;
+  color: rgba(71, 85, 105, 0.7);
+  font-size: 0.92rem;
+}
+
+.quick-admin-list {
+  display: grid;
+  gap: 16px;
+}
+
+.quick-admin-item {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  padding: 18px 20px;
+  border-radius: 22px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 24px 44px rgba(15, 23, 42, 0.12);
+}
+
+.quick-admin-row {
+  display: flex;
+  gap: 16px;
+  flex: 1 1 320px;
+  min-width: 240px;
+}
+
+.quick-admin-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 18px;
+  background: rgba(59, 130, 246, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 16px 30px rgba(59, 130, 246, 0.16);
+}
+
+.quick-admin-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.quick-admin-icon span {
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: 0.04em;
+}
+
+.quick-admin-body {
+  display: grid;
+  gap: 6px;
+  flex: 1;
+}
+
+.quick-admin-name {
+  font-weight: 600;
+  color: var(--text-color);
+  text-decoration: none;
+}
+
+.quick-admin-name:hover {
+  text-decoration: underline;
+}
+
+.quick-admin-url {
+  font-size: 0.88rem;
+  color: rgba(71, 85, 105, 0.7);
+  word-break: break-all;
+}
+
+.quick-admin-note {
+  margin: 4px 0 0;
+  font-size: 0.88rem;
+  color: rgba(51, 65, 85, 0.8);
+  line-height: 1.45;
+}
+
+.quick-admin-children {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.quick-admin-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: rgba(59, 130, 246, 0.14);
+  color: rgba(30, 41, 59, 0.85);
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+
+.quick-admin-chip:hover {
+  background: rgba(59, 130, 246, 0.22);
+}
+
+.quick-admin-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
 .quick-card:hover::before,
 .quick-card:focus-within::before,
 .quick-card.is-active::before {
@@ -836,6 +968,29 @@ svg.icon.is-solid {
   border-color: rgba(148, 163, 184, 0.45);
   color: rgba(226, 232, 240, 0.92);
   box-shadow: 0 26px 40px rgba(15, 23, 42, 0.55);
+}
+
+[data-theme="dark"] .quick-admin-item {
+  background: rgba(15, 23, 42, 0.78);
+  border-color: rgba(71, 85, 105, 0.45);
+  box-shadow: 0 28px 52px rgba(2, 6, 23, 0.6);
+}
+
+[data-theme="dark"] .quick-admin-sub {
+  color: rgba(148, 163, 184, 0.7);
+}
+
+[data-theme="dark"] .quick-admin-url {
+  color: rgba(148, 163, 184, 0.75);
+}
+
+[data-theme="dark"] .quick-admin-note {
+  color: rgba(203, 213, 225, 0.82);
+}
+
+[data-theme="dark"] .quick-admin-chip {
+  background: rgba(59, 130, 246, 0.24);
+  color: rgba(226, 232, 240, 0.9);
 }
 
 [data-theme="dark"] .friend-links {
@@ -1182,6 +1337,16 @@ main.container {
 }
 
 @media (max-width: 720px) {
+  .quick-admin-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .quick-admin-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
   .link-hover-card {
     position: relative;
     top: auto;
