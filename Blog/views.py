@@ -274,6 +274,9 @@ def show_post(slug):
         # 解析 Markdown 文件
         post_data = frontmatter.load(md_path)
         content_md = post_data.content
+        metadata = post_data.metadata or {}
+        post_title = metadata.get('title') or slug
+        post_summary = metadata.get('description') or metadata.get('summary')
         content_html = markdown.markdown(
             content_md,
             extensions=MARKDOWN_EXTENSIONS,
@@ -283,7 +286,9 @@ def show_post(slug):
             'blog_post.html',
             post_content=content_html,
             post_date=post_data.get('date', ''),
-            frontmatter=post_data.metadata
+            frontmatter=metadata,
+            post_title=post_title,
+            post_summary=post_summary or ''
         )
 
     elif os.path.exists(html_path):
@@ -294,7 +299,9 @@ def show_post(slug):
             'blog_post.html',
             post_content=html_content,
             post_date='',  # 或者你可以用某种方式提取日期
-            frontmatter={}
+            frontmatter={},
+            post_title=slug,
+            post_summary=''
         )
 
     else:

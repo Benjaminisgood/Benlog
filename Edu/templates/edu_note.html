@@ -1,9 +1,24 @@
 <!-- Edu/templates/edu_note.html -->
 {% extends "base.html" %}
-{% block nav %}{# 子模板不需要导航栏 #}{% endblock %}
+{% block nav %}
+  <nav class="article-top-nav">
+    <a href="{{ url_for('edu.list_notes') }}" class="article-back-link" aria-label="返回笔记列表">← 返回笔记列表</a>
+  </nav>
+{% endblock %}
 {% block content %}
 
 <div class="article-shell">
+  {% if note_title or note_summary %}
+    <section class="card-panel article-hero-card">
+      {% if note_title %}
+        <h1 class="article-hero-title">{{ note_title }}</h1>
+      {% endif %}
+      {% if note_summary %}
+        <p class="article-hero-subtitle">{{ note_summary }}</p>
+      {% endif %}
+    </section>
+  {% endif %}
+
   {% if note_date or frontmatter %}
     <section class="card-panel article-meta-card">
       <div class="article-meta-head">
@@ -128,11 +143,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.mermaid) {
       initializeMermaid();
     } else {
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js';
-      script.async = true;
-      script.onload = initializeMermaid;
-      document.head.appendChild(script);
+      let mermaidScript = document.getElementById('mermaid-cdn-script');
+      if (mermaidScript) {
+        mermaidScript.addEventListener('load', initializeMermaid, { once: true });
+      } else {
+        mermaidScript = document.createElement('script');
+        mermaidScript.id = 'mermaid-cdn-script';
+        mermaidScript.src = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js';
+        mermaidScript.async = true;
+        mermaidScript.addEventListener('load', () => {
+          mermaidScript.dataset.loaded = '1';
+          initializeMermaid();
+        }, { once: true });
+        document.head.appendChild(mermaidScript);
+      }
     }
   }
 

@@ -267,17 +267,35 @@ def show_note(slug):
         note_data = frontmatter.load(md_path)
         title = note_data.get('title', 'Untitled')
         content_md = note_data.content
+        metadata = note_data.metadata or {}
+        note_summary = metadata.get('description') or metadata.get('summary')
         content_html = markdown.markdown(
             content_md,
             extensions=MARKDOWN_EXTENSIONS,
             extension_configs=MARKDOWN_EXTENSION_CONFIGS
         )
-        return render_template('edu_note.html', title=title, note_title=title, note_content=content_html, note_date=note_data.get('date', ''), frontmatter=note_data.metadata)
+        return render_template(
+            'edu_note.html',
+            title=title,
+            note_title=title,
+            note_summary=note_summary or '',
+            note_content=content_html,
+            note_date=note_data.get('date', ''),
+            frontmatter=metadata
+        )
 
     elif os.path.exists(html_path):
         with open(html_path, 'r', encoding='utf-8') as f:
             html_content = f.read()
-        return render_template('edu_note.html', title=slug, note_title=slug, note_content=html_content, note_date='', frontmatter={})
+        return render_template(
+            'edu_note.html',
+            title=slug,
+            note_title=slug,
+            note_summary='',
+            note_content=html_content,
+            note_date='',
+            frontmatter={}
+        )
 
     else:
         abort(404)

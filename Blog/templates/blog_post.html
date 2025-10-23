@@ -1,11 +1,24 @@
 <!-- Blog/templates/blog_post.html -->
 {% extends "base.html" %}
 {% block nav %}
-{# 子模板不需要导航栏，故留空 #}
+  <nav class="article-top-nav">
+    <a href="{{ url_for('blog.list_posts') }}" class="article-back-link" aria-label="返回博客列表">← 返回博客列表</a>
+  </nav>
 {% endblock %}
 {% block content %}
 
 <div class="article-shell">
+  {% if post_title or post_summary %}
+    <section class="card-panel article-hero-card">
+      {% if post_title %}
+        <h1 class="article-hero-title">{{ post_title }}</h1>
+      {% endif %}
+      {% if post_summary %}
+        <p class="article-hero-subtitle">{{ post_summary }}</p>
+      {% endif %}
+    </section>
+  {% endif %}
+
   {% if post_date or frontmatter %}
     <section class="card-panel article-meta-card">
       <div class="article-meta-head">
@@ -125,13 +138,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (window.mermaid) {
       initializeMermaid();
-    } else {
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js';
-      script.async = true;
-      script.onload = initializeMermaid;
-      document.head.appendChild(script);
+      return;
     }
+
+    let mermaidScript = document.getElementById('mermaid-cdn-script');
+    if (mermaidScript) {
+      mermaidScript.addEventListener('load', initializeMermaid, { once: true });
+      return;
+    }
+
+    mermaidScript = document.createElement('script');
+    mermaidScript.id = 'mermaid-cdn-script';
+    mermaidScript.src = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js';
+    mermaidScript.async = true;
+    mermaidScript.addEventListener('load', () => {
+      mermaidScript.dataset.loaded = '1';
+      initializeMermaid();
+    }, { once: true });
+    document.head.appendChild(mermaidScript);
   }
 });
 </script>
