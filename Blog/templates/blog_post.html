@@ -1,10 +1,6 @@
 <!-- Blog/templates/blog_post.html -->
 {% extends "base.html" %}
-{% block nav %}
-  <nav class="article-top-nav">
-    <a href="{{ url_for('blog.list_posts') }}" class="article-back-link" aria-label="返回博客列表">← 返回博客列表</a>
-  </nav>
-{% endblock %}
+{% block nav %}{% endblock %}
 {% block content %}
 
 <div class="article-shell">
@@ -59,6 +55,11 @@
       {{ post_content|safe }}
     </div>
   </article>
+
+  <section class="article-footer-actions">
+    <a href="{{ url_for('blog.list_posts') }}" class="article-action-link" aria-label="返回博客列表">返回博客列表</a>
+    <button type="button" class="article-action-btn" data-share-article data-share-title="{{ post_title or '' }}">分享这篇文章</button>
+  </section>
 </div>
 
 <!-- TOC 弹窗结构 -->
@@ -156,6 +157,56 @@ document.addEventListener('DOMContentLoaded', () => {
       initializeMermaid();
     }, { once: true });
     document.head.appendChild(mermaidScript);
+  }
+
+  const shareButton = document.querySelector('[data-share-article]');
+  if (shareButton) {
+    const originalText = shareButton.textContent;
+    const resetState = () => {
+      shareButton.textContent = originalText;
+      shareButton.classList.remove('is-success');
+      shareButton.classList.remove('is-error');
+    };
+
+    shareButton.addEventListener('click', async () => {
+      resetState();
+      const title = shareButton.dataset.shareTitle || document.title || '分享';
+      const shareData = {
+        title: title,
+        text: title,
+        url: window.location.href
+      };
+
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+          shareButton.classList.add('is-success');
+          shareButton.textContent = '已分享';
+          setTimeout(resetState, 2200);
+        } catch (error) {
+          if (error && error.name !== 'AbortError') {
+            shareButton.classList.add('is-error');
+            shareButton.textContent = '分享失败';
+            setTimeout(resetState, 2200);
+          }
+        }
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        shareButton.classList.add('is-success');
+        shareButton.textContent = '链接已复制';
+        setTimeout(resetState, 2200);
+      } catch (error) {
+        shareButton.classList.add('is-error');
+        shareButton.textContent = '复制失败';
+        setTimeout(() => {
+          resetState();
+          window.prompt('复制链接至剪贴板：', window.location.href);
+        }, 200);
+      }
+    });
   }
 });
 </script>
