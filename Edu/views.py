@@ -7,6 +7,7 @@ from . import edu_bp
 from flask_login import login_required, current_user
 import re
 from math import ceil
+from typing import Final
 
 NOTES_DIR = os.path.join(os.path.dirname(__file__), 'notes')
 PER_PAGE = 10  # 每页显示条目数
@@ -20,6 +21,40 @@ BLUE_GRADIENTS = [
     ('#818cf8', '#3730a3'),
     ('#5eead4', '#14b8a6')
 ]
+
+MARKDOWN_EXTENSIONS: Final[list[str]] = [
+    'extra',
+    'admonition',
+    'codehilite',
+    'pymdownx.highlight',
+    'pymdownx.inlinehilite',
+    'pymdownx.superfences',
+    'pymdownx.tilde',
+    'pymdownx.tasklist',
+    'pymdownx.arithmatex',
+]
+
+MARKDOWN_EXTENSION_CONFIGS: Final[dict[str, dict]] = {
+    'codehilite': {
+        'guess_lang': False,
+        'linenums': False,
+        'noclasses': True,
+    },
+    'pymdownx.highlight': {
+        'guess_lang': False,
+        'anchor_linenums': True,
+    },
+    'pymdownx.superfences': {
+        'custom_fences': [
+            {
+                'name': 'mermaid',
+                'class': 'mermaid',
+                'format': '!!python/name:pymdownx.superfences.fence_code_format'
+            }
+        ]
+    },
+    'pymdownx.arithmatex': {'generic': True},
+}
 
 
 def hex_to_rgba(hex_color: str, alpha: float = 0.85) -> str:
@@ -234,8 +269,8 @@ def show_note(slug):
         content_md = note_data.content
         content_html = markdown.markdown(
             content_md,
-            extensions=['extra', 'pymdownx.tilde', 'pymdownx.tasklist', 'pymdownx.arithmatex'],
-            extension_configs={'pymdownx.arithmatex': {'generic': True}}
+            extensions=MARKDOWN_EXTENSIONS,
+            extension_configs=MARKDOWN_EXTENSION_CONFIGS
         )
         return render_template('edu_note.html', title=title, note_title=title, note_content=content_html, note_date=note_data.get('date', ''), frontmatter=note_data.metadata)
 

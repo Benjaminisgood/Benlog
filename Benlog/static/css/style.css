@@ -2393,6 +2393,16 @@ main.container {
   line-height: 1.6;
 }
 
+.markdown-body .codehilite,
+.markdown-body .highlight {
+  position: relative;
+}
+
+.markdown-body .codehilite pre,
+.markdown-body .highlight pre {
+  margin: 0;
+}
+
 .markdown-body blockquote {
   border-left: 4px solid var(--link-color, #3366cc);
   background: var(--blockquote-bg, rgba(52, 58, 64, 0.05));

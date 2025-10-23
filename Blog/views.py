@@ -6,6 +6,7 @@ import frontmatter, markdown
 from datetime import datetime
 from . import blog_bp
 from flask_login import login_required, current_user
+from typing import Final
 
 # POSTS_DIR 存放 blog 模块的 Markdown 文件
 POSTS_DIR = os.path.join(os.path.dirname(__file__), 'posts')
@@ -20,6 +21,40 @@ BLUE_GRADIENTS = [
     ('#22d3ee', '#0ea5e9'),
     ('#93c5fd', '#3b82f6')
 ]
+
+MARKDOWN_EXTENSIONS: Final[list[str]] = [
+    'extra',
+    'admonition',
+    'codehilite',
+    'pymdownx.highlight',
+    'pymdownx.inlinehilite',
+    'pymdownx.superfences',
+    'pymdownx.tilde',
+    'pymdownx.tasklist',
+    'pymdownx.arithmatex',
+]
+
+MARKDOWN_EXTENSION_CONFIGS: Final[dict[str, dict]] = {
+    'codehilite': {
+        'guess_lang': False,
+        'linenums': False,
+        'noclasses': True,
+    },
+    'pymdownx.highlight': {
+        'guess_lang': False,
+        'anchor_linenums': True,
+    },
+    'pymdownx.superfences': {
+        'custom_fences': [
+            {
+                'name': 'mermaid',
+                'class': 'mermaid',
+                'format': '!!python/name:pymdownx.superfences.fence_code_format'
+            }
+        ]
+    },
+    'pymdownx.arithmatex': {'generic': True},
+}
 
 
 def hex_to_rgba(hex_color: str, alpha: float = 0.85) -> str:
@@ -241,15 +276,8 @@ def show_post(slug):
         content_md = post_data.content
         content_html = markdown.markdown(
             content_md,
-            extensions=[
-                'extra',
-                'pymdownx.tilde',
-                'pymdownx.tasklist',
-                'pymdownx.arithmatex'
-            ],
-            extension_configs={
-                'pymdownx.arithmatex': {'generic': True}
-            }
+            extensions=MARKDOWN_EXTENSIONS,
+            extension_configs=MARKDOWN_EXTENSION_CONFIGS
         )
         return render_template(
             'blog_post.html',

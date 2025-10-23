@@ -109,6 +109,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
   closeBtn.addEventListener('click', closeTOC);
   backdrop.addEventListener('click', closeTOC);
+
+  const mermaidBlocks = markdownRoot ? markdownRoot.querySelectorAll('.mermaid') : [];
+  if (mermaidBlocks.length) {
+    const initializeMermaid = () => {
+      if (!window.mermaid) {
+        return;
+      }
+      window.mermaid.initialize({
+        startOnLoad: false,
+        theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'default',
+      });
+      window.mermaid.init(undefined, mermaidBlocks);
+    };
+
+    if (window.mermaid) {
+      initializeMermaid();
+    } else {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js';
+      script.async = true;
+      script.onload = initializeMermaid;
+      document.head.appendChild(script);
+    }
+  }
 });
 </script>
 
