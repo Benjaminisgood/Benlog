@@ -3,7 +3,7 @@
 <div class="home-shell">
   <section class="card-panel home-hero">
     <span class="home-hero-glow" aria-hidden="true"></span>
-    <h1>Welcome to My Personal Site</h1>
+    <h1>Welcome to a half-baked polyglot's Personal Site</h1>
     <p>欢迎来逛逛啊</p>
     <div class="home-search">
       <span class="home-search-icon" aria-hidden="true">
@@ -33,17 +33,23 @@
               </div>
               <span class="quick-label">{{ link.label }}</span>
             </a>
-            {% if link.summary %}
-            <div class="quick-card-details">
-              <p class="quick-card-summary">{{ link.summary | e | replace('\n', '<br>') | safe }}</p>
-            </div>
-            {% endif %}
           </div>
-          {% if link.children %}
-          <div class="quick-orbit" data-quick-orbit>
-            {% for child in link.children %}
-            <a href="{{ child.url }}" class="quick-orbit-chip" target="_blank" rel="noopener" data-orbit-chip>{{ child.label }}</a>
-            {% endfor %}
+          {% if link.summary or link.children %}
+          <div class="quick-card-popup" data-quick-popup>
+            <div class="quick-card-popup-inner">
+              {% if link.summary %}
+              <div class="quick-card-popup-block">
+                <p class="quick-card-summary">{{ link.summary | e | replace('\n', '<br>') | safe }}</p>
+              </div>
+              {% endif %}
+              {% if link.children %}
+              <div class="quick-card-popup-block quick-card-popup-links">
+                {% for child in link.children %}
+                <a href="{{ child.url }}" class="quick-popup-chip" target="_blank" rel="noopener">{{ child.label }}</a>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
           </div>
           {% endif %}
         </article>
@@ -63,114 +69,92 @@
 
 <script>
   (() => {
-    const prefersHover = window.matchMedia('(hover: hover)').matches;
-    if (!prefersHover) {
+    const cards = Array.from(document.querySelectorAll('[data-quick-card]'));
+    if (!cards.length) {
       return;
     }
 
-    const cards = document.querySelectorAll('[data-quick-card]');
+    const hoverQuery = window.matchMedia('(hover: hover)');
+    let prefersHover = hoverQuery.matches;
+    const timers = new WeakMap();
+    const HIDE_DELAY = 180;
+
+    const cancelTimer = (card) => {
+      const timer = timers.get(card);
+      if (timer) {
+        clearTimeout(timer);
+        timers.delete(card);
+      }
+    };
+
+    const activate = (card) => {
+      cancelTimer(card);
+      card.classList.add('is-active');
+    };
+
+    const scheduleDeactivate = (card) => {
+      cancelTimer(card);
+      if (!prefersHover) {
+        card.classList.remove('is-active');
+        return;
+      }
+      const timer = setTimeout(() => {
+        card.classList.remove('is-active');
+        timers.delete(card);
+      }, HIDE_DELAY);
+      timers.set(card, timer);
+    };
+
     cards.forEach(card => {
-      const orbit = card.querySelector('[data-quick-orbit]');
-      if (!orbit) return;
-      const chips = orbit.querySelectorAll('[data-orbit-chip]');
-      if (!chips.length) return;
+      const popup = card.querySelector('[data-quick-popup]');
+      if (!popup) {
+        return;
+      }
 
-      const placeChips = () => {
-        const rect = card.getBoundingClientRect();
-        const radius = Math.max(rect.width, rect.height) * 0.55 + 16;
-        const baseAngle = -Math.PI / 2;
-
-        chips.forEach((chip, index) => {
-          const angle = baseAngle + (index - (chips.length - 1) / 2) * (Math.PI / Math.max(chips.length, 2));
-          const offsetX = radius * Math.cos(angle);
-          const offsetY = radius * Math.sin(angle);
-
-          chip.style.setProperty('--orbit-x', `${offsetX}px`);
-          chip.style.setProperty('--orbit-y', `${offsetY}px`);
-          chip.style.visibility = 'hidden';
-        });
-
-        requestAnimationFrame(() => {
-          chips.forEach(chip => {
-            chip.style.visibility = 'visible';
-            const chipRect = chip.getBoundingClientRect();
-            let shiftX = 0;
-            let shiftY = 0;
-
-            if (chipRect.left < 12) {
-              shiftX = 12 - chipRect.left;
-            } else if (chipRect.right > window.innerWidth - 12) {
-              shiftX = (window.innerWidth - 12) - chipRect.right;
-            }
-
-            if (chipRect.top < 12) {
-              shiftY = 12 - chipRect.top;
-            } else if (chipRect.bottom > window.innerHeight - 12) {
-              shiftY = (window.innerHeight - 12) - chipRect.bottom;
-            }
-
-            chip.style.setProperty('--orbit-shift-x', `${shiftX}px`);
-            chip.style.setProperty('--orbit-shift-y', `${shiftY}px`);
-            chip.style.zIndex = '999';
-          });
-        });
-      };
-
-      let hideTimer = null;
-      const ACTIVE_DELAY = 120;
-      const HIDE_DELAY = 220;
-
-      const activate = () => {
-        if (hideTimer) {
-          clearTimeout(hideTimer);
-          hideTimer = null;
+      const onMouseEnter = () => {
+        if (!prefersHover) {
+          return;
         }
-        card.classList.add('is-active');
-        placeChips();
+        activate(card);
       };
 
-      const scheduleDeactivate = () => {
-        if (hideTimer) {
-          clearTimeout(hideTimer);
+      const onMouseLeave = () => {
+        if (!prefersHover) {
+          return;
         }
-        hideTimer = setTimeout(() => {
-          card.classList.remove('is-active');
-          chips.forEach(chip => {
-            chip.style.visibility = 'hidden';
-          });
-        }, HIDE_DELAY);
+        scheduleDeactivate(card);
       };
 
-      const cancelDeactivate = () => {
-        if (hideTimer) {
-          clearTimeout(hideTimer);
-          hideTimer = null;
-        }
-      };
+      card.addEventListener('mouseenter', onMouseEnter);
+      card.addEventListener('mouseleave', onMouseLeave);
+      popup.addEventListener('mouseenter', onMouseEnter);
+      popup.addEventListener('mouseleave', onMouseLeave);
 
-      card.addEventListener('mouseenter', activate);
-      card.addEventListener('focusin', activate);
-      card.addEventListener('mouseleave', scheduleDeactivate);
+      card.addEventListener('focusin', () => activate(card));
       card.addEventListener('focusout', () => {
-        if (!card.contains(document.activeElement)) {
-          scheduleDeactivate();
-        }
-      });
-
-      orbit.addEventListener('mouseenter', activate);
-      orbit.addEventListener('mouseleave', scheduleDeactivate);
-
-      chips.forEach(chip => {
-        chip.addEventListener('mouseenter', cancelDeactivate);
-        chip.addEventListener('mouseleave', scheduleDeactivate);
-      });
-
-      window.addEventListener('resize', () => {
-        if (card.classList.contains('is-active')) {
-          placeChips();
-        }
+        requestAnimationFrame(() => {
+          if (!card.contains(document.activeElement)) {
+            scheduleDeactivate(card);
+          }
+        });
       });
     });
+
+    const handleHoverChange = (event) => {
+      prefersHover = event.matches;
+      if (!prefersHover) {
+        cards.forEach(card => {
+          card.classList.remove('is-active');
+          cancelTimer(card);
+        });
+      }
+    };
+
+    if (typeof hoverQuery.addEventListener === 'function') {
+      hoverQuery.addEventListener('change', handleHoverChange);
+    } else if (typeof hoverQuery.addListener === 'function') {
+      hoverQuery.addListener(handleHoverChange);
+    }
   })();
 </script>
 {% endblock %}
