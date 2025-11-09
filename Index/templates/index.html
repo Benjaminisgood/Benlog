@@ -78,6 +78,36 @@
     let prefersHover = hoverQuery.matches;
     const timers = new WeakMap();
     const HIDE_DELAY = 180;
+    let activeCard = null;
+    let overlay = null;
+
+    const ensureOverlay = () => {
+      if (overlay) {
+        return overlay;
+      }
+      overlay = document.createElement('div');
+      overlay.className = 'quick-card-overlay';
+      overlay.setAttribute('data-quick-overlay', '');
+      overlay.addEventListener('click', () => {
+        closeActiveCard();
+      });
+      document.body.appendChild(overlay);
+      return overlay;
+    };
+
+    const showOverlay = () => {
+      if (prefersHover) {
+        return;
+      }
+      const node = ensureOverlay();
+      node.classList.add('is-visible');
+    };
+
+    const hideOverlay = () => {
+      if (overlay) {
+        overlay.classList.remove('is-visible');
+      }
+    };
 
     const cancelTimer = (card) => {
       const timer = timers.get(card);
@@ -87,19 +117,46 @@
       }
     };
 
-    const activate = (card) => {
+    const openCard = (card) => {
       cancelTimer(card);
+      if (!prefersHover) {
+        if (activeCard && activeCard !== card) {
+          activeCard.classList.remove('is-active');
+        }
+        activeCard = card;
+        showOverlay();
+      }
       card.classList.add('is-active');
+    };
+
+    const closeCardImmediately = (card) => {
+      cancelTimer(card);
+      card.classList.remove('is-active');
+      if (card.contains(document.activeElement) && typeof document.activeElement.blur === 'function') {
+        document.activeElement.blur();
+      }
+      if (activeCard === card) {
+        activeCard = null;
+        hideOverlay();
+      }
+    };
+
+    const closeActiveCard = () => {
+      if (!activeCard) {
+        hideOverlay();
+        return;
+      }
+      closeCardImmediately(activeCard);
     };
 
     const scheduleDeactivate = (card) => {
       cancelTimer(card);
       if (!prefersHover) {
-        card.classList.remove('is-active');
+        closeCardImmediately(card);
         return;
       }
       const timer = setTimeout(() => {
-        card.classList.remove('is-active');
+        closeCardImmediately(card);
         timers.delete(card);
       }, HIDE_DELAY);
       timers.set(card, timer);
@@ -115,7 +172,7 @@
         if (!prefersHover) {
           return;
         }
-        activate(card);
+        openCard(card);
       };
 
       const onMouseLeave = () => {
@@ -130,7 +187,7 @@
       popup.addEventListener('mouseenter', onMouseEnter);
       popup.addEventListener('mouseleave', onMouseLeave);
 
-      card.addEventListener('focusin', () => activate(card));
+      card.addEventListener('focusin', () => openCard(card));
       card.addEventListener('focusout', () => {
         requestAnimationFrame(() => {
           if (!card.contains(document.activeElement)) {
@@ -138,16 +195,63 @@
           }
         });
       });
+
+      const link = card.querySelector('.quick-card-link');
+      const icon = card.querySelector('.quick-card-art');
+      const surface = card.querySelector('.quick-card-surface');
+
+      const handleSurfaceClick = (event) => {
+        if (prefersHover || !surface) {
+          return;
+        }
+        if (!(surface === event.target || surface.contains(event.target))) {
+          return;
+        }
+        const iconTapped = icon && (icon === event.target || icon.contains(event.target));
+        if (iconTapped) {
+          closeActiveCard();
+          return;
+        }
+        if (link && link.contains(event.target)) {
+          event.preventDefault();
+          if (document.activeElement === link && typeof link.blur === 'function') {
+            link.blur();
+          }
+        }
+        const isActive = card.classList.contains('is-active');
+        if (!isActive) {
+          openCard(card);
+        } else {
+          closeActiveCard();
+        }
+      };
+
+      if (surface) {
+        surface.addEventListener('click', handleSurfaceClick);
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        closeActiveCard();
+      }
     });
 
     const handleHoverChange = (event) => {
       prefersHover = event.matches;
-      if (!prefersHover) {
-        cards.forEach(card => {
-          card.classList.remove('is-active');
-          cancelTimer(card);
-        });
+      if (prefersHover) {
+        closeActiveCard();
+        if (overlay && overlay.parentNode) {
+          overlay.parentNode.removeChild(overlay);
+          overlay = null;
+        }
+        return;
       }
+      cards.forEach(card => {
+        card.classList.remove('is-active');
+        cancelTimer(card);
+      });
+      closeActiveCard();
     };
 
     if (typeof hoverQuery.addEventListener === 'function') {

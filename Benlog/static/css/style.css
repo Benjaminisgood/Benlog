@@ -924,9 +924,16 @@ svg.icon.is-solid {
   box-shadow: 0 22px 40px rgba(37, 99, 235, 0.25);
 }
 
-.quick-card:hover .quick-card-popup,
 .quick-card:focus-within .quick-card-popup,
 .quick-card.is-active .quick-card-popup {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translate(-50%, -10px) scale(1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .quick-card:hover .quick-card-popup {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -939,15 +946,50 @@ svg.icon.is-solid {
   }
 }
 
+.quick-card-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.24s ease;
+  z-index: 35;
+}
+
+.quick-card-overlay.is-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
 @media (hover: none) {
+  .quick-card {
+    position: relative;
+  }
+
   .quick-card-popup {
-    position: static;
-    width: 100%;
-    margin-top: 12px;
-    transform: none !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    pointer-events: auto !important;
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    bottom: calc(env(safe-area-inset-bottom) + 24px);
+    top: auto;
+    width: min(400px, calc(100vw - 32px));
+    max-height: min(80vh, 520px);
+    overflow-y: auto;
+    margin-top: 0;
+    transform: translate(-50%, 20px) scale(0.94);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.26s ease, transform 0.26s ease;
+  }
+
+  .quick-card.is-active .quick-card-popup {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translate(-50%, 0) scale(1);
   }
 
   .quick-card-popup::before {
@@ -955,7 +997,7 @@ svg.icon.is-solid {
   }
 
   .quick-card-popup-inner {
-    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.18);
+    box-shadow: 0 20px 48px rgba(15, 23, 42, 0.28);
   }
 }
 
