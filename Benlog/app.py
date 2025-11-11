@@ -2,7 +2,7 @@ from flask import Flask
 import os
 import logging
 from datetime import timedelta
-
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 
 
@@ -32,7 +32,8 @@ def create_app():
 
 
     )
-    
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
+
 
     app.config.from_pyfile('config.py', silent=True)
     
