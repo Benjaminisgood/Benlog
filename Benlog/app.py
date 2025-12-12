@@ -26,6 +26,7 @@ def create_app():
         OSS_ACCESS_KEY_SECRET = '',
         OSS_ENDPOINT          = 'oss-cn-shanghai-internal.aliyuncs.com',
         OSS_BUCKET_NAME       = '',
+        OSS_BASE_PREFIX       = '',
 
 
 

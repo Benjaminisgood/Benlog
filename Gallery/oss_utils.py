@@ -1,6 +1,39 @@
 # Gallery/oss_utils.py
 import oss2
 from flask import current_app
+from typing import Optional
+
+def _base_prefix() -> str:
+    """
+    从配置读取基础前缀，规范化为 '' 或 'path/'（末尾带斜杠、无前导斜杠）
+    """
+    prefix = (current_app.config.get('OSS_BASE_PREFIX') or '').strip('/')
+    if prefix:
+        return prefix + '/'
+    return ''
+
+def _with_base(key: Optional[str]) -> str:
+    """
+    拼接基础前缀，让所有对象操作都落在指定子目录下
+    """
+    base = _base_prefix()
+    if key is None:
+        return base
+    key = key.lstrip('/')
+    if base and key.startswith(base):
+        return key
+    return f"{base}{key}" if base else key
+
+def _strip_base(key: Optional[str]) -> Optional[str]:
+    """
+    去掉返回 key 中的基础前缀，便于页面显示和分页参数传递
+    """
+    if key is None:
+        return None
+    base = _base_prefix()
+    if base and key.startswith(base):
+        return key[len(base):]
+    return key
 
 def _get_bucket():
     ak = current_app.config['OSS_ACCESS_KEY_ID']
@@ -25,21 +58,31 @@ def list_albums(prefix: str = '') -> list[str]:
     列举指定前缀下的“相册”——使用 delimiter 分组得到的公共前缀列表
     """
     bucket = _get_bucket()
+    base = _base_prefix()
     # 使用 list_objects 接口的 delimiter 参数模拟目录
-    result = bucket.list_objects(prefix=prefix, delimiter='/', max_keys=1000)
+    result = bucket.list_objects(prefix=_with_base(prefix), delimiter='/', max_keys=1000)
     # OSS SDK 在返回值中通过 prefix_list 提供公共前缀
-    return result.prefix_list  # e.g. ['album1/', 'album2/']
+    prefixes = result.prefix_list or []  # e.g. ['album1/', 'album2/']
+    if base:
+        prefixes = [p[len(base):] for p in prefixes if p.startswith(base)]
+    return prefixes
 
 
-def list_objects(prefix: str = '', marker: str = None, max_keys: int = 100) -> tuple[list[str], str]:
+def list_objects(prefix: str = '', marker: str = None, max_keys: int = 100) -> tuple[list[str], Optional[str]]:
     """
     列举指定前缀下的对象 key 列表，支持分页。
     返回 (keys, next_marker)
     """
     bucket = _get_bucket()
-    iterator = oss2.ObjectIterator(bucket, prefix=prefix, marker=marker, max_keys=max_keys)
-    keys = [obj.key for obj in iterator]
-    return keys, iterator.next_marker
+    iterator = oss2.ObjectIterator(
+        bucket,
+        prefix=_with_base(prefix),
+        marker=_with_base(marker) if marker else None,
+        max_keys=max_keys
+    )
+    keys = [_strip_base(obj.key) for obj in iterator]
+    next_marker = _strip_base(iterator.next_marker) if iterator.next_marker else None
+    return keys, next_marker
 
 
 def delete_object(key: str):
@@ -47,15 +90,8 @@ def delete_object(key: str):
     删除指定 key 的对象。
     """
     bucket = _get_bucket()
-    bucket.delete_object(key)
+    bucket.delete_object(_with_base(key))
 
-
-def generate_signed_url(key: str, expires: int = 3600) -> str:
-    """
-    生成带签名的 GET URL，有效期 expires 秒。
-    """
-    bucket = _get_bucket()
-    return bucket.sign_url('GET', key, expires)
 
 def generate_signed_url(key: str, expires: int = 3600, style: str = None) -> str:
     bucket = _get_bucket()
@@ -65,7 +101,7 @@ def generate_signed_url(key: str, expires: int = 3600, style: str = None) -> str
         params = {
             'x-oss-process': 'image/resize,w_300/quality,q_70/format,jpg/blur,r_5,s_2'
         }
-    return bucket.sign_url('GET', key, expires, params=params)
+    return bucket.sign_url('GET', _with_base(key), expires, params=params)
 
 
 import os

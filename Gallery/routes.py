@@ -10,7 +10,8 @@ from .oss_utils import (
     list_objects,      # 列举相册下的对象并支持分页
     generate_signed_url,# 生成带签名的访问 URL
     delete_object,     # 删除指定对象
-    _get_bucket        # 获取已配置的 Bucket 实例
+    _get_bucket,       # 获取已配置的 Bucket 实例
+    _with_base         # 将 key 拼上基础前缀
 )
 from . import gallery_bp
 from Gallery.oss_utils import load_visible_albums, save_visible_albums
@@ -35,7 +36,7 @@ def _handle_upload(prefix: str):
     uploaded_count = 0
     for f in files:
         filename = secure_filename(f.filename)
-        key = f"{prefix}{filename}"
+        key = _with_base(f"{prefix}{filename}")
         bucket.put_object(key, f.stream)
         uploaded_count += 1
     return uploaded_count
