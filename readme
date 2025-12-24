@@ -1,39 +1,186 @@
-# 🧠 Benlog | 科研博客知识社交等一体化个人网站平台
+# 🧠 Benlog | 科研博客 × 知识库 × 轻社交一体化个人网站平台
 
-朋友圈改变了我们的社交方式，给我们带来了便利，但也让我们失去了深度交流的空间。也让分享变得肤浅和碎片化，甚至变味。
-这种方式的改变，拉远的人与人距离的同时，还给每个人的带来了额外的社交压力和攀比心理和生活负担。
-而 Benlog 希望通过一个轻量化、易部署、易使用的个人网站平台，帮助大家重新找回深度交流和分享的乐趣，摆脱社交网络的束缚，专注于内容本身。
-它是一个面向科研工作者、学生与写作爱好者的 **Flask 驱动网站平台**。  
-它支持图文博客、知识笔记、动态页面、社交平台等功能，旨在帮助用户轻松创建和管理个人网站，分享知识和经验。
+Benlog 是一个面向科研工作者、学生与写作爱好者的 **Flask 驱动一体化个人网站平台**。它将「博客写作」「学习笔记」「图文/多媒体帖子」「动态页面」「友链与导航」「图库展示」「站内检索」「AI 助理」集中在一个可部署的项目中，让你拥有自己的内容中枢与社交空间。
+
+> 目标：帮助你以更轻量、可控、可持续的方式，建立长期可维护的个人内容站点，而不被碎片化社交平台绑架。
 
 ---
 
-## 🔍 网站主要内容结构
+## ✅ 功能总览（按模块）
 
-| 模块路径 | 内容说明 |
-|----------|----------|
-| `Dynamic_pages/` | 用 JSON 构建的动态网页 |
-| `Index(dynamic_links)` | 外链聚合页面（动态pages以及友情链接） |
-| `Blog` | Markdown+html 博客文章 |
-| `Edu` | Markdown+html 学习笔记 |
-| `Neibr` | 简易论坛样帖子（支持文本+图片） |
-| `Gallery` | 图床个人展示一体化 |
-| `Index(AI)` | 即可以大语言模型提问，也可以站内搜索，也是个人ai助理 |
-
----
-
-## 💡 三种内容编辑方式
-
-1. **结构化编辑（JSON）**：灵活强大、功能自由，适合网页定制，适合永久化的pages，搭配动态链接使用，自由定制你的主页快捷卡片，未来会支持导出为各种类型文件（如latex、pdf等）比如你可以直接将aboutme导出为简历使用哦；
-2. **Markdown 博客和笔记**：使用 `.md` 编写，简单直观、图文并茂，适合长文章书写，推荐搭配jupyterlab导出的html使用，可以作为你学习工作的展示区域（比如每天在lab里做的笔记或者科研记录，直接导出为html（base64）粘在输入框中展示给导师）没想到吧，让导师当管理员，他还能直接编辑你的笔记呢；
-3. **基础文本/媒体拼接**：零依赖纯文本 + 图片发帖，不仅每个用户的帖子数据稳定自由，而且图文视频甚至所有文件类型全部都可以支持，未来再引入ai大模型，自己每天的碎碎念和日常分享就可以在这里进行啦，再也不用担心手机里相册爆满没地方分享又舍不得删的问题啦。
-
+- **Blog 博客模块**：Markdown/HTML 文章管理、首页分页、封面与标签、后台编辑与上传
+- **Edu 学习笔记**：与博客一致的写作与管理体验，适合整理知识体系
+- **Neibr 轻社交模块**：图文/多媒体帖子、封面图、评论、隐藏帖子、随机/最新/我的卡片流
+- **Gallery 图库模块**：基于 OSS 的相册展示、封面预览、分页、可见性控制
+- **动态页面系统**：通过 JSON 搭建页面组件、支持可视化编辑与发布
+- **首页导航系统**：快捷链接 + 友链管理、用于构建个人站点入口
+- **站内搜索**：跨 Blog/Edu/Neibr 全站检索，支持结果摘要与高亮
+- **AI 助理（Index/AI）**：可在站内请求大模型回答
+- **后台管理**：用户管理、内容统计、动态页面管理、导航管理等
 
 ---
 
-## 🚀 快速部署教程（适合 0 基础用户）
+## 🧩 详细功能说明
 
-### 📦 一键安装运行
+### 1) Blog 博客模块（/blog）
+**适合：长文写作、科研记录、项目总结、公开展示**
+
+- 支持 **Markdown + Front Matter** 解析
+- 支持 **纯 HTML 文章**（可直接粘贴 JupyterLab 导出的 HTML）
+- 支持封面字段：`cover` / `image` / `banner` / `thumbnail` / `hero`
+- 自动生成摘要（从正文内容中提取）
+- 文章标签支持逗号分隔或数组
+- 文章分页展示（每页 10 条）
+- **随机推荐**（访客可随机跳转）
+- **管理端功能**（需管理员权限）：
+  - 上传 `.md` / `.html` 文件
+  - 新建文章（自动生成 Front Matter 模板）
+  - 在线编辑 / 重命名 / 删除
+
+> 文件存储位置：`/Blog/posts/`
+
+---
+
+### 2) Edu 学习笔记模块（/edu）
+**适合：学习记录、实验日志、知识体系整理**
+
+- 功能与 Blog 几乎一致，适用于“知识型内容”归档
+- 支持 Markdown/HTML 两种格式
+- 支持封面、摘要、标签、随机推荐
+- 管理端支持上传、新建、编辑、重命名、删除
+- 独立分页与独立内容目录
+
+> 文件存储位置：`/Edu/notes/`
+
+---
+
+### 3) Neibr 轻社交模块（/neibr）
+**适合：动态分享、轻量社交、图文记录、资源分享**
+
+- 需要登录后访问（保护内容隐私）
+- 支持多媒体上传：
+  - 图片（jpg/png/webp/gif 等）
+  - 视频（mp4/webm/mov）
+  - 音频（mp3/wav/flac）
+  - 文档（pdf/docx/xlsx/pptx）
+- 支持远程媒体链接嵌入（自动识别图片/视频等）
+- 支持正文富文本渲染：
+  - 链接自动转卡片
+  - 图片/视频链接自动识别
+  - `@用户名`、`#话题` 自动渲染
+  - 邮箱自动 mailto
+- 帖子可设置为 **隐藏（仅本人可见）**
+- 帖子自动生成封面，可手动选择：
+  - 本地媒体设为封面
+  - 远程图片设为封面
+  - Base64 数据设为封面
+- 支持评论系统（YAML 持久化）
+- 首页提供三种帖子流：
+  - 最新帖 / 随机帖 / 我的帖
+- 支持无限翻页 API（JSON）
+- 详情页支持上一条 / 下一条导航
+
+> 媒体与文本存储位置：`/Neibr/neibr/<user_id>/<post_id>/`
+
+---
+
+### 4) Gallery 图库模块（/gallery）
+**适合：摄影作品、实验图像、项目展示**
+
+- 基于 OSS（阿里云对象存储）
+- 支持相册结构（基于 OSS 前缀）
+- 支持自动封面图（相册第一张图）
+- 支持分页加载（marker + limit）
+- 支持管理员上传、删除
+- 支持后台设置 **相册可见性与说明**
+
+> 相册显示受 `Gallery/oss_utils.py` 中配置控制
+
+---
+
+### 5) 动态页面系统（/Index/dynamic_pages）
+**适合：个人主页、About Me、项目页、课程页、作品集**
+
+- 使用 JSON 结构化配置页面内容
+- 支持按顺序组合页面组件（数字键排序）
+- 每个页面对应一个 `.json` 文件
+- 支持后台创建新页面、编辑、删除
+- 页面 URL 由文件名决定
+
+> 页面存储位置：`/Index/dynamic_pages/*.json`
+
+---
+
+### 6) 首页导航系统（快捷入口 + 友链）
+**适合：构建个人站点入口导航**
+
+- 首页显示两类链接：
+  - **快捷链接**（支持图标、简介、子链接）
+  - **友链**（用于展示合作站点）
+- 后台可视化管理链接、排序、删除
+
+> 配置文件：`/Index/dynamic_links/quick-links.json` & `friend-links.json`
+
+---
+
+### 7) 站内搜索系统（/search）
+**跨模块检索，定位内容更快**
+
+- 支持搜索 Blog、Edu、Neibr 全站内容
+- 结果支持摘要高亮、标签展示、更新时间排序
+- Markdown 先转文本，HTML 自动剥离标签
+
+---
+
+### 8) AI 助理（/llm）
+**站内集成 AI 提问**
+
+- 通过 OpenAI 接口回答问题
+- 可作为主页 AI 助理入口
+
+> 使用需设置 `OPENAI_API_KEY` 环境变量
+
+---
+
+### 9) 后台管理中心（/setting）
+**集中管理用户与内容**
+
+- 内容统计（文章、笔记、用户、图库等）
+- 用户管理（创建/编辑/删除）
+- 登录/注册/注销
+- 动态页面管理
+- 快捷链接 / 友链管理
+- 图库可见性管理
+
+> 超级管理员为 `User.id == 1`
+
+---
+
+## 🔐 权限体系
+
+- **访客**：可浏览公开内容（Blog / Edu / Dynamic Pages / Home）
+- **普通用户**：可登录使用 Neibr、评论、上传媒体等
+- **管理员**：可管理 Blog/Edu 内容
+- **超级管理员（ID=1）**：拥有用户管理权限、动态页面管理权限、全功能权限
+
+---
+
+## 🗂️ 内容存储结构一览
+
+```
+Benlog/
+├── Blog/posts/            # 博客文章 Markdown / HTML
+├── Edu/notes/             # 学习笔记 Markdown / HTML
+├── Neibr/neibr/           # 轻社交模块媒体与文本
+│   └── <user_id>/<post_id>/post.txt
+├── Index/dynamic_pages/   # JSON 动态页面
+├── Index/dynamic_links/   # quick-links.json / friend-links.json
+├── Gallery/               # OSS 相册逻辑
+```
+
+---
+
+## 🚀 快速部署与运行（保持原配置示例）
 
 ```bash
 # 下载项目源码
@@ -55,41 +202,14 @@ flask --app Benlog/app.py db upgrade
 # 运行本地开发服务器
 flask --app "Benlog.app:create_app" run --host=0.0.0.0 --port=80
 # 或者
-gunicorn -w 3 --threads 6 -b 0.0.0.0:80 "Benlog.app:create_app()"
-
+# gunicorn -w 3 --threads 6 -b 0.0.0.0:80 "Benlog.app:create_app()"
 ```
 
 ---
 
-### 📦 一键更新
-cd /home/Benlogmain.tar/Benlogmain
-chmod +x deploy.sh
-./deploy.sh
+## 🔧 配置说明（可选）
 
-
-
-
-
-# 如果需要进行版本更新也非常简单，只需在服务器中依次：
-cd /Benlogmain
-source myenv/bin/activate
-chmod +x deploy.sh
-./deploy.sh
-# 随后再继续一键启动即可。
-pkill -f gunicorn
-gunicorn -w 3 --threads 6 -b 0.0.0.0:80 "Benlog.app:create_app()"
-# setup、manifest也可以帮助你先将程序打包，小白可以直接忽略。
-# 测试代码
-export FLASK_ENV=development
-export FLASK_DEBUG=1
-flask --app "Benlog.app:create_app" run --host=0.0.0.0 --port=80
-
-cd /home/Benlogmain.tar/Benlogmain
----
-
-## 🔒 配置说明（可选）
-
-系统默认读取内置配置。如需自定义：
+系统默认读取内置配置，如需自定义：
 
 ```bash
 mkdir instance
@@ -99,8 +219,6 @@ touch instance/config.py
 在 `instance/config.py` 中写入：
 
 ```python
-# instance/config.py
-
 DEBUG = True
 SECRET_KEY = 'your-secret-key'
 
@@ -109,39 +227,36 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///benlog.db'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # 登录管理相关
-REMEMBER_COOKIE_DURATION = 3600 * 24 * 7  # 一周自动登录
+REMEMBER_COOKIE_DURATION = 3600 * 24 * 7
 
-
-# OSS 云存储（如果使用）
+# OSS 云存储（如使用 Gallery 模块）
 OSS_ACCESS_KEY_ID = 'your-access-key-id'
 OSS_ACCESS_KEY_SECRET = 'your-access-key-secret'
 OSS_BUCKET_NAME = 'your-bucket-name'
 OSS_ENDPOINT = 'oss-cn-your-region.aliyuncs.com'
-
 ```
 
 ---
 
-## 如果你要开发，📤 贡献/部署建议
+## 💡 使用建议
 
-1. 建议新功能用分支开发：
-```bash
-git checkout -b feature/xxx
-```
+- **科研记录**：用 Edu 写学习笔记与实验日志，Blog 写阶段性总结
+- **内容输出**：用 Blog 写公开文章，Neibr 用于日常动态分享
+- **资源管理**：用 Gallery 作为图片/视频作品展示
+- **主页搭建**：用动态页面 + 快捷链接搭建个人主页入口
 
-2. 推送代码：
-```bash
-git add .
-git commit -m "功能更新"
-git push origin feature/xxx
-```
-
-3. 欢迎大佬加入一起维护完善这个项目
-
-4. 📬 反馈 & 建议欢迎通过 issue 或 email 提出！
-
-5. 这个项目也可以作为实验室的科研工作者们的个人网站平台，欢迎大家使用和贡献。
 ---
 
-## 🛠 未来功能规划
-neibr模块index懒加载未完成时，加载更多以及三个阅读方式的切换按钮都无法被点击，然而新建帖子的按钮和点击卡片进入帖子详情页是可以使用的。
+## 🤝 贡献与维护
+
+欢迎开发者加入完善这个平台！如果你有优化想法或功能建议，请通过 Issue 或邮件联系维护者。
+
+---
+
+## 🛠️ 已知/规划说明
+
+- Neibr 模块首页的“加载更多”和部分阅读视图切换尚未完成。
+
+---
+
+如需我继续完善文档（例如：组件 JSON 格式说明、后台截图、部署脚本优化等），可以告诉我。
