@@ -117,16 +117,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <script defer src="{{ url_for('static', filename='js/pseudo-bg.js') }}"></script>
   <script defer src="{{ url_for('static', filename='js/clickimg.js') }}"></script>
-  <script>
-    const userId = parseInt(document.body.dataset.userId);
-    if (userId !== 1) {
-      const script = document.createElement("script");
-      script.defer = true;
-      script.dataset.domain = "blog.00ling.com";
-      script.src = "http://101.132.248.137:8080/js/script.js";
-      document.head.appendChild(script);
-    }
-  </script>
+
   <script>
     MathJax = {
       tex: {
