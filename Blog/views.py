@@ -9,7 +9,12 @@ from flask_login import login_required, current_user
 from typing import Final
 
 # POSTS_DIR 存放 blog 模块的 Markdown 文件
-POSTS_DIR = os.path.join(os.path.dirname(__file__), 'posts')
+def _posts_dir() -> str:
+    return current_app.config.get('BLOG_POSTS_DIR') or os.path.join(
+        current_app.instance_path,
+        'Blog',
+        'posts'
+    )
 ALLOWED_EXTENSIONS = {'md', 'html'}
 PER_PAGE = 10  # 每页显示条数
 
@@ -117,8 +122,9 @@ def select_cover(metadata: dict) -> str | None:
 
 def load_post_card(slug: str, last_modified: datetime):
     """加载单篇文章的 Frontmatter 和摘要信息。"""
-    md_path = os.path.join(POSTS_DIR, f"{slug}.md")
-    html_path = os.path.join(POSTS_DIR, f"{slug}.html")
+    posts_dir = _posts_dir()
+    md_path = os.path.join(posts_dir, f"{slug}.md")
+    html_path = os.path.join(posts_dir, f"{slug}.html")
 
     title = slug
     summary = ''
@@ -161,11 +167,12 @@ def load_post_card(slug: str, last_modified: datetime):
 def get_all_posts():
     """返回按时间倒序排列的所有文章元信息列表"""
     posts = []
-    if not os.path.exists(POSTS_DIR):
-        abort(500, description=f"POSTS_DIR 不存在：{POSTS_DIR}")
-    for filename in os.listdir(POSTS_DIR):
+    posts_dir = _posts_dir()
+    if not os.path.exists(posts_dir):
+        abort(500, description=f"POSTS_DIR 不存在：{posts_dir}")
+    for filename in os.listdir(posts_dir):
         if filename.endswith(('.md', '.html')):
-            filepath = os.path.join(POSTS_DIR, filename)
+            filepath = os.path.join(posts_dir, filename)
             lm = datetime.fromtimestamp(os.path.getmtime(filepath))
             slug = filename.rsplit('.', 1)[0]
             posts.append({'slug': slug, 'last_modified': lm})
@@ -203,7 +210,8 @@ def upload_post():
 
     # 安全清洗文件名
     filename = sanitize_filename(file.filename)
-    save_path = os.path.join(POSTS_DIR, filename)
+    posts_dir = _posts_dir()
+    save_path = os.path.join(posts_dir, filename)
 
     # 保存文件
     file.save(save_path)
@@ -213,7 +221,8 @@ def upload_post():
 
 @blog_bp.route('/')
 def list_posts():
-    os.makedirs(POSTS_DIR, exist_ok=True)
+    posts_dir = _posts_dir()
+    os.makedirs(posts_dir, exist_ok=True)
 
     # 1. 获取 page 参数
     try:
@@ -267,8 +276,9 @@ def list_posts():
 @blog_bp.route('/<slug>')
 def show_post(slug):
     """支持显示 .md 或 .html 文件的文章"""
-    md_path = os.path.join(POSTS_DIR, f"{slug}.md")
-    html_path = os.path.join(POSTS_DIR, f"{slug}.html")
+    posts_dir = _posts_dir()
+    md_path = os.path.join(posts_dir, f"{slug}.md")
+    html_path = os.path.join(posts_dir, f"{slug}.html")
 
     if os.path.exists(md_path):
         # 解析 Markdown 文件
@@ -316,13 +326,14 @@ def manage_posts():
         flash("无权限访问博客管理页面", "error")
         return redirect(url_for('index.home'))
 
-    if not os.path.exists(POSTS_DIR):
-        abort(500, description=f"Posts directory not found: {POSTS_DIR}")
+    posts_dir = _posts_dir()
+    if not os.path.exists(posts_dir):
+        abort(500, description=f"Posts directory not found: {posts_dir}")
 
     posts = []
-    for filename in os.listdir(POSTS_DIR):
+    for filename in os.listdir(posts_dir):
         if filename.endswith(('.md', '.html')):  # ✅ 支持两种后缀
-            filepath = os.path.join(POSTS_DIR, filename)
+            filepath = os.path.join(posts_dir, filename)
             last_modified = datetime.fromtimestamp(os.path.getmtime(filepath))
             slug, ext = filename.rsplit('.', 1)
             posts.append({
@@ -346,7 +357,8 @@ def new_post():
     # 生成新文件名，采用时间戳确保唯一性
     timestamp = datetime.now().strftime('%Y%m%d')
     filename = f"post_{timestamp}.md"
-    filepath = os.path.join(POSTS_DIR, filename)
+    posts_dir = _posts_dir()
+    filepath = os.path.join(posts_dir, filename)
     
     # 定义默认 frontmatter 与内容 %H:%M:%S
     default_frontmatter = {
@@ -374,8 +386,9 @@ def new_post():
 def edit_post(slug):
     # 定位文件
     filepath = None
+    posts_dir = _posts_dir()
     for ext in ('md', 'html'):
-        p = os.path.join(POSTS_DIR, f"{slug}.{ext}")
+        p = os.path.join(posts_dir, f"{slug}.{ext}")
         if os.path.exists(p):
             filepath = p
             break
@@ -404,10 +417,11 @@ def rename_post(slug):
     if not new_slug:
         flash("新名称不能为空", "error")
         return redirect(url_for('blog.edit_post', slug=slug))
+    posts_dir = _posts_dir()
     for ext in ('md', 'html'):
-        old_path = os.path.join(POSTS_DIR, f"{slug}.{ext}")
+        old_path = os.path.join(posts_dir, f"{slug}.{ext}")
         if os.path.exists(old_path):
-            new_path = os.path.join(POSTS_DIR, f"{new_slug}.{ext}")
+            new_path = os.path.join(posts_dir, f"{new_slug}.{ext}")
             if os.path.exists(new_path):
                 flash("重命名失败：目标文件已存在", "error")
                 return redirect(url_for('blog.edit_post', slug=slug))
@@ -421,8 +435,9 @@ def rename_post(slug):
 def delete_post(slug):
     if not (current_user.is_admin or current_user.id == 1):
         abort(403)
+    posts_dir = _posts_dir()
     for ext in ('md', 'html'):
-        path = os.path.join(POSTS_DIR, f"{slug}.{ext}")
+        path = os.path.join(posts_dir, f"{slug}.{ext}")
         if os.path.exists(path):
             os.remove(path)
             flash("文章已删除", "success")

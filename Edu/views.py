@@ -9,7 +9,12 @@ import re
 from math import ceil
 from typing import Final
 
-NOTES_DIR = os.path.join(os.path.dirname(__file__), 'notes')
+def _notes_dir() -> str:
+    return current_app.config.get('EDU_NOTES_DIR') or os.path.join(
+        current_app.instance_path,
+        'Edu',
+        'notes'
+    )
 PER_PAGE = 10  # 每页显示条目数
 ALLOWED_EXTENSIONS = {'md', 'html'}
 
@@ -113,8 +118,8 @@ def select_cover(metadata: dict) -> str | None:
 
 
 def load_note_card(slug: str, last_modified: datetime):
-    md_path = os.path.join(NOTES_DIR, f"{slug}.md")
-    html_path = os.path.join(NOTES_DIR, f"{slug}.html")
+    md_path = os.path.join(_notes_dir(), f"{slug}.md")
+    html_path = os.path.join(_notes_dir(), f"{slug}.html")
 
     title = slug
     summary = ''
@@ -188,9 +193,9 @@ def upload_note():
 
     # 清洗文件名，防止目录穿越和非法字符
     filename = sanitize_filename(file.filename)
-    save_path = os.path.join(os.path.dirname(__file__), 'notes', filename)
+    save_path = os.path.join(_notes_dir(), filename)
 
-    # 保存到 NOTES_DIR
+    # 保存到笔记目录
     file.save(save_path)
 
     flash("上传成功！", "success")
@@ -198,7 +203,7 @@ def upload_note():
 
 @edu_bp.route('/')
 def list_notes():
-    os.makedirs(NOTES_DIR, exist_ok=True)
+    os.makedirs(_notes_dir(), exist_ok=True)
 
     """分页列出所有文档，按最后修改时间倒序。"""
     try:
@@ -208,11 +213,11 @@ def list_notes():
 
     # 读取所有笔记
     all_notes = []
-    if not os.path.exists(NOTES_DIR):
-        abort(500, description=f"Notes directory not found: {NOTES_DIR}")
-    for filename in os.listdir(NOTES_DIR):
+    if not os.path.exists(_notes_dir()):
+        abort(500, description=f"Notes directory not found: {_notes_dir()}")
+    for filename in os.listdir(_notes_dir()):
         if filename.endswith(('.md', '.html')):
-            filepath = os.path.join(NOTES_DIR, filename)
+            filepath = os.path.join(_notes_dir(), filename)
             lm = datetime.fromtimestamp(os.path.getmtime(filepath))
             slug, ext = filename.rsplit('.', 1)
             all_notes.append({'slug': slug, 'last_modified': lm})
@@ -260,8 +265,8 @@ def list_notes():
 @edu_bp.route('/<slug>')
 def show_note(slug):
     """显示单个笔记，支持 .md 和 .html 文件"""
-    md_path = os.path.join(NOTES_DIR, f"{slug}.md")
-    html_path = os.path.join(NOTES_DIR, f"{slug}.html")
+    md_path = os.path.join(_notes_dir(), f"{slug}.md")
+    html_path = os.path.join(_notes_dir(), f"{slug}.html")
 
     if os.path.exists(md_path):
         note_data = frontmatter.load(md_path)
@@ -329,13 +334,13 @@ def manage_notes():
         flash("无权限访问笔记管理页面", "error")
         return redirect(url_for('index.home'))
 
-    if not os.path.exists(NOTES_DIR):
-        abort(500, description=f"Notes directory not found: {NOTES_DIR}")
+    if not os.path.exists(_notes_dir()):
+        abort(500, description=f"Notes directory not found: {_notes_dir()}")
 
     notes = []
-    for filename in os.listdir(NOTES_DIR):
+    for filename in os.listdir(_notes_dir()):
         if filename.endswith(('.md', '.html')):
-            filepath = os.path.join(NOTES_DIR, filename)
+            filepath = os.path.join(_notes_dir(), filename)
             last_modified = datetime.fromtimestamp(os.path.getmtime(filepath))
             slug, ext = filename.rsplit('.', 1)
             notes.append({
@@ -356,7 +361,7 @@ def new_note():
     # 生成新文件名，格式例如 note_20250408123045.md %H:%M:%S
     timestamp = datetime.now().strftime('%Y%m%d')
     filename = f"note_{timestamp}.md"
-    filepath = os.path.join(NOTES_DIR, filename)
+    filepath = os.path.join(_notes_dir(), filename)
     
     # 定义默认 frontmatter 与内容 %H:%M:%S
     default_frontmatter = {
@@ -383,7 +388,7 @@ def edit_note(slug):
     # 定位文件
     filepath = None
     for ext in ('md', 'html'):
-        p = os.path.join(NOTES_DIR, f"{slug}.{ext}")
+        p = os.path.join(_notes_dir(), f"{slug}.{ext}")
         if os.path.exists(p):
             filepath = p
             break
@@ -417,9 +422,9 @@ def rename_note(slug):
 
     # 查找并重命名
     for ext in ('md', 'html'):
-        old_path = os.path.join(NOTES_DIR, f"{slug}.{ext}")
+        old_path = os.path.join(_notes_dir(), f"{slug}.{ext}")
         if os.path.exists(old_path):
-            new_path = os.path.join(NOTES_DIR, f"{new_slug}.{ext}")
+            new_path = os.path.join(_notes_dir(), f"{new_slug}.{ext}")
             if os.path.exists(new_path):
                 flash("重命名失败：目标文件已存在", "error")
                 return redirect(url_for('edu.edit_note', slug=slug))
@@ -438,7 +443,7 @@ def delete_note(slug):
 
     # 删除文件
     for ext in ('md', 'html'):
-        path = os.path.join(NOTES_DIR, f"{slug}.{ext}")
+        path = os.path.join(_notes_dir(), f"{slug}.{ext}")
         if os.path.exists(path):
             os.remove(path)
             flash("文档已删除", "success")

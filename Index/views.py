@@ -1,5 +1,5 @@
 # Index/views.py
-from flask import render_template, abort, request, jsonify
+from flask import render_template, abort, request, jsonify, current_app
 from flask import Blueprint, redirect, url_for, flash
 import requests
 import urllib3
@@ -21,11 +21,48 @@ from Neibr.models import Post as NeibrPost
 from Settings.models import User
 
 
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+def _blog_posts_dir() -> str:
+    return current_app.config.get('BLOG_POSTS_DIR') or os.path.join(
+        current_app.instance_path,
+        'Blog',
+        'posts'
+    )
 
-BLOG_POSTS_DIR = os.path.join(BASE_DIR, 'Blog', 'posts')
-EDU_NOTES_DIR = os.path.join(BASE_DIR, 'Edu', 'notes')
-NEIBR_STORAGE_DIR = os.path.join(BASE_DIR, 'Neibr', 'neibr')
+
+def _edu_notes_dir() -> str:
+    return current_app.config.get('EDU_NOTES_DIR') or os.path.join(
+        current_app.instance_path,
+        'Edu',
+        'notes'
+    )
+
+
+def _neibr_storage_dir() -> str:
+    return current_app.config.get('NEIBR_STORAGE_DIR') or os.path.join(
+        current_app.instance_path,
+        'Neibr',
+        'neibr'
+    )
+
+
+def _dynamic_pages_dir() -> str:
+    path = current_app.config.get('DYNAMIC_PAGES_DIR') or os.path.join(
+        current_app.instance_path,
+        'Index',
+        'dynamic_pages'
+    )
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def _dynamic_links_dir() -> str:
+    path = current_app.config.get('DYNAMIC_LINKS_DIR') or os.path.join(
+        current_app.instance_path,
+        'Index',
+        'dynamic_links'
+    )
+    os.makedirs(path, exist_ok=True)
+    return path
 
 
 class _HTMLStripper(HTMLParser):
@@ -105,14 +142,14 @@ def search_blog_posts(query: str):
     results = []
     query_lower = query.lower()
 
-    if not os.path.isdir(BLOG_POSTS_DIR):
+    if not os.path.isdir(_blog_posts_dir()):
         return results
 
-    for filename in os.listdir(BLOG_POSTS_DIR):
+    for filename in os.listdir(_blog_posts_dir()):
         if not filename.endswith(('.md', '.html')):
             continue
 
-        filepath = os.path.join(BLOG_POSTS_DIR, filename)
+        filepath = os.path.join(_blog_posts_dir(), filename)
         slug = filename.rsplit('.', 1)[0]
 
         try:
@@ -171,14 +208,14 @@ def search_edu_notes(query: str):
     results = []
     query_lower = query.lower()
 
-    if not os.path.isdir(EDU_NOTES_DIR):
+    if not os.path.isdir(_edu_notes_dir()):
         return results
 
-    for filename in os.listdir(EDU_NOTES_DIR):
+    for filename in os.listdir(_edu_notes_dir()):
         if not filename.endswith(('.md', '.html')):
             continue
 
-        filepath = os.path.join(EDU_NOTES_DIR, filename)
+        filepath = os.path.join(_edu_notes_dir(), filename)
         slug = filename.rsplit('.', 1)[0]
 
         try:
@@ -234,7 +271,7 @@ def search_edu_notes(query: str):
 
 
 def _load_neibr_post_body(post: NeibrPost) -> str:
-    folder_path = os.path.join(NEIBR_STORAGE_DIR, str(post.user_id), str(post.id))
+    folder_path = os.path.join(_neibr_storage_dir(), str(post.user_id), str(post.id))
     text_path = os.path.join(folder_path, 'post.txt')
     if not os.path.exists(text_path):
         return ''
@@ -352,19 +389,13 @@ def search():
 
 
 
-DYNAMIC_PAGES_FOLDER = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), 'dynamic_pages')
-)
-if not os.path.exists(DYNAMIC_PAGES_FOLDER):
-    os.makedirs(DYNAMIC_PAGES_FOLDER)
-    
 @index_bp.route('/<page>', methods=['GET'])
 def dynamic_page(page):
     """
     公共预览：读取 JSON，按数字键排序组装组件列表，
     filename 退化为 URL 中的 page 参数
     """
-    json_path = os.path.join(DYNAMIC_PAGES_FOLDER, f"{page}.json")
+    json_path = os.path.join(_dynamic_pages_dir(), f"{page}.json")
     if not os.path.exists(json_path):
         abort(404, "页面未找到")
 
@@ -394,7 +425,7 @@ def edit_dynamic_page(page):
       POST 保存 JSON，并在文件名（filename）变更时重命名文件
     """
     # 旧的 JSON 路径
-    old_json_path = os.path.join(DYNAMIC_PAGES_FOLDER, f"{page}.json")
+    old_json_path = os.path.join(_dynamic_pages_dir(), f"{page}.json")
     if not os.path.exists(old_json_path):
         abort(404, "页面不存在")
 
@@ -422,7 +453,7 @@ def edit_dynamic_page(page):
         if new_filename != filename:
             # 生成安全的文件名
             safe = re.sub(r'[^0-9A-Za-z_-]', '_', new_filename)
-            new_json_path = os.path.join(DYNAMIC_PAGES_FOLDER, f"{safe}.json")
+            new_json_path = os.path.join(_dynamic_pages_dir(), f"{safe}.json")
             if os.path.exists(new_json_path):
                 flash("目标文件名已存在，请换一个", "danger")
                 return redirect(url_for('index.edit_dynamic_page', page=page))
@@ -547,11 +578,7 @@ def ensure_json_file(path, default):
             json.dump(default, f, ensure_ascii=False, indent=2)
 
 def load_quick_links():
-    links_file = os.path.join(
-        os.path.dirname(__file__),
-        'dynamic_links',
-        'quick-links.json'
-    )
+    links_file = os.path.join(_dynamic_links_dir(), 'quick-links.json')
     # 如果目录或文件不存在，就创建
     ensure_json_file(links_file, default=[])
     # 读取并返回
@@ -559,11 +586,7 @@ def load_quick_links():
         return json.load(f)
 
 def load_friend_links():
-    links_file = os.path.join(
-        os.path.dirname(__file__),
-        'dynamic_links',
-        'friend-links.json'
-    )
+    links_file = os.path.join(_dynamic_links_dir(), 'friend-links.json')
     ensure_json_file(links_file, default=[])
     with open(links_file, 'r', encoding='utf-8') as f:
         return json.load(f)
@@ -580,10 +603,6 @@ def home():
         friend_links=friend_links,
         title="首页"
     )
-
-
-
-
 
 
 

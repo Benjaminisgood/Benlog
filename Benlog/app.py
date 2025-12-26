@@ -13,6 +13,7 @@ def create_app():
                 instance_relative_config=True,
                 template_folder=os.path.join(base_dir, 'templates'),
                 static_folder=os.path.join(base_dir, 'static'))
+    instance_data_root = app.instance_path
 
     app.config.from_mapping(
         SECRET_KEY='default-secret-key',
@@ -27,6 +28,12 @@ def create_app():
         OSS_ENDPOINT          = 'oss-cn-shanghai-internal.aliyuncs.com',
         OSS_BUCKET_NAME       = '',
         OSS_BASE_PREFIX       = '',
+        BLOG_POSTS_DIR        = os.path.join(instance_data_root, 'Blog', 'posts'),
+        EDU_NOTES_DIR         = os.path.join(instance_data_root, 'Edu', 'notes'),
+        NEIBR_STORAGE_DIR     = os.path.join(instance_data_root, 'Neibr', 'neibr'),
+        DYNAMIC_PAGES_DIR     = os.path.join(instance_data_root, 'Index', 'dynamic_pages'),
+        DYNAMIC_LINKS_DIR     = os.path.join(instance_data_root, 'Index', 'dynamic_links'),
+        VISIBLE_ALBUMS_PATH   = os.path.join(instance_data_root, 'Settings', 'visible_albums.json'),
 
 
 
@@ -40,6 +47,12 @@ def create_app():
     
     try:
         os.makedirs(app.instance_path, exist_ok=True)
+        os.makedirs(app.config['BLOG_POSTS_DIR'], exist_ok=True)
+        os.makedirs(app.config['EDU_NOTES_DIR'], exist_ok=True)
+        os.makedirs(app.config['NEIBR_STORAGE_DIR'], exist_ok=True)
+        os.makedirs(app.config['DYNAMIC_PAGES_DIR'], exist_ok=True)
+        os.makedirs(app.config['DYNAMIC_LINKS_DIR'], exist_ok=True)
+        os.makedirs(os.path.dirname(app.config['VISIBLE_ALBUMS_PATH']), exist_ok=True)
     except OSError:
         pass
 
