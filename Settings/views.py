@@ -504,11 +504,9 @@ def new_dynamic_page():
 
 
 
-# Path to the JSON file
-cards_file_path = os.path.join(os.path.dirname(__file__), '..', 'Index', 'dynamic_links', 'quick-links.json')
-
 # Load the existing quick links from the JSON file
 def load_quick_links():
+    cards_file_path = os.path.join(_dynamic_links_dir(), 'quick-links.json')
     if not os.path.exists(cards_file_path):
         return []  # Return an empty list if the file doesn't exist
     with open(cards_file_path, 'r', encoding='utf-8') as file:
@@ -516,6 +514,7 @@ def load_quick_links():
 
 # Save the updated list of quick links to the JSON file
 def save_quick_links(links):
+    cards_file_path = os.path.join(_dynamic_links_dir(), 'quick-links.json')
     with open(cards_file_path, 'w', encoding='utf-8') as file:
         json.dump(links, file, ensure_ascii=False, indent=4)
 
@@ -596,11 +595,9 @@ def manage_quick_links():
 
 
 
-# Path to the JSON file
-links_file_path = os.path.join(os.path.dirname(__file__), '..', 'Index', 'dynamic_links', 'friend-links.json')
-
 # Load the existing friend links from the JSON file
 def load_friend_links():
+    links_file_path = os.path.join(_dynamic_links_dir(), 'friend-links.json')
     if not os.path.exists(links_file_path):
         return []  # Return an empty list if the file doesn't exist
     with open(links_file_path, 'r', encoding='utf-8') as file:
@@ -608,6 +605,7 @@ def load_friend_links():
 
 # Save the updated list of friend links to the JSON file
 def save_friend_links(links):
+    links_file_path = os.path.join(_dynamic_links_dir(), 'friend-links.json')
     with open(links_file_path, 'w', encoding='utf-8') as file:
         json.dump(links, file, ensure_ascii=False, indent=4)
 
