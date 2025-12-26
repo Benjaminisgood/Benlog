@@ -1,8 +1,9 @@
-from flask import Flask
+from flask import Flask, flash, redirect, request, url_for
 import os
 import logging
 from datetime import timedelta
 from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.exceptions import RequestEntityTooLarge
 
 
 
@@ -22,12 +23,18 @@ def create_app():
         DEBUG=False,
         DOC_CREATION_PASSWORD='0715',
         REMEMBER_COOKIE_DURATION=timedelta(days=30),
-        MAX_CONTENT_LENGTH=64 * 1024 * 1024,  # 64MB upload limit
+        MAX_CONTENT_LENGTH=256 * 1024 * 1024,  # 256MB upload limit
+        MAX_FORM_MEMORY_SIZE=64 * 1024 * 1024,  # 64MB form body limit
+        MAX_FORM_PARTS=2000,  # allow more parts for batch uploads
         OSS_ACCESS_KEY_ID     = '',
         OSS_ACCESS_KEY_SECRET = '',
         OSS_ENDPOINT          = 'oss-cn-shanghai-internal.aliyuncs.com',
         OSS_BUCKET_NAME       = '',
         OSS_BASE_PREFIX       = '',
+        NEIBR_COMPRESS_MAX_FILES=12,
+        NEIBR_IMAGE_MAX_EDGE=2560,
+        NEIBR_IMAGE_QUALITY=22,
+        NEIBR_IMAGE_OPTIMIZE=False,
         BLOG_POSTS_DIR        = os.path.join(instance_data_root, 'Blog', 'posts'),
         EDU_NOTES_DIR         = os.path.join(instance_data_root, 'Edu', 'notes'),
         NEIBR_STORAGE_DIR     = os.path.join(instance_data_root, 'Neibr', 'neibr'),
@@ -76,6 +83,11 @@ def create_app():
 
     settings_init_app(app)
     neibr_init_app(app)
+
+    @app.errorhandler(RequestEntityTooLarge)
+    def handle_request_too_large(error):
+        flash('提交内容过大，请分批上传或缩小内容后重试。', 'error')
+        return redirect(request.referrer or url_for('index.home'))
 
     app.logger.setLevel(logging.DEBUG)
     logging.basicConfig(level=logging.DEBUG)

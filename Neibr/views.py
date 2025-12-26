@@ -125,18 +125,35 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
 
 
+def _should_compress_images(files) -> bool:
+    max_files = current_app.config.get('NEIBR_COMPRESS_MAX_FILES')
+    if max_files is None:
+        return True
+    try:
+        max_files = int(max_files)
+    except (TypeError, ValueError):
+        return True
+    if max_files <= 0:
+        return False
+    image_count = sum(
+        1 for f in files
+        if f and f.filename and f.filename.rsplit('.', 1)[-1].lower() in COMPRESSIBLE_IMAGE_EXTENSIONS
+    )
+    return image_count <= max_files
+
+
 def compress_and_save_image(file_storage, save_path):
     try:
         img = Image.open(file_storage.stream)
+        img = ImageOps.exif_transpose(img)
+        max_edge = current_app.config.get('NEIBR_IMAGE_MAX_EDGE', 2560)
+        if max_edge and max(img.size) > max_edge:
+            img.thumbnail((max_edge, max_edge), Image.LANCZOS)
         if img.mode in ("RGBA", "P"):
             img = img.convert("RGB")
-
-        img_io = io.BytesIO()
-        img.save(img_io, format='JPEG', quality=IMAGE_QUALITY, optimize=True)
-        img_io.seek(0)
-
-        with open(save_path, 'wb') as out_f:
-            out_f.write(img_io.read())
+        quality = current_app.config.get('NEIBR_IMAGE_QUALITY', IMAGE_QUALITY)
+        optimize = bool(current_app.config.get('NEIBR_IMAGE_OPTIMIZE', False))
+        img.save(save_path, format='JPEG', quality=quality, optimize=optimize)
     except UnidentifiedImageError:
         raise  # 交由上层处理（或你可以 flash 一句）
         
@@ -749,6 +766,7 @@ def create_post():
         folder_path = os.path.join(_neibr_storage_dir(), str(current_user.id), str(post.id))
         os.makedirs(folder_path, exist_ok=True)
 
+        compress_images = _should_compress_images(files)
         for file in files:
             if file and file.filename:
                 filename = sanitize_filename(file)
@@ -761,8 +779,12 @@ def create_post():
                 ext = filename.rsplit('.', 1)[1].lower()
                 file_path = os.path.join(folder_path, filename)
 
-                if ext in COMPRESSIBLE_IMAGE_EXTENSIONS:
-                    compress_and_save_image(file, file_path)
+                if ext in COMPRESSIBLE_IMAGE_EXTENSIONS and compress_images:
+                    try:
+                        compress_and_save_image(file, file_path)
+                    except UnidentifiedImageError:
+                        flash(f'图片文件无法识别：{file.filename}，请上传有效图片', 'danger')
+                        continue
                 else:
                     file.save(file_path)
 
@@ -1009,26 +1031,27 @@ def _handle_edit_post(post: Post):
         with open(os.path.join(folder_path, 'post.txt'), 'w') as f:
             f.write(file_content)
 
-        if 'media_files' in request.files:
-            for file in request.files.getlist('media_files'):
-                if file and file.filename:
-                    filename = sanitize_filename(file)
+        files = request.files.getlist('media_files') if 'media_files' in request.files else []
+        compress_images = _should_compress_images(files)
+        for file in files:
+            if file and file.filename:
+                filename = sanitize_filename(file)
 
-                    if not allowed_file(filename):
-                        flash(f'文件类型不允许：{file.filename}', 'warning')
+                if not allowed_file(filename):
+                    flash(f'文件类型不允许：{file.filename}', 'warning')
+                    continue
+
+                ext = filename.rsplit('.', 1)[-1].lower()
+                file_path = os.path.join(folder_path, filename)
+
+                if ext in COMPRESSIBLE_IMAGE_EXTENSIONS and compress_images:
+                    try:
+                        compress_and_save_image(file, file_path)
+                    except UnidentifiedImageError:
+                        flash(f'图片文件无法识别：{file.filename}，请上传有效图片', 'danger')
                         continue
-
-                    ext = filename.rsplit('.', 1)[-1].lower()
-                    file_path = os.path.join(folder_path, filename)
-
-                    if ext in COMPRESSIBLE_IMAGE_EXTENSIONS:
-                        try:
-                            compress_and_save_image(file, file_path)
-                        except UnidentifiedImageError:
-                            flash(f'图片文件无法识别：{file.filename}，请上传有效图片', 'danger')
-                            continue
-                    else:
-                        file.save(file_path)
+                else:
+                    file.save(file_path)
 
         delete_files = request.form.getlist('delete_files')
         for filename in delete_files:
