@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% block extra_styles %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
 {% block content %}
 <section class="auth-wrapper">
   <article class="auth-card glass-card">
@@ -43,8 +46,4 @@
   </article>
 </section>
 
-<!-- 复用 login 样式 -->
-<style>
-{% include '_auth_styles.css' %}
-</style>
 {% endblock %}

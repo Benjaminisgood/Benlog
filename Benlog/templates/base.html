@@ -1,18 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
-  <script>
-  (function() {
-    const theme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', theme);
-  })();
-  </script>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}" type="image/png">
-  
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ title if title else "My Personal Site" }}</title>
+  <script>
+    (function() {
+      const theme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}" type="image/png">
   {% block extra_styles %}{% endblock %}
 </head>
 <body data-user-id="{{ current_user.id }}">
@@ -117,6 +116,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <script defer src="{{ url_for('static', filename='js/pseudo-bg.js') }}"></script>
   <script defer src="{{ url_for('static', filename='js/clickimg.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/main.js') }}"></script>
 
   <script>
     MathJax = {

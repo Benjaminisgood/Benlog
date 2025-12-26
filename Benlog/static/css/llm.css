@@ -1,0 +1,32 @@
+.llm-result {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  text-align: center;
+  color: var(--text-color);
+}
+
+.llm-result h1 {
+  margin-bottom: 20px;
+}
+
+.llm-result p {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin: 15px 0;
+}
+
+.llm-result a {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #ff4d67;
+  color: #fff;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background-color 0.3s;
+}
+
+.llm-result a:hover {
+  background-color: #e8435f;
+}

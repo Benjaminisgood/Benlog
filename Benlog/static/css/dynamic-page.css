@@ -1,0 +1,107 @@
+.new-page-container {
+  max-width: 600px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background: var(--card-bg-color);
+  border: 1px solid var(--card-border-color);
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.npc-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.page-heading {
+  font-size: 2.2rem;
+  color: var(--text-color);
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--input-border-color);
+  border-radius: 6px;
+  background: var(--input-bg-color);
+  transition: border-color 0.3s ease;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--input-focus-border-color);
+}
+
+.hint {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--meta-text-color);
+}
+
+.error-message {
+  display: none;
+  margin-top: 0.3rem;
+  font-size: 0.85rem;
+  color: #dc3545;
+}
+
+.form-actions {
+  text-align: center;
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.6rem 1.4rem;
+  margin: 0 0.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.btn-save {
+  background: var(--btn-bg-color);
+  color: var(--btn-text-color);
+  border: 1px solid var(--btn-bg-color);
+}
+
+.btn-save:hover {
+  background: var(--btn-hover-bg-color);
+  border-color: var(--btn-hover-bg-color);
+}
+
+.btn-cancel {
+  background: transparent;
+  color: var(--link-color);
+  border: 1px solid var(--link-color);
+}
+
+.btn-cancel:hover {
+  background: var(--quick-card-hover-bg);
+  color: var(--text-color);
+}
+
+@media (max-width: 480px) {
+  .new-page-container {
+    padding: 1rem;
+  }
+
+  .btn {
+    display: block;
+    width: 100%;
+    margin: 0.5rem 0;
+  }
+}

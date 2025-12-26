@@ -1,11 +1,11 @@
 <article class="content-card"
          data-url="{{ item.url }}"
-         onclick="window.location.href=this.dataset.url"
-         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.location.href=this.dataset.url;}"
          role="button"
          tabindex="0"
          aria-label="{{ item.title }}">
-  <div class="content-card__media" style="background-image: {{ item.gradient|safe }}{% if item.cover %}, url('{{ item.cover }}'){% endif %};">
+  <div class="content-card__media"
+       data-card-gradient="{{ item.gradient }}"
+       {% if item.cover %}data-card-cover="{{ item.cover }}"{% endif %}>
     {% if item.badge %}
       <span class="content-card__badge">{{ item.badge }}</span>
     {% endif %}

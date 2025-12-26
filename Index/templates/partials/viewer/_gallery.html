@@ -1,18 +1,3 @@
-<style>
-.gallery-element {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-.gallery-image {
-  width: calc(33% - 1rem);
-  border-radius: 4px;
-}
-@media (max-width: 768px) {
-  .gallery-image { width: calc(50% - 1rem); }
-}
-</style>
 <div class="gallery-element">
   {% for img in elm.images %}
     <div class="gallery-item"><img src="{{ img }}" alt="" class="gallery-image"/></div>

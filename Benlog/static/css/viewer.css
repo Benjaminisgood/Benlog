@@ -1,0 +1,154 @@
+.card {
+  background: var(--card-bg-color);
+  border: 1px solid var(--card-border-color);
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.card-excerpt {
+  font-size: 1rem;
+  color: var(--meta-text-color);
+}
+
+.card-link {
+  display: inline-block;
+  margin-top: 0.5rem;
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+.card-link:hover {
+  color: var(--text-color);
+}
+
+.code-element {
+  background: var(--card-bg-color);
+  border: 1px solid var(--card-border-color);
+  border-radius: 6px;
+  padding: 1rem;
+  font-family: Menlo, monospace;
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+}
+
+.faq-item {
+  background: var(--card-bg-color);
+  border: 1px solid var(--card-border-color);
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.faq-question {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.faq-answer {
+  color: var(--meta-text-color);
+}
+
+.flip-card {
+  perspective: 1000px;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto 1.5rem auto;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  transform-style: preserve-3d;
+  transition: transform 0.6s;
+}
+
+.flip-card:hover .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1rem;
+}
+
+.flip-card-back {
+  transform: rotateY(180deg);
+  background: var(--quick-card-bg);
+  color: var(--text-color);
+}
+
+.gallery-element {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.gallery-image {
+  width: calc(33% - 1rem);
+  border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .gallery-image {
+    width: calc(50% - 1rem);
+  }
+}
+
+.image-element {
+  margin-bottom: 1.5rem;
+}
+
+.image-element img {
+  width: 100%;
+  border-radius: 6px;
+}
+
+.link-element {
+  margin-bottom: 1.5rem;
+}
+
+.link-element a {
+  color: var(--link-color);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.link-element a:hover {
+  color: var(--text-color);
+}
+
+.quote-element {
+  font-style: italic;
+  border-left: 4px solid var(--link-color);
+  padding-left: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.text-element {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+.title-element {
+  font-size: 1.5rem;
+  color: var(--text-color);
+  border-bottom: 2px solid var(--card-border-color);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+}

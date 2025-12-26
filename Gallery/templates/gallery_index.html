@@ -1,68 +1,9 @@
 {% extends "base.html" %}
+{% block extra_styles %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/gallery.css') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/basiclightbox@5/dist/basicLightbox.min.css">
+{% endblock %}
 {% block content %}
-  <style>
-    .photo-stream {
-      max-width: 1200px;
-      margin: 1rem auto;
-    }
-
-    /* 关键 Masonry 结构：用 grid-sizer 设定列宽 */
-    .grid-sizer {
-      width: 25%;
-    }
-
-    .photo-item {
-      width: 25%;
-      padding: 0.5rem;
-      box-sizing: border-box;
-    }
-
-    @media (max-width: 992px) {
-      .grid-sizer,
-      .photo-item {
-        width: 33.33%;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .grid-sizer,
-      .photo-item {
-        width: 50%;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .grid-sizer,
-      .photo-item {
-        width: 100%;
-      }
-    }
-
-    .photo-item img {
-      width: 100%;
-      height: auto;
-      display: block;
-      border-radius: 0.5rem;
-      background: #f0f0f0;
-    }
-
-    .photo-desc {
-      background: rgba(0, 0, 0, 0.5);
-      color: white;
-      padding: 0.4rem;
-      font-size: 0.9rem;
-      position: relative;
-      border-radius: 0 0 0.5rem 0.5rem;
-      opacity: 0;
-      transition: opacity 0.2s;
-      margin-top: -2.2rem;
-    }
-
-    .photo-item:hover .photo-desc {
-      opacity: 1;
-    }
-  </style>
-
   <h2>Photo Stream{% if prefix %} - {{ prefix.rstrip('/') }}{% endif %}</h2>
   <div class="photo-stream">
     <div class="grid-sizer"></div> <!-- Masonry column baseline -->
@@ -79,7 +20,7 @@
         <div class="photo-desc">{{ f.key }}</div>
       </div>
     {% else %}
-      <div style="color: var(--meta-text-color); font-style: italic;">No photos available.</div>
+      <div class="photo-empty">No photos available.</div>
     {% endfor %}
   </div>
 
@@ -94,7 +35,6 @@
   {% endif %}
 
   <!-- Lightbox -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/basiclightbox@5/dist/basicLightbox.min.css">
   <script src="https://cdn.jsdelivr.net/npm/basiclightbox@5/dist/basicLightbox.min.js"></script>
 
 
@@ -146,7 +86,7 @@
       const fullSrc = e.target.dataset.full || e.target.src;
       basicLightbox
         .create(
-          `<img src="${fullSrc}" style="max-width:90vw; max-height:90vh;">`
+          `<img src="${fullSrc}" class="lightbox-image" alt="">`
         )
         .show();
         }
