@@ -231,8 +231,16 @@ def list_posts():
     except ValueError:
         page = 1
 
+    order = request.args.get('order', 'desc').lower()
+    if order not in ('asc', 'desc', 'random'):
+        order = 'desc'
+
     # 2. 拿到所有文章
     all_posts = get_all_posts()  # 之前定义的函数
+    if order == 'asc':
+        all_posts.sort(key=lambda x: x['last_modified'])
+    elif order == 'random':
+        random.shuffle(all_posts)
     random_slug = random.choice(all_posts)['slug'] if all_posts else None
 
     # 3. 计算总页数，并确保 page 在合理范围
@@ -271,7 +279,8 @@ def list_posts():
         page=page,
         total_pages=total_pages,
         can_edit=can_edit,
-        random_url=random_url
+        random_url=random_url,
+        current_order=order
     )
 
 @blog_bp.route('/<slug>')

@@ -6,6 +6,11 @@
     <div class="hero-headline">
       <h1>Blog Posts</h1>
       <p>记录每日的思考与灵感，精选文章以全新卡片视图呈现。</p>
+      <nav class="hero-tabs" aria-label="排序">
+        <a class="feed-tab{% if current_order == 'asc' %} active{% endif %}" href="{{ url_for('blog.list_posts', order='asc') }}"{% if current_order == 'asc' %} aria-current="page"{% endif %}>顺序</a>
+        <a class="feed-tab{% if current_order == 'desc' %} active{% endif %}" href="{{ url_for('blog.list_posts', order='desc') }}"{% if current_order == 'desc' %} aria-current="page"{% endif %}>倒序</a>
+        <a class="feed-tab{% if current_order == 'random' %} active{% endif %}" href="{{ url_for('blog.list_posts', order='random') }}"{% if current_order == 'random' %} aria-current="page"{% endif %}>随机</a>
+      </nav>
     </div>
     <div class="hero-actions">
       {% if can_edit %}
@@ -30,7 +35,7 @@
 
     <nav class="content-pagination">
       {% if page > 1 %}
-        <a href="{{ url_for('blog.list_posts', page=page-1) }}">« Prev</a>
+        <a href="{{ url_for('blog.list_posts', page=page-1, order=current_order) }}">« Prev</a>
       {% else %}
         <span class="disabled">« Prev</span>
       {% endif %}
@@ -39,12 +44,12 @@
         {% if p == page %}
           <span class="current">{{ p }}</span>
         {% else %}
-          <a href="{{ url_for('blog.list_posts', page=p) }}">{{ p }}</a>
+          <a href="{{ url_for('blog.list_posts', page=p, order=current_order) }}">{{ p }}</a>
         {% endif %}
       {% endfor %}
 
       {% if page < total_pages %}
-        <a href="{{ url_for('blog.list_posts', page=page+1) }}">Next »</a>
+        <a href="{{ url_for('blog.list_posts', page=page+1, order=current_order) }}">Next »</a>
       {% else %}
         <span class="disabled">Next »</span>
       {% endif %}

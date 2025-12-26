@@ -1,195 +1,153 @@
 # 🧠 Benlog | 科研博客 × 知识库 × 轻社交一体化个人网站平台
 
-Benlog 是一个面向科研工作者、学生与写作爱好者的 **Flask 驱动一体化个人网站平台**。它将「博客写作」「学习笔记」「图文/多媒体帖子」「动态页面」「友链与导航」「图库展示」「站内检索」「AI 助理」集中在一个可部署的项目中，让你拥有自己的内容中枢与社交空间。
+Benlog 是一个面向科研人员、学生与写作爱好者的 **Flask 驱动一体化个人网站平台**。它把「博客写作」「学习笔记」「多媒体动态」「动态页面」「友链与导航」「图库展示」「站内检索」「AI 助理」统一到一套可部署的项目里，让内容沉淀与展示变得清晰、可控、可迁移。
 
-> 目标：帮助你以更轻量、可控、可持续的方式，建立长期可维护的个人内容站点，而不被碎片化社交平台绑架。
-
----
-
-## ✅ 功能总览（按模块）
-
-- **Blog 博客模块**：Markdown/HTML 文章管理、首页分页、封面与标签、后台编辑与上传
-- **Edu 学习笔记**：与博客一致的写作与管理体验，适合整理知识体系
-- **Neibr 轻社交模块**：图文/多媒体帖子、封面图、评论、隐藏帖子、随机/最新/我的卡片流
-- **Gallery 图库模块**：基于 OSS 的相册展示、封面预览、分页、可见性控制
-- **动态页面系统**：通过 JSON 搭建页面组件、支持可视化编辑与发布
-- **首页导航系统**：快捷链接 + 友链管理、用于构建个人站点入口
-- **站内搜索**：跨 Blog/Edu/Neibr 全站检索，支持结果摘要与高亮
-- **AI 助理（Index/AI）**：可在站内请求大模型回答
-- **后台管理**：用户管理、内容统计、动态页面管理、导航管理等
+> 目标：用更轻量、可持续的方式，打造长期可维护的个人内容中枢，而不是被碎片化平台绑定。
 
 ---
 
-## 🧩 详细功能说明
+## ✨ 你会得到什么
+
+- **统一内容中枢**：Blog / Edu / Neibr / Dynamic Pages / Gallery 数据互通，统一检索与管理。
+- **写作体验完整**：支持 Markdown + HTML，封面、标签、摘要、随机推荐等基础能力齐全。
+- **轻社交表达**：图文/音频/视频/文档一站式上传，封面自动化与富文本渲染。
+- **强可迁移性**：所有内容集中存放于 `instance/`，便于备份与迁移。
+- **可扩展配置**：通过 `instance/config.py` 自定义数据库、OSS、上传限制等。
+
+---
+
+## 🧭 目录
+
+- [模块速览](#-模块速览)
+- [前端结构与设计](#-前端结构与设计)
+- [功能详解](#-功能详解)
+- [快速上手](#-快速上手)
+- [配置与环境变量](#-配置与环境变量)
+- [内容存储与迁移](#-内容存储与迁移)
+- [性能与上传限制](#-性能与上传限制)
+- [运维与部署](#-运维与部署)
+- [权限体系](#-权限体系)
+- [常见问题](#-常见问题)
+- [贡献与规划](#-贡献与规划)
+
+---
+
+## ✅ 模块速览
+
+| 模块 | 入口 | 核心能力 | 内容存储 |
+| --- | --- | --- | --- |
+| Blog | `/blog` | Markdown/HTML 文章、封面、标签、随机推荐、后台管理 | `instance/Blog/posts/` |
+| Edu | `/edu` | 笔记管理、与 Blog 同级体验 | `instance/Edu/notes/` |
+| Neibr | `/neibr` | 图文/多媒体动态、封面、评论、私密帖子 | `instance/Neibr/neibr/` |
+| Gallery | `/gallery` | OSS 图库、可见性控制、封面预览 | OSS + `instance/Settings/visible_albums.json` |
+| Dynamic Pages | `/[page]` | JSON 组件化页面、可视化编辑 | `instance/Index/dynamic_pages/` |
+| Index Links | `/` | 快捷入口 + 友链管理 | `instance/Index/dynamic_links/` |
+| Search | `/search` | 跨模块检索与高亮摘要 | - |
+| Settings | `/setting` | 站点管理与统计 | - |
+
+---
+
+## 🎨 前端结构与设计
+
+### 代码结构（前端相关）
+- `Benlog/templates/`：全站基础布局（`base.html`）+ 通用卡片等模板片段。
+- `Blog/Edu/Neibr/Index/.../templates/`：各模块页面模板，继承 `base.html`。
+- `Benlog/static/css/`：按模块/层次拆分的样式文件。
+- `Benlog/static/js/`：主题切换、通知、滚动、背景动画等交互脚本。
+- `Benlog/static/images/`：品牌图标与视觉资源。
+
+### 样式组织方式
+- `Benlog/static/css/style.css` 为入口文件，通过 `@import` 组织样式。
+- 分层：`base.css`（变量与基础排版）→ `layout.css`（布局）→ `components.css`（通用组件）→ 各业务模块样式（如 `content.css`, `neibr.css`, `gallery.css` 等）→ `theme.css`（暗色主题）→ `custom.css`（预留自定义）。
+- 主题色/层级阴影通过 CSS 变量控制，统一保持视觉一致性。
+
+### 前端依赖与运行方式
+- **无打包构建**：纯静态 CSS/JS，由 Flask 直接提供静态文件。
+- **CDN 依赖**：`three.js`（用于背景动效）与 `MathJax`（公式渲染）。
+
+### 设计风格与理念
+- **卡片化信息架构**：内容列表统一使用卡片布局，便于浏览与筛选。
+- **柔和渐变与玻璃质感**：Hero/导航采用低饱和渐变与半透明玻璃效果。
+- **模块化视觉一致性**：Blog/Edu/Neibr 共享组件体系，通过变量切换调色。
+- **可读性优先**：强调层级、留白与字重对比，弱化干扰元素。
+- **轻量交互**：以必要交互为主（主题切换、滚动动效、通知提示等）。
+
+---
+
+## 🧩 功能详解
 
 ### 1) Blog 博客模块（/blog）
-**适合：长文写作、科研记录、项目总结、公开展示**
+适合长文写作、科研记录、项目总结、公开展示。
 
-- 支持 **Markdown + Front Matter** 解析
-- 支持 **纯 HTML 文章**（可直接粘贴 JupyterLab 导出的 HTML）
-- 支持封面字段：`cover` / `image` / `banner` / `thumbnail` / `hero`
-- 自动生成摘要（从正文内容中提取）
-- 文章标签支持逗号分隔或数组
-- 文章分页展示（每页 10 条）
-- **随机推荐**（访客可随机跳转）
-- **管理端功能**（需管理员权限）：
-  - 上传 `.md` / `.html` 文件
-  - 新建文章（自动生成 Front Matter 模板）
-  - 在线编辑 / 重命名 / 删除
+- 支持 **Markdown + Front Matter**
+- 支持 **HTML 文章**（如 JupyterLab 导出）
+- 封面字段：`cover` / `image` / `banner` / `thumbnail` / `hero`
+- 自动摘要、分页、随机推荐
+- 管理端：上传 / 新建 / 编辑 / 重命名 / 删除
 
-> 文件存储位置：`/instance/Blog/posts/`
-
----
+> 文件位置：`instance/Blog/posts/`
 
 ### 2) Edu 学习笔记模块（/edu）
-**适合：学习记录、实验日志、知识体系整理**
+适合学习记录、实验日志、知识体系整理。
 
-- 功能与 Blog 几乎一致，适用于“知识型内容”归档
-- 支持 Markdown/HTML 两种格式
-- 支持封面、摘要、标签、随机推荐
-- 管理端支持上传、新建、编辑、重命名、删除
-- 独立分页与独立内容目录
+- 与 Blog 同级体验
+- Markdown/HTML 支持
+- 独立分页与管理入口
 
-> 文件存储位置：`/instance/Edu/notes/`
-
----
+> 文件位置：`instance/Edu/notes/`
 
 ### 3) Neibr 轻社交模块（/neibr）
-**适合：动态分享、轻量社交、图文记录、资源分享**
+适合动态分享、轻量社交、图文记录、资源分享。
 
-- 需要登录后访问（保护内容隐私）
-- 支持多媒体上传：
-  - 图片（jpg/png/webp/gif 等）
-  - 视频（mp4/webm/mov）
-  - 音频（mp3/wav/flac）
-  - 文档（pdf/docx/xlsx/pptx）
-- 支持远程媒体链接嵌入（自动识别图片/视频等）
-- 支持正文富文本渲染：
-  - 链接自动转卡片
-  - 图片/视频链接自动识别
-  - `@用户名`、`#话题` 自动渲染
-  - 邮箱自动 mailto
-- 帖子可设置为 **隐藏（仅本人可见）**
-- 帖子自动生成封面，可手动选择：
-  - 本地媒体设为封面
-  - 远程图片设为封面
-  - Base64 数据设为封面
-- 支持评论系统（YAML 持久化）
-- 首页提供三种帖子流：
-  - 最新帖 / 随机帖 / 我的帖
-- 支持无限翻页 API（JSON）
-- 详情页支持上一条 / 下一条导航
+- 登录后可用（保护隐私）
+- 支持图片/视频/音频/文档上传
+- 支持外链媒体自动识别
+- 富文本增强：链接卡片、图片/视频、@mention、#话题、邮箱 mailto
+- 封面自动生成，可本地/外链指定
+- 帖子可设置隐藏
+- 评论与导航（上一条/下一条）
 
-> 媒体与文本存储位置：`/instance/Neibr/neibr/<user_id>/<post_id>/`
-
----
+> 媒体与文本位置：`instance/Neibr/neibr/<user_id>/<post_id>/`
 
 ### 4) Gallery 图库模块（/gallery）
-**适合：摄影作品、实验图像、项目展示**
+适合摄影作品与项目图像展示。
 
 - 基于 OSS（阿里云对象存储）
-- 支持相册结构（基于 OSS 前缀）
-- 支持自动封面图（相册第一张图）
-- 支持分页加载（marker + limit）
-- 支持管理员上传、删除
-- 支持后台设置 **相册可见性与说明**
-
-> 相册显示受 `Gallery/oss_utils.py` 中配置控制
-
----
+- 相册分页、封面预览、后台可见性控制
 
 ### 5) 动态页面系统（/instance/Index/dynamic_pages）
-**适合：个人主页、About Me、项目页、课程页、作品集**
+适合 About Me / 项目页 / 作品集 / 课程页。
 
-- 使用 JSON 结构化配置页面内容
-- 支持按顺序组合页面组件（数字键排序）
-- 每个页面对应一个 `.json` 文件
-- 支持后台创建新页面、编辑、删除
-- 页面 URL 由文件名决定
+- JSON 组件化页面
+- 可视化创建/编辑/发布
+- URL 与文件名一致
 
-> 页面存储位置：`/instance/Index/dynamic_pages/*.json`
-
----
+> 文件位置：`instance/Index/dynamic_pages/*.json`
 
 ### 6) 首页导航系统（快捷入口 + 友链）
-**适合：构建个人站点入口导航**
+用于构建主页入口与链接墙。
 
-- 首页显示两类链接：
-  - **快捷链接**（支持图标、简介、子链接）
-  - **友链**（用于展示合作站点）
-- 后台可视化管理链接、排序、删除
+> 配置文件：`instance/Index/dynamic_links/quick-links.json`、`friend-links.json`
 
-> 配置文件：`/instance/Index/dynamic_links/quick-links.json` & `friend-links.json`
-
----
-
-### 7) 站内搜索系统（/search）
-**跨模块检索，定位内容更快**
-
-- 支持搜索 Blog、Edu、Neibr 全站内容
-- 结果支持摘要高亮、标签展示、更新时间排序
-- Markdown 先转文本，HTML 自动剥离标签
-
----
+### 7) 站内搜索（/search）
+跨 Blog / Edu / Neibr 检索，支持摘要高亮与排序。
 
 ### 8) AI 助理（/llm）
-**站内集成 AI 提问**
+集成 OpenAI API（需配置 `OPENAI_API_KEY`）。
 
-- 通过 OpenAI 接口回答问题
-- 可作为主页 AI 助理入口
-
-> 使用需设置 `OPENAI_API_KEY` 环境变量
+### 9) 后台管理（/setting）
+用户管理、内容统计、动态页面管理、导航管理、图库可见性控制。
 
 ---
 
-### 9) 后台管理中心（/setting）
-**集中管理用户与内容**
-
-- 内容统计（文章、笔记、用户、图库等）
-- 用户管理（创建/编辑/删除）
-- 登录/注册/注销
-- 动态页面管理
-- 快捷链接 / 友链管理
-- 图库可见性管理
-
-> 超级管理员为 `User.id == 1`
-
----
-
-## 🔐 权限体系
-
-- **访客**：可浏览公开内容（Blog / Edu / Dynamic Pages / Home）
-- **普通用户**：可登录使用 Neibr、评论、上传媒体等
-- **管理员**：可管理 Blog/Edu 内容
-- **超级管理员（ID=1）**：拥有用户管理权限、动态页面管理权限、全功能权限
-
----
-
-## 🗂️ 内容存储结构一览
-
-```
-Benlog/
-├── instance/
-│   ├── Blog/posts/            # 博客文章 Markdown / HTML
-│   ├── Edu/notes/             # 学习笔记 Markdown / HTML
-│   ├── Neibr/neibr/           # 轻社交模块媒体与文本
-│   │   └── <user_id>/<post_id>/post.txt
-│   ├── Index/dynamic_pages/   # JSON 动态页面
-│   ├── Index/dynamic_links/   # quick-links.json / friend-links.json
-│   └── Settings/visible_albums.json
-├── Gallery/                   # OSS 相册逻辑
-```
-
----
-
-## 🚀 快速部署与运行（保持原配置示例）
+## 🚀 快速上手
 
 ```bash
-# 下载项目源码
+# 克隆项目
 git clone https://github.com/yourname/Benlog.git
 cd Benlog
 
-# 建立虚拟环境
+# 创建虚拟环境
 python3 -m venv myenv
 source myenv/bin/activate
 
@@ -201,64 +159,136 @@ flask --app Benlog/app.py db init
 flask --app Benlog/app.py db migrate -m "initial"
 flask --app Benlog/app.py db upgrade
 
-# 运行本地开发服务器
+# 启动开发服务器
 flask --app "Benlog.app:create_app" run --host=0.0.0.0 --port=80
-# 或者
-# gunicorn -w 3 --threads 6 -b 0.0.0.0:80 "Benlog.app:create_app()"
 ```
+
+如果你习惯脚本化管理，本项目提供了 `benlog.sh`（本地启动/停止/发布）。
 
 ---
 
-## 🔧 配置说明（可选）
+## 🔧 配置与环境变量
 
-系统默认读取内置配置，如需自定义：
-
-```bash
-mkdir instance
-touch instance/config.py
-```
-
-在 `instance/config.py` 中写入：
+创建并编辑 `instance/config.py`：
 
 ```python
+import os
+
 DEBUG = True
 SECRET_KEY = 'your-secret-key'
 
-# 数据库路径（SQLite 示例）
-SQLALCHEMY_DATABASE_URI = 'sqlite:///benlog.db'
+# 数据库（SQLite）
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(BASE_DIR, 'site.db')
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-# 登录管理相关
-REMEMBER_COOKIE_DURATION = 3600 * 24 * 7
+# OpenAI
+OPENAI_API_KEY = 'your-api-key'
 
-# OSS 云存储（如使用 Gallery 模块）
+# OSS（Gallery）
 OSS_ACCESS_KEY_ID = 'your-access-key-id'
 OSS_ACCESS_KEY_SECRET = 'your-access-key-secret'
 OSS_BUCKET_NAME = 'your-bucket-name'
-OSS_ENDPOINT = 'oss-cn-your-region.aliyuncs.com'
+OSS_ENDPOINT_PUBLIC = 'oss-cn-xxx.aliyuncs.com'
+OSS_ENDPOINT_INTERNAL = 'oss-cn-xxx-internal.aliyuncs.com'
+USE_OSS_INTERNAL = False
+OSS_BASE_PREFIX = 'benlog/'
+
+# 内容存储路径（默认已指向 instance，可按需自定义）
+BLOG_POSTS_DIR = os.path.join(BASE_DIR, 'Blog', 'posts')
+EDU_NOTES_DIR = os.path.join(BASE_DIR, 'Edu', 'notes')
+NEIBR_STORAGE_DIR = os.path.join(BASE_DIR, 'Neibr', 'neibr')
+DYNAMIC_PAGES_DIR = os.path.join(BASE_DIR, 'Index', 'dynamic_pages')
+DYNAMIC_LINKS_DIR = os.path.join(BASE_DIR, 'Index', 'dynamic_links')
+VISIBLE_ALBUMS_PATH = os.path.join(BASE_DIR, 'Settings', 'visible_albums.json')
 ```
 
 ---
 
-## 💡 使用建议
+## 🗂️ 内容存储与迁移
 
-- **科研记录**：用 Edu 写学习笔记与实验日志，Blog 写阶段性总结
-- **内容输出**：用 Blog 写公开文章，Neibr 用于日常动态分享
-- **资源管理**：用 Gallery 作为图片/视频作品展示
-- **主页搭建**：用动态页面 + 快捷链接搭建个人主页入口
+所有内容与可变配置统一放在 `instance/`，便于迁移与备份：
+
+```
+Benlog/
+├── instance/
+│   ├── Blog/posts/            # 博客文章 Markdown / HTML
+│   ├── Edu/notes/             # 学习笔记 Markdown / HTML
+│   ├── Neibr/neibr/           # 轻社交模块媒体与文本
+│   │   └── <user_id>/<post_id>/post.txt
+│   ├── Index/dynamic_pages/   # JSON 动态页面
+│   ├── Index/dynamic_links/   # quick-links / friend-links
+│   └── Settings/visible_albums.json
+│   └── site.db                # 数据库（SQLite）
+```
+
+**迁移建议：**
+1. 备份 `instance/`（含 `site.db`）。
+2. 新环境恢复 `instance/` 即可完整迁移内容。
 
 ---
 
-## 🤝 贡献与维护
+## ⚙️ 性能与上传限制
 
-欢迎开发者加入完善这个平台！如果你有优化想法或功能建议，请通过 Issue 或邮件联系维护者。
+大型媒体或长文本容易遇到“上传慢/保存失败”，可在 `instance/config.py` 调整：
+
+```python
+# 请求/表单限制
+MAX_CONTENT_LENGTH = 256 * 1024 * 1024      # 单次请求最大体积
+MAX_FORM_MEMORY_SIZE = 64 * 1024 * 1024     # 表单内存阈值
+MAX_FORM_PARTS = 2000                       # 表单最大字段数（批量文件）
+
+# Neibr 图片处理策略
+NEIBR_COMPRESS_MAX_FILES = 12               # 超过则跳过压缩以提速
+NEIBR_IMAGE_MAX_EDGE = 2560                 # 压缩图最大边长
+NEIBR_IMAGE_QUALITY = 22                    # JPEG 质量
+NEIBR_IMAGE_OPTIMIZE = False                # 是否启用高耗时优化
+```
+
+若使用 Nginx/反向代理，请同步配置 `client_max_body_size`。
 
 ---
 
-## 🛠️ 已知/规划说明
+## 🧰 运维与部署
 
-- Neibr 模块首页的“加载更多”和部分阅读视图切换尚未完成。
+生产部署建议：
+
+```bash
+gunicorn -w 4 -b 0.0.0.0:80 "Benlog.app:create_app()"
+```
+
+可结合 Nginx 反代、SSL、静态资源缓存等。
 
 ---
 
-如需我继续完善文档（例如：组件 JSON 格式说明、后台截图、部署脚本优化等），可以告诉我。
+## 🔐 权限体系
+
+- **访客**：可浏览公开内容（Blog / Edu / Dynamic Pages / Home）
+- **普通用户**：可登录使用 Neibr、评论、上传媒体等
+- **管理员**：可管理 Blog/Edu 内容
+- **超级管理员（ID=1）**：拥有用户管理、动态页面管理、全功能权限
+
+---
+
+## 🧯 常见问题
+
+**1. 上传失败或 413 Request Entity Too Large**
+- 调整 `MAX_CONTENT_LENGTH` 与 `MAX_FORM_PARTS`
+- 如果有 Nginx，设置 `client_max_body_size`
+
+**2. Blog/Edu 保存失败**
+- 文本过大时可能触发请求限制，请提升 `MAX_CONTENT_LENGTH`
+
+**3. Gallery 无法读取**
+- 检查 OSS 配置是否正确（AK/SK/Endpoint/Bucket）
+
+---
+
+## 🤝 贡献与规划
+
+欢迎提交建议与改进！如果你希望补充：
+- 动态页面 JSON 模板文档
+- 部署脚本与自动化发布
+- 管理后台可视化增强
+
+欢迎随时提出需求。

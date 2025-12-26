@@ -204,13 +204,16 @@ def upload_note():
 
 @edu_bp.route('/')
 def list_notes():
+    """分页列出所有文档，支持顺序、倒序与随机排序。"""
     os.makedirs(_notes_dir(), exist_ok=True)
-
-    """分页列出所有文档，按最后修改时间倒序。"""
     try:
         page = int(request.args.get('page', 1))
     except ValueError:
         page = 1
+
+    order = request.args.get('order', 'desc').lower()
+    if order not in ('asc', 'desc', 'random'):
+        order = 'desc'
 
     # 读取所有笔记
     all_notes = []
@@ -222,7 +225,12 @@ def list_notes():
             lm = datetime.fromtimestamp(os.path.getmtime(filepath))
             slug, ext = filename.rsplit('.', 1)
             all_notes.append({'slug': slug, 'last_modified': lm})
-    all_notes.sort(key=lambda x: x['last_modified'], reverse=True)
+    if order == 'asc':
+        all_notes.sort(key=lambda x: x['last_modified'])
+    elif order == 'random':
+        random.shuffle(all_notes)
+    else:
+        all_notes.sort(key=lambda x: x['last_modified'], reverse=True)
     random_slug = random.choice(all_notes)['slug'] if all_notes else None
 
     # 计算分页
@@ -259,7 +267,8 @@ def list_notes():
         page=page,
         total_pages=total_pages,
         can_edit=can_edit,
-        random_url=random_url
+        random_url=random_url,
+        current_order=order
     )
 
 
