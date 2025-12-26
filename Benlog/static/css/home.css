@@ -473,10 +473,11 @@
 
 @media (hover: hover) and (pointer: fine) {
   .quick-card:hover .quick-card-popup {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  transform: translate(-50%, -10px) scale(1);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translate(-50%, -10px) scale(1);
+  }
 }
 
 @media (max-width: 680px) {
@@ -663,14 +664,6 @@
   color: rgba(147, 197, 253, 0.88);
 }
 
-/* 内容区域避免被导航栏遮挡 */
-main.container {
-  margin: 0 auto;
-  width: min(100%, 1180px);
-  padding: clamp(120px, 16vw, 168px) clamp(20px, 6vw, 72px) 64px;
-  box-sizing: border-box;
-}
-
 @media (max-width: 720px) {
   .home-shell {
     gap: clamp(20px, 6vw, 28px);
@@ -734,3 +727,4 @@ main.container {
     font-size: 0.9rem;
     gap: 6px;
   }
+}

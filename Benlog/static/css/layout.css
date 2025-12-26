@@ -8,6 +8,7 @@
   z-index: -1; /* 背景画布位于最底层 */
   pointer-events: none; /* 禁止背景画布与鼠标交互 */
   background-color: var(--canvas-bg); /* 使用全局的画布背景色 */
+}
 
 /* 液态玻璃导航栏 */
 .global-header {
@@ -343,4 +344,18 @@ main.container {
   display: block;
   font-size: clamp(1.4rem, 4vw, 1.8rem);
   color: var(--text-color);
+}
+
+@media (max-width: 860px) {
+  .page-hero-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: clamp(24px, 8vw, 36px);
+  }
+
+  .page-hero-aside {
+    width: 100%;
+    justify-items: stretch;
+    text-align: left;
+  }
 }
