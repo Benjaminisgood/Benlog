@@ -15,8 +15,8 @@ LOCAL_PID_FILE="$LOCAL_PROJECT_DIR/gunicorn.pid"
 LOCAL_LOG_FILE="$LOCAL_PROJECT_DIR/gunicorn.log"
 
 # Markdown 文件目标路径
-BLOG_POSTS_DIR="/Users/benserver/Desktop/Benlog/Blog/posts"
-EDU_NOTES_DIR="/Users/benserver/Desktop/Benlog/Edu/notes"
+BLOG_POSTS_DIR="/Users/benserver/Desktop/Benlog/instance/Blog/posts"
+EDU_NOTES_DIR="/Users/benserver/Desktop/Benlog/instance/Edu/notes"
 
 ### === 工具函数 ===
 msg() { echo -e "\033[1;32m$1\033[0m"; }
@@ -227,8 +227,8 @@ pub() {
     echo ""
     echo "📄 检测到文件：$(basename "$filepath")"
     echo "请选择移动目标："
-    echo "  1️⃣ 博客 (Blog/posts)"
-    echo "  2️⃣ 笔记 (Edu/notes)"
+    echo "  1️⃣ 博客 (instance/Blog/posts)"
+    echo "  2️⃣ 笔记 (instance/Edu/notes)"
     echo "  3️⃣ 跳过此文件"
     read -p "输入 1 / 2 / 3: " choice
 

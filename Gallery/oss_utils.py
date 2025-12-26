@@ -107,20 +107,28 @@ def generate_signed_url(key: str, expires: int = 3600, style: str = None) -> str
 import os
 import json
 
-VISIBLE_JSON_PATH = os.path.join(os.path.dirname(__file__), '..', 'Settings', 'visible_albums.json')
+def _visible_albums_path() -> str:
+    try:
+        configured = current_app.config.get('VISIBLE_ALBUMS_PATH')
+    except RuntimeError:
+        configured = None
+    if configured:
+        return configured
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    return os.path.join(base_dir, 'instance', 'Settings', 'visible_albums.json')
 
 def load_visible_albums():
-    path = os.path.join(os.path.dirname(__file__), '..', 'Settings', 'visible_albums.json')
-    path = os.path.abspath(path)
+    path = os.path.abspath(_visible_albums_path())
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     if not os.path.exists(path):
-        with open(path, 'w') as f:
-            json.dump({}, f)
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump({}, f, ensure_ascii=False)
     # 修复空文件导致的JSONDecodeError
-    with open(path, 'r+') as f:
+    with open(path, 'r+', encoding='utf-8') as f:
         content = f.read().strip()
         if not content:
             f.seek(0)
-            json.dump({}, f)
+            json.dump({}, f, ensure_ascii=False)
             f.truncate()
             return {}
         try:
@@ -128,12 +136,13 @@ def load_visible_albums():
         except Exception:
             # 如果内容无效，重置为空对象
             f.seek(0)
-            json.dump({}, f)
+            json.dump({}, f, ensure_ascii=False)
             f.truncate()
             return {}
     
     
 def save_visible_albums(data):
-    os.makedirs(os.path.dirname(VISIBLE_JSON_PATH), exist_ok=True)
-    with open(VISIBLE_JSON_PATH, 'w', encoding='utf-8') as f:
+    path = _visible_albums_path()
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)

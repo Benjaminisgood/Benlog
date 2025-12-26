@@ -1,5 +1,5 @@
 # Neibr/views.py
-from flask import render_template, request, redirect, url_for, flash  # type: ignore
+from flask import render_template, request, redirect, url_for, flash, current_app  # type: ignore
 from . import neibr_bp, db  # 从 Neibr/__init__.py 导入蓝图和本地数据库实例
 from flask_login import login_required, current_user, login_user  # type: ignore # Flask-Login 用于用户会话管理
 from .models import User, Post  # 从本地 models.py 导入 User 和 Post 模型
@@ -62,9 +62,6 @@ def convert_rich_text(text):
 
     return Markup(text)  # 👈 标记为“安全 HTML”
 
-# 项目根目录下的 static/neibr 路径
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-UPLOAD_BASE_PATH = os.path.join(BASE_DIR, 'Neibr', 'neibr')
 IMAGE_QUALITY = 22
 REMOTE_LINKS_FILENAME = 'media_links.yaml'
 MAX_REMOTE_COVER_BYTES = 5 * 1024 * 1024
@@ -78,6 +75,14 @@ DOCUMENT_EXTENSIONS = {'pdf', 'docx', 'xlsx', 'pptx'}
 ALLOWED_LINK_SCHEMES = {'http', 'https'}
 FRONT_MATTER_DELIM = '---'
 CHINA_TZ = timezone(timedelta(hours=8))
+
+
+def _neibr_storage_dir() -> str:
+    return current_app.config.get('NEIBR_STORAGE_DIR') or os.path.join(
+        current_app.instance_path,
+        'Neibr',
+        'neibr'
+    )
 
 
 def _coerce_datetime(value: Any) -> Optional[datetime]:
@@ -246,7 +251,7 @@ def random_visible_post(exclude_ids=None):
 
 def get_post_folder(post: Post) -> str:
     """计算帖子对应的存储目录。"""
-    return os.path.join(UPLOAD_BASE_PATH, str(post.user_id), str(post.id))
+    return os.path.join(_neibr_storage_dir(), str(post.user_id), str(post.id))
 
 
 def resolve_visible_post(post_id: int) -> Optional[Post]:
@@ -741,7 +746,7 @@ def create_post():
             )
 
         # 构建帖子文件夹路径：static/neibr/user_id/post_id
-        folder_path = os.path.join(UPLOAD_BASE_PATH, str(current_user.id), str(post.id))
+        folder_path = os.path.join(_neibr_storage_dir(), str(current_user.id), str(post.id))
         os.makedirs(folder_path, exist_ok=True)
 
         for file in files:
@@ -826,7 +831,7 @@ def post_detail(title):
     author = User.query.get(user_id).username
 
     # 构建帖子文件夹路径：static/neibr/user_id/post_id
-    folder_path = os.path.join(UPLOAD_BASE_PATH, str(user_id), str(post.id))
+    folder_path = os.path.join(_neibr_storage_dir(), str(user_id), str(post.id))
 
     # 读取帖子文案（允许文案缺失）
     text_path = os.path.join(folder_path, 'post.txt')
@@ -987,7 +992,7 @@ def _handle_edit_post(post: Post):
         flash('您无权编辑此帖子。', 'error')
         return redirect(url_for('neibr.index'))
 
-    folder_path = os.path.join(UPLOAD_BASE_PATH, str(post.user_id), str(post.id))
+    folder_path = os.path.join(_neibr_storage_dir(), str(post.user_id), str(post.id))
 
     if request.method == 'POST':
         post.title = request.form['title']
@@ -1170,7 +1175,7 @@ def media_file(user_id, post_id, filename):
         abort(403)  # Forbidden，不在白名单里的类型一律拒绝
 
     # 2) 计算真实路径
-    base = os.path.join(BASE_DIR, 'Neibr', 'neibr')
+    base = _neibr_storage_dir()
     folder = os.path.join(base, user_id, post_id)
     full_path = os.path.join(folder, filename)
 
