@@ -380,26 +380,6 @@ def logout():
 
 
 
-#BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-#DYNAMIC_PAGES_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'Index', 'dynamic_pages')
-#DYNAMIC_PAGES_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'Index', 'dynamic_pages')
-# 动态页面 JSON 文件所在目录
-DYNAMIC_PAGES_FOLDER = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '..', 'Index', 'dynamic_pages')
-)
-#if not os.path.exists(DYNAMIC_PAGES_FOLDER):
-#    raise FileNotFoundError(f"目录 {DYNAMIC_PAGES_FOLDER} 不存在！")
-if not os.path.exists(DYNAMIC_PAGES_FOLDER):
-    os.makedirs(DYNAMIC_PAGES_FOLDER)
-
-DYNAMIC_PAGES_FOLDER = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '..', 'Index', 'dynamic_pages')
-)
-#if not os.path.exists(DYNAMIC_PAGES_FOLDER):
-#    raise FileNotFoundError(f"目录 {DYNAMIC_PAGES_FOLDER} 不存在！")
-if not os.path.exists(DYNAMIC_PAGES_FOLDER):
-    os.makedirs(DYNAMIC_PAGES_FOLDER)
-    
 @setting_bp.route('/manage_dynamic_page', methods=['GET'])
 @login_required
 def manage_dynamic_page():
@@ -416,11 +396,11 @@ def manage_dynamic_page():
         return redirect(url_for('setting.index'))
 
     editable_pages = []
-    for filename in os.listdir(DYNAMIC_PAGES_FOLDER):
+    for filename in os.listdir(_dynamic_pages_dir()):
         if not filename.endswith('.json'):
             continue
         page = filename[:-5]
-        path = os.path.join(DYNAMIC_PAGES_FOLDER, filename)
+        path = os.path.join(_dynamic_pages_dir(), filename)
         try:
             with open(path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
@@ -441,7 +421,7 @@ def delete_dynamic_page(page):
     """
     if not (current_user.is_admin or current_user.id == 1):
         abort(403)
-    file_path = os.path.join(DYNAMIC_PAGES_FOLDER, f"{page}.json")
+    file_path = os.path.join(_dynamic_pages_dir(), f"{page}.json")
     if os.path.exists(file_path):
         try:
             os.remove(file_path)
@@ -476,7 +456,7 @@ def new_dynamic_page():
     # 清洗为安全文件名（不含扩展名）
     safe = re.sub(r'[^0-9A-Za-z_-]', '_', filename_input)
     json_filename = f"{safe}.json"
-    full_path = os.path.join(DYNAMIC_PAGES_FOLDER, json_filename)
+    full_path = os.path.join(_dynamic_pages_dir(), json_filename)
 
     if os.path.exists(full_path):
         flash("该文件名已存在，请换一个", 'danger')
@@ -488,7 +468,7 @@ def new_dynamic_page():
     }
 
     try:
-        os.makedirs(DYNAMIC_PAGES_FOLDER, exist_ok=True)
+        os.makedirs(_dynamic_pages_dir(), exist_ok=True)
         with open(full_path, 'w', encoding='utf-8') as f:
             json.dump(initial_data, f, ensure_ascii=False, indent=4)
         flash(f'新建页面 "{safe}" 成功！', 'success')
