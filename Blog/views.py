@@ -15,6 +15,7 @@ def _posts_dir() -> str:
         'Blog',
         'posts'
     )
+
 ALLOWED_EXTENSIONS = {'md', 'html'}
 PER_PAGE = 10  # 每页显示条数
 

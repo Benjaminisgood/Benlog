@@ -15,6 +15,7 @@ def _notes_dir() -> str:
         'Edu',
         'notes'
     )
+
 PER_PAGE = 10  # 每页显示条目数
 ALLOWED_EXTENSIONS = {'md', 'html'}
 

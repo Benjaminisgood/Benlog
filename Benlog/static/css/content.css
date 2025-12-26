@@ -1,0 +1,273 @@
+.content-page {
+  display: grid;
+  gap: clamp(28px, 5vw, 36px);
+  --hero-bg: radial-gradient(circle at top left, rgba(99, 102, 241, 0.16), transparent 45%), linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(13, 148, 136, 0.08));
+  --hero-border: rgba(59, 130, 246, 0.18);
+  --hero-shadow: 0 30px 60px rgba(37, 99, 235, 0.15);
+  --hero-sub: rgba(15, 23, 42, 0.78);
+  --hero-glow-bg: radial-gradient(circle, rgba(56, 189, 248, 0.35), transparent 60%);
+}
+
+.content-page--edu {
+  --hero-bg: radial-gradient(circle at top right, rgba(20, 184, 166, 0.15), transparent 45%), linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(6, 182, 212, 0.16));
+  --hero-border: rgba(6, 182, 212, 0.18);
+  --hero-shadow: 0 30px 60px rgba(13, 148, 136, 0.18);
+  --hero-sub: rgba(15, 23, 42, 0.74);
+  --hero-glow-bg: radial-gradient(circle, rgba(125, 211, 252, 0.35), transparent 60%);
+}
+
+[data-theme="dark"] .content-page {
+  --hero-bg: radial-gradient(circle at top left, rgba(99, 102, 241, 0.26), transparent 45%),
+                linear-gradient(135deg, rgba(37, 99, 235, 0.24), rgba(13, 148, 136, 0.18));
+  --hero-border: rgba(59, 130, 246, 0.28);
+  --hero-shadow: 0 32px 64px rgba(2, 6, 23, 0.6);
+}
+
+[data-theme="dark"] .content-page--edu {
+  --hero-bg: radial-gradient(circle at top right, rgba(20, 184, 166, 0.28), transparent 45%),
+                linear-gradient(135deg, rgba(6, 182, 212, 0.28), rgba(8, 145, 178, 0.22));
+  --hero-border: rgba(6, 182, 212, 0.3);
+  --hero-shadow: 0 32px 64px rgba(6, 182, 212, 0.25);
+}
+
+
+.content-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  padding: clamp(24px, 6vw, 40px);
+  background: var(--hero-bg);
+  border: 1px solid var(--hero-border);
+  box-shadow: var(--hero-shadow);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(16px, 3vw, 32px);
+}
+
+.hero-headline {
+  max-width: 640px;
+}
+
+.content-hero h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  color: var(--hero-title, #0f172a);
+}
+
+.content-hero p {
+  margin: 12px 0 0;
+  max-width: 640px;
+  color: var(--hero-sub);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.hero-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.hero-action {
+  margin: 0;
+  display: inline-flex;
+}
+
+.hero-glow {
+  position: absolute;
+  top: -40%;
+  right: -10%;
+  width: 360px;
+  height: 360px;
+  background: var(--hero-glow-bg);
+  filter: blur(12px);
+  pointer-events: none;
+}
+
+.content-page--edu .hero-glow {
+  top: -30%;
+  right: auto;
+  left: -10%;
+  width: 320px;
+  height: 320px;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 28px;
+}
+
+.content-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.1);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  cursor: pointer;
+}
+
+.content-card:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 30px 60px rgba(30, 64, 175, 0.18);
+}
+
+.content-card:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.8);
+  outline-offset: 4px;
+}
+
+.content-card__media {
+  position: relative;
+  padding-top: 56%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: saturate(108%);
+}
+
+.content-card__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(30, 58, 138, 0), rgba(15, 23, 42, 0.3));
+}
+
+.content-card__badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #fff;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.content-card__body {
+  display: grid;
+  gap: 12px;
+  padding: 18px 20px 22px;
+}
+
+.content-card__meta {
+  color: rgba(15, 23, 42, 0.65);
+  font-size: 0.85rem;
+}
+
+.content-card__meta-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.content-card__title {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--text-color);
+}
+
+.content-card__summary {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--meta-text-color);
+  line-height: 1.6;
+}
+
+.content-card__tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+  color: rgba(59, 130, 246, 0.78);
+}
+
+.content-card__tags li {
+  list-style: none;
+}
+
+@media (max-width: 720px) {
+  .content-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .hero-actions {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 12px;
+  }
+}
+
+.content-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 0.95rem;
+}
+
+.content-pagination a,
+.content-pagination span {
+  padding: 6px 12px;
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--meta-text-color);
+}
+
+.content-pagination a:hover {
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--text-color);
+}
+
+.content-pagination .current {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.82), rgba(14, 165, 233, 0.74));
+  color: #fff;
+}
+
+.content-pagination .disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+
+.content-empty {
+  text-align: center;
+  color: var(--meta-text-color);
+  font-size: 1rem;
+}
+
+[data-theme="dark"] .content-page {
+  --hero-title: #e2e8f0;
+  --hero-sub: rgba(226, 232, 240, 0.78);
+}
+
+[data-theme="dark"] .content-card {
+  background: rgba(15, 23, 42, 0.7);
+  border-color: rgba(71, 85, 105, 0.35);
+  box-shadow: 0 26px 52px rgba(2, 6, 23, 0.6);
+}
+
+[data-theme="dark"] .content-card__meta {
+  color: rgba(226, 232, 240, 0.65);
+}
+
+[data-theme="dark"] .content-card__summary {
+  color: rgba(226, 232, 240, 0.7);
+}
+
+[data-theme="dark"] .content-pagination a:hover {
+  background: rgba(59, 130, 246, 0.24);

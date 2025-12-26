@@ -1,0 +1,43 @@
+/* 定义全局变量 */
+:root {
+  /* 背景和文本颜色 */
+  --bg-color: rgba(255, 255, 255, 0); /* 默认背景色 */
+  --text-color: #333; /* 默认文本颜色 */
+  --nav-bg-color: rgba(255, 255, 255, 0.7); /* 导航栏背景色 */
+  --nav-text-color: #444; /* 导航栏文本颜色 */
+  --canvas-bg: rgba(255, 255, 255, 1); /* 背景画布颜色 */
+  --card-bg-color: #fff; /* 卡片背景色 */
+  --card-border-color: #e0e0e0; /* 卡片边框颜色 */
+  --link-color: #3366cc; /* 默认链接颜色 */
+  --meta-text-color: #666; /* 元数据文本颜色 */
+  --footer-bg: #f9f9f9; /* 页脚背景色 */
+  --quick-card-bg: rgba(255, 255, 255, 0.5); /* 快捷卡片背景色 */
+  --quick-card-hover-bg: rgba(255, 255, 255, 0.7); /* 快捷卡片悬停背景色 */
+  --quick-label-color: #222; /* 快捷标签颜色 */
+
+  --inline-code-bg: rgba(230,236,240,0.4);
+  --inline-code-color: #bf2c2c;
+  --code-block-bg: #f0f4f8;
+  --blockquote-bg: #f9f9f9;
+  --blockquote-color: #586069;
+  --heading-color: #2f363d;
+  /* 按钮样式 */
+  --btn-bg-color: #3366cc; /* 默认按钮背景色 */
+  --btn-hover-bg-color: #0055cc; /* 按钮悬停时的背景色 */
+  --btn-text-color: #fff; /* 按钮文本颜色 */
+
+  /* 输入框、选择框、文本框样式 */
+  --input-bg-color: #fff; /* 输入框背景色 */
+  --input-border-color: #ccc; /* 输入框边框色 */
+  --input-focus-border-color: #3366cc; /* 输入框聚焦时的边框颜色 */
+}
+
+/* 页面字体和基本布局 */
+body {
+  font-family: Arial, sans-serif; /* 设置字体 */
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+  background: var(--bg-color); /* 使用全局背景颜色 */
+  color: var(--text-color); /* 使用全局文本颜色 */
+}
