@@ -25,6 +25,32 @@ from pathlib import Path
 from Gallery.oss_utils import load_visible_albums
 # --------------------------------------------------
 
+def _resolve_storage_path(config_key: str, *fallback_parts: str) -> Path:
+    value = current_app.config.get(config_key)
+    if value:
+        return Path(value)
+    return Path(current_app.instance_path, *fallback_parts)
+
+
+def _dynamic_pages_dir() -> str:
+    path = current_app.config.get('DYNAMIC_PAGES_DIR') or os.path.join(
+        current_app.instance_path,
+        'Index',
+        'dynamic_pages'
+    )
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def _dynamic_links_dir() -> str:
+    path = current_app.config.get('DYNAMIC_LINKS_DIR') or os.path.join(
+        current_app.instance_path,
+        'Index',
+        'dynamic_links'
+    )
+    os.makedirs(path, exist_ok=True)
+    return path
+
 @setting_bp.route('/')
 @login_required
 def index():
@@ -38,10 +64,9 @@ def index():
     extra_for_user1 = is_user1
 
     # ------- 目录基准 -------
-    project_root = Path(current_app.root_path).parent  # e.g. …/Benlog
-    blog_posts_dir  = project_root / "Blog"    / "posts"
-    edu_notes_dir   = project_root / "Edu"     / "notes"
-    neibr_dir       = project_root / "Neibr"   / "neibr"
+    blog_posts_dir = _resolve_storage_path('BLOG_POSTS_DIR', 'Blog', 'posts')
+    edu_notes_dir = _resolve_storage_path('EDU_NOTES_DIR', 'Edu', 'notes')
+    neibr_dir = _resolve_storage_path('NEIBR_STORAGE_DIR', 'Neibr', 'neibr')
     # gallery_dir     = project_root / "Gallery" / "galleries"
 
     # ------- 统计工具 -------
