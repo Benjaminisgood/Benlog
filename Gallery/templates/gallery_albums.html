@@ -33,28 +33,49 @@
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const grid = document.querySelector('.album-stream');
+    const supportsGridLanes = window.CSS && CSS.supports && CSS.supports('display', 'grid-lanes');
 
-    const msnry = new Masonry(grid, {
-      itemSelector: '.album-item',
-      columnWidth: '.grid-sizer',
-      percentPosition: true,
-      gutter: 0
-    });
+    const msnry = supportsGridLanes
+      ? null
+      : new Masonry(grid, {
+          itemSelector: '.album-item',
+          columnWidth: '.grid-sizer',
+          percentPosition: true,
+          gutter: 0
+        });
 
     // 懒加载处理
     const lazyImages = document.querySelectorAll('img.lazy-img');
+
+    const markLoaded = (img) => {
+      if (img.dataset.loaded) {
+        return;
+      }
+      img.dataset.loaded = 'true';
+      img.classList.add('is-loaded');
+      if (msnry) {
+        imagesLoaded(grid, () => msnry.layout());
+      }
+    };
+
+    const loadImage = (img) => {
+      const src = img.dataset.src;
+      if (!src) {
+        return;
+      }
+      img.onload = () => markLoaded(img);
+      img.src = src;
+      if (img.complete) {
+        markLoaded(img);
+      }
+    };
 
     if ('IntersectionObserver' in window) {
       const observer = new IntersectionObserver(entries => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
-            const img = entry.target;
-            img.src = img.dataset.src;
-            img.onload = () => {
-              img.classList.add('is-loaded');
-              imagesLoaded(grid, () => msnry.layout());
-            };
-            observer.unobserve(img);
+            loadImage(entry.target);
+            observer.unobserve(entry.target);
           }
         });
       });
@@ -62,17 +83,13 @@
       lazyImages.forEach(img => observer.observe(img));
     } else {
       // fallback: 不支持懒加载的浏览器
-      lazyImages.forEach(img => {
-        img.src = img.dataset.src;
-        img.onload = () => {
-          img.classList.add('is-loaded');
-          imagesLoaded(grid, () => msnry.layout());
-        };
-      });
+      lazyImages.forEach(loadImage);
     }
 
     // 初始布局
-    imagesLoaded(grid, () => msnry.layout());
+    if (msnry) {
+      imagesLoaded(grid, () => msnry.layout());
+    }
   });
 </script>
 {% endblock %}

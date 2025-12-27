@@ -9,15 +9,17 @@
     <div class="grid-sizer"></div> <!-- Masonry column baseline -->
     {% for f in files %}
       <div class="photo-item">
-        <img
-          src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" 
-          data-src="{{ f.thumb_url }}" 
-          data-full="{{ f.full_url }}" 
-          alt="{{ f.key }}" 
-          class="lazy-img" 
-          loading="lazy" 
-        />
-        <div class="photo-desc">{{ f.key }}</div>
+        <div class="photo-card">
+          <img
+            src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" 
+            data-src="{{ f.thumb_url }}" 
+            data-full="{{ f.full_url }}" 
+            alt="{{ f.key }}" 
+            class="lazy-img" 
+            loading="lazy" 
+          />
+          <div class="photo-desc">{{ f.key }}</div>
+        </div>
       </div>
     {% else %}
       <div class="photo-empty">No photos available.</div>
@@ -46,25 +48,47 @@
     document.addEventListener("DOMContentLoaded", function () {
       const grid = document.querySelector('.photo-stream');
       const lazyImages = document.querySelectorAll('img.lazy-img');
+      const supportsGridLanes = window.CSS && CSS.supports && CSS.supports('display', 'grid-lanes');
 
-      const msnry = new Masonry(grid, {
-        itemSelector: '.photo-item',
-        columnWidth: '.grid-sizer',
-        percentPosition: true,
-        gutter: 0
-      });
+      const msnry = supportsGridLanes
+        ? null
+        : new Masonry(grid, {
+            itemSelector: '.photo-item',
+            columnWidth: '.grid-sizer',
+            percentPosition: true,
+            gutter: 0
+          });
+
+      const markLoaded = (img) => {
+        if (img.dataset.loaded) {
+          return;
+        }
+        img.dataset.loaded = 'true';
+        img.classList.add('is-loaded');
+        if (msnry) {
+          imagesLoaded(grid, () => msnry.layout());
+        }
+      };
+
+      const loadImage = (img) => {
+        const src = img.dataset.src;
+        if (!src) {
+          return;
+        }
+        img.onload = () => markLoaded(img);
+        img.src = src;
+        if (img.complete) {
+          markLoaded(img);
+        }
+      };
 
       // 使用 IntersectionObserver 懒加载
       if ('IntersectionObserver' in window) {
         const observer = new IntersectionObserver(function (entries) {
           entries.forEach(entry => {
             if (entry.isIntersecting) {
-              const img = entry.target;
-              img.src = img.dataset.src;
-              img.onload = () => {
-                imagesLoaded(grid, () => msnry.layout());
-              };
-              observer.unobserve(img);
+              loadImage(entry.target);
+              observer.unobserve(entry.target);
             }
           });
         });
@@ -72,23 +96,22 @@
         lazyImages.forEach(img => observer.observe(img));
       } else {
         // fallback: 立即加载所有图
-        lazyImages.forEach(img => {
-          img.src = img.dataset.src;
-          img.onload = () => {
-            imagesLoaded(grid, () => msnry.layout());
-          };
-        });
+        lazyImages.forEach(loadImage);
       }
 
-  // 点击图片放大：优先使用 data-full，再回退到当前 src
-  document.addEventListener('click', function (e) {
-    if (e.target.matches('.photo-item img')) {
-      const fullSrc = e.target.dataset.full || e.target.src;
-      basicLightbox
-        .create(
-          `<img src="${fullSrc}" class="lightbox-image" alt="">`
-        )
-        .show();
+      if (msnry) {
+        imagesLoaded(grid, () => msnry.layout());
+      }
+
+      // 点击图片放大：优先使用 data-full，再回退到当前 src
+      document.addEventListener('click', function (e) {
+        if (e.target.matches('.photo-item img')) {
+          const fullSrc = e.target.dataset.full || e.target.src;
+          basicLightbox
+            .create(
+              `<img src="${fullSrc}" class="lightbox-image" alt="">`
+            )
+            .show();
         }
       });
     });
