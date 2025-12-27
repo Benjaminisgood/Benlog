@@ -140,7 +140,8 @@
     </div>
     <form method="POST"
           action="{{ url_for('neibr.delete_post', post_id=post.id) }}"
-          onsubmit="return confirm('确定要删除此帖子吗？该操作不可撤销。');">
+          onsubmit="return confirm('确定要删除此帖子吗？该操作不可撤销。');"
+          data-neibr-overlay-message="正在删除，请稍候...">
       <div class="form-footer">
         <button type="submit" class="glass-btn danger">
           <span class="btn-icon" aria-hidden="true">
@@ -162,7 +163,7 @@
 <div class="neibr-publish-overlay" data-neibr-publish-overlay>
   <div class="neibr-publish-card">
     <div class="neibr-spinner" aria-hidden="true"></div>
-    <p>正在保存，请稍候...</p>
+    <p data-neibr-overlay-text>正在保存，请稍候...</p>
   </div>
 </div>
 
@@ -172,23 +173,39 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('edit-post-form');
-  if (!form) return;
+  const deleteForm = document.querySelector('form[data-neibr-overlay-message]');
+  if (!form && !deleteForm) return;
+  const overlay = document.querySelector('[data-neibr-publish-overlay]');
+  const overlayText = document.querySelector('[data-neibr-overlay-text]');
 
-  form.addEventListener('submit', () => {
-    const submitBtn = form.querySelector('button[type="submit"]');
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      const text = submitBtn.querySelector('.btn-text');
-      if (text) text.textContent = '保存中...';
-    }
-    const overlay = document.querySelector('[data-neibr-publish-overlay]');
-    if (overlay) {
-      overlay.classList.add('show');
-    }
-    if (window.neibrPushFlash) {
-      window.neibrPushFlash('正在保存，请稍候...', 'info');
-    }
-  }, { once: true });
+  const showOverlay = (message) => {
+    if (overlayText && message) overlayText.textContent = message;
+    if (overlay) overlay.classList.add('show');
+  };
+
+  if (form) {
+    form.addEventListener('submit', () => {
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        const text = submitBtn.querySelector('.btn-text');
+        if (text) text.textContent = '保存中...';
+      }
+      showOverlay('正在保存，请稍候...');
+      if (window.neibrPushFlash) {
+        window.neibrPushFlash('正在保存，请稍候...', 'info');
+      }
+    }, { once: true });
+  }
+
+  if (deleteForm) {
+    deleteForm.addEventListener('submit', () => {
+      showOverlay(deleteForm.dataset.neibrOverlayMessage || '正在删除，请稍候...');
+      if (window.neibrPushFlash) {
+        window.neibrPushFlash('正在删除，请稍候...', 'warning');
+      }
+    }, { once: true });
+  }
 });
 </script>
 {% endblock %}
