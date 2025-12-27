@@ -9,6 +9,8 @@ import shutil
 import io
 import base64
 import binascii
+import multiprocessing
+import tempfile
 from PIL import Image
 from PIL import UnidentifiedImageError
 from PIL import ImageOps, ImageDraw
@@ -26,7 +28,7 @@ from urllib.parse import urlparse
 from sqlalchemy import and_, or_
 from sqlalchemy.exc import IntegrityError
 import requests
-from typing import Any, Optional
+from typing import Any, Optional, List
 
 
 def convert_rich_text(text):
@@ -157,6 +159,44 @@ def compress_and_save_image(file_storage, save_path):
     except UnidentifiedImageError:
         raise  # 交由上层处理（或你可以 flash 一句）
         
+
+def _compress_image_file(image_path: str, max_edge: int, quality: int, optimize: bool) -> bool:
+    try:
+        with Image.open(image_path) as img:
+            img = ImageOps.exif_transpose(img)
+            if max_edge and max(img.size) > max_edge:
+                img.thumbnail((max_edge, max_edge), Image.LANCZOS)
+            if img.mode in ("RGBA", "P"):
+                img = img.convert("RGB")
+            dir_name = os.path.dirname(image_path)
+            with tempfile.NamedTemporaryFile(delete=False, dir=dir_name, suffix='.jpg') as tmp:
+                tmp_path = tmp.name
+            img.save(tmp_path, format='JPEG', quality=quality, optimize=optimize)
+        os.replace(tmp_path, image_path)
+        return True
+    except UnidentifiedImageError:
+        return False
+    except Exception:
+        return False
+
+
+def _compress_images_worker(paths: List[str], max_edge: int, quality: int, optimize: bool) -> None:
+    for path in paths:
+        _compress_image_file(path, max_edge, quality, optimize)
+
+
+def _start_background_compression(paths: List[str]) -> None:
+    if not paths:
+        return
+    max_edge = current_app.config.get('NEIBR_IMAGE_MAX_EDGE', 2560)
+    quality = current_app.config.get('NEIBR_IMAGE_QUALITY', IMAGE_QUALITY)
+    optimize = bool(current_app.config.get('NEIBR_IMAGE_OPTIMIZE', False))
+    process = multiprocessing.Process(
+        target=_compress_images_worker,
+        args=(paths, max_edge, quality, optimize),
+        daemon=True
+    )
+    process.start()
 
 
 def sanitize_filename(file):
@@ -767,6 +807,7 @@ def create_post():
         os.makedirs(folder_path, exist_ok=True)
 
         compress_images = _should_compress_images(files)
+        compress_paths: List[str] = []
         for file in files:
             if file and file.filename:
                 filename = sanitize_filename(file)
@@ -780,13 +821,13 @@ def create_post():
                 file_path = os.path.join(folder_path, filename)
 
                 if ext in COMPRESSIBLE_IMAGE_EXTENSIONS and compress_images:
-                    try:
-                        compress_and_save_image(file, file_path)
-                    except UnidentifiedImageError:
-                        flash(f'图片文件无法识别：{file.filename}，请上传有效图片', 'danger')
-                        continue
+                    file.save(file_path)
+                    compress_paths.append(file_path)
                 else:
                     file.save(file_path)
+
+        if compress_paths:
+            _start_background_compression(compress_paths)
 
         save_remote_links(folder_path, remote_links)
 
@@ -1033,6 +1074,7 @@ def _handle_edit_post(post: Post):
 
         files = request.files.getlist('media_files') if 'media_files' in request.files else []
         compress_images = _should_compress_images(files)
+        compress_paths: List[str] = []
         for file in files:
             if file and file.filename:
                 filename = sanitize_filename(file)
@@ -1045,13 +1087,13 @@ def _handle_edit_post(post: Post):
                 file_path = os.path.join(folder_path, filename)
 
                 if ext in COMPRESSIBLE_IMAGE_EXTENSIONS and compress_images:
-                    try:
-                        compress_and_save_image(file, file_path)
-                    except UnidentifiedImageError:
-                        flash(f'图片文件无法识别：{file.filename}，请上传有效图片', 'danger')
-                        continue
+                    file.save(file_path)
+                    compress_paths.append(file_path)
                 else:
                     file.save(file_path)
+
+        if compress_paths:
+            _start_background_compression(compress_paths)
 
         delete_files = request.form.getlist('delete_files')
         for filename in delete_files:

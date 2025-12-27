@@ -159,6 +159,13 @@
   </section>
 </div>
 
+<div class="neibr-publish-overlay" data-neibr-publish-overlay>
+  <div class="neibr-publish-card">
+    <div class="neibr-spinner" aria-hidden="true"></div>
+    <p>正在保存，请稍候...</p>
+  </div>
+</div>
+
 
 
 <script defer src="{{ url_for('static', filename='js/neibr-media.js') }}"></script>
@@ -173,6 +180,10 @@ document.addEventListener('DOMContentLoaded', () => {
       submitBtn.disabled = true;
       const text = submitBtn.querySelector('.btn-text');
       if (text) text.textContent = '保存中...';
+    }
+    const overlay = document.querySelector('[data-neibr-publish-overlay]');
+    if (overlay) {
+      overlay.classList.add('show');
     }
     if (window.neibrPushFlash) {
       window.neibrPushFlash('正在保存，请稍候...', 'info');
