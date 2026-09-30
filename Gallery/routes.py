@@ -1,119 +1,145 @@
-# ------------------- Gallery/routes.py -------------------
 from flask import (
-    render_template, request, redirect,
-    url_for, flash
+    render_template, request, redirect, url_for, flash, send_file, abort, current_app
 )
-from flask_login import login_required
-from werkzeug.utils import secure_filename
+from flask_login import login_required, current_user
 from .oss_utils import (
-    list_albums,       # 列举所有相册（OSS 前缀）
-    list_objects,      # 列举相册下的对象并支持分页
-    generate_signed_url,# 生成带签名的访问 URL
-    delete_object,     # 删除指定对象
-    _get_bucket,       # 获取已配置的 Bucket 实例
-    _with_base         # 将 key 拼上基础前缀
+    list_albums,
+    list_objects,
+    generate_signed_url,
+    delete_object,
+    save_upload,
+    local_file,
+    using_oss,
+    ALLOWED_EXTENSIONS,
 )
 from . import gallery_bp
 from Gallery.oss_utils import load_visible_albums, save_visible_albums
 
+IMAGE_EXT = {'.png', '.jpg', '.jpeg', '.webp', '.gif'}
+VIDEO_EXT = {'.mp4', '.mov', '.webm'}
+AUDIO_EXT = {'.mp3', '.m4a', '.ogg'}
 
 
+def _can_manage():
+    return current_user.is_authenticated and (
+        getattr(current_user, 'is_admin', False) or current_user.id == 1
+    )
 
-def _handle_upload(prefix: str):
-    """
-    处理多文件上传到 OSS 的逻辑：
-    1. 验证至少选择一个文件
-    2. 对文件名进行安全转换
-    3. 在 OSS Bucket 中以前缀 + 文件名形成 key 上传
-    4. 返回上传成功的文件数
-    """
-    files = request.files.getlist('file')
-    if not files:
-        # 没有文件则抛出异常，外层 catch 会处理重定向和 flash 提示
-        raise ValueError('Please select at least one file to upload.')
 
-    bucket = _get_bucket()
-    uploaded_count = 0
-    for f in files:
-        filename = secure_filename(f.filename)
-        key = _with_base(f"{prefix}{filename}")
-        bucket.put_object(key, f.stream)
-        uploaded_count += 1
-    return uploaded_count
+def _clean_album_name(raw):
+    name = (raw or '').strip().strip('/').replace('\\', '/')
+    if not name or '/' in name or name in {'.', '..'}:
+        return ''
+    return name
+
+
+@gallery_bp.route('/media/<path:key>')
+@login_required
+def media(key):
+    if using_oss():
+        abort(404)
+    path = local_file(key)
+    if not path:
+        abort(404)
+    return send_file(path)
 
 
 @gallery_bp.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
-    """
-    单页视图入口：
-    - GET 请求：
-        * 无 prefix -> 列出相册列表（gallery_albums.html）
-        * 有 prefix -> 列出该相册下文件（gallery_index.html），并支持分页
-    - POST 请求：
-        * 处理上传，自动识别是否在某个相册下
-    """
     prefix = request.args.get('prefix', '') or ''
     visible_config = load_visible_albums()
 
-    # --- POST：处理文件上传 ---
     if request.method == 'POST':
+        if not _can_manage():
+            abort(403)
+        album_name = _clean_album_name(request.form.get('album'))
+        target = prefix
+        if not target and album_name:
+            target = album_name + '/'
+        if target and not target.endswith('/'):
+            target += '/'
         try:
-            count = _handle_upload(prefix)
-            flash(f'Uploaded {count} file(s).', 'success')
-        except ValueError as e:
-            flash(str(e), 'error')
-        # 上传完成后重定向到当前相册或根目录
-        return redirect(url_for('gallery.index', prefix=prefix))
+            files = request.files.getlist('file')
+            chosen = [item for item in files if item and item.filename]
+            if not chosen:
+                raise ValueError('请至少选择一个文件。')
+            if not target:
+                raise ValueError('请先填写相册名称。')
+            count = 0
+            for item in chosen:
+                save_upload(target, item)
+                count += 1
+            album_key = target
+            if album_key not in visible_config:
+                visible_config[album_key] = {'visible': True, 'note': ''}
+                save_visible_albums(visible_config)
+            flash(f'已上传 {count} 个文件。', 'success')
+        except ValueError as exc:
+            flash(str(exc), 'error')
+        except Exception as exc:
+            current_app.logger.exception('图库上传失败')
+            flash(f'上传失败：{exc}', 'error')
+        return redirect(url_for('gallery.index', prefix=target or prefix))
 
-    # --- GET：根据 prefix 展示 ---
     if not prefix:
-        albums = list_albums()
-
-        # ✅ 为每个相册选取首张图片作为封面
+        try:
+            albums = list_albums()
+        except Exception as exc:
+            current_app.logger.exception('读取相册失败')
+            flash(f'读取图库失败：{exc}', 'error')
+            albums = []
         album_infos = []
         for album in albums:
-            if not visible_config.get(album, {}).get("visible", False):
+            info = visible_config.get(album, {})
+            visible = info if isinstance(info, bool) else bool(isinstance(info, dict) and info.get('visible'))
+            if not visible:
                 continue
-            keys, _ = list_objects(prefix=album, max_keys=20)  # 限定只取少量即可
-            image_key = next((k for k in keys if k.lower().endswith(('.png', '.jpg', '.jpeg', '.webp', '.gif'))), None)
+            keys, _ = list_objects(prefix=album, max_keys=20)
+            image_key = next((key for key in keys if key.lower().endswith(tuple(IMAGE_EXT))), None)
             cover_url = generate_signed_url(image_key) if image_key else None
             album_infos.append({
                 'name': album.rstrip('/'),
                 'prefix': album,
-                'cover_url': cover_url
+                'cover_url': cover_url,
             })
+        return render_template(
+            'gallery_albums.html',
+            albums=album_infos,
+            can_manage=_can_manage(),
+            allowed_extensions=', '.join(sorted(ALLOWED_EXTENSIONS)),
+        )
 
-        return render_template('gallery_albums.html', albums=album_infos)
-
-
-    # 有 prefix：列出该相册下的文件，支持分页参数 marker 和 limit
     marker = request.args.get('marker')
     try:
-        limit = int(request.args.get('limit', 20))  # 改为 20
+        limit = int(request.args.get('limit', 20))
     except ValueError:
         limit = 20
 
-    # 通过 OSS 查询文件列表和下页游标
-    # 获取原始 key 列表
-    raw_keys, next_marker = list_objects(prefix=prefix, marker=marker, max_keys=limit)
+    try:
+        raw_keys, next_marker = list_objects(prefix=prefix, marker=marker, max_keys=limit)
+    except Exception as exc:
+        current_app.logger.exception('读取相册文件失败')
+        flash(f'读取相册失败：{exc}', 'error')
+        raw_keys, next_marker = [], None
 
-    # ✅ 过滤掉以 '/' 结尾的 key（这些是目录，不是媒体文件）
-    keys = [k for k in raw_keys if not k.endswith('/')]
-
-
+    keys = [key for key in raw_keys if key and not key.endswith('/')]
     files = []
+    audio_url = None
     for key in keys:
         lower_key = key.lower()
-        is_img = lower_key.endswith(('.png', '.jpg', '.jpeg', '.gif', '.nef', '.raw'))
-        is_video = lower_key.endswith(('.mp4', '.mov', '.webm'))
+        is_img = lower_key.endswith(tuple(IMAGE_EXT))
+        is_video = lower_key.endswith(tuple(VIDEO_EXT))
+        is_audio = lower_key.endswith(tuple(AUDIO_EXT))
+        if is_audio and not audio_url:
+            audio_url = generate_signed_url(key)
         if is_img:
             files.append({
                 'key': key,
                 'thumb_url': generate_signed_url(key, style='thumb'),
                 'full_url': generate_signed_url(key),
                 'is_image': True,
-                'is_video': False
+                'is_video': False,
             })
         elif is_video:
             files.append({
@@ -121,14 +147,9 @@ def index():
                 'thumb_url': None,
                 'full_url': generate_signed_url(key),
                 'is_image': False,
-                'is_video': True
+                'is_video': True,
             })
-    audio_url = None
-    for f in files:
-        if f['key'].lower().endswith(('.mp3', '.m4a', '.ogg')):
-            audio_url = f['url']
-            break
-    # 渲染 gallery_index.html，传递分页和文件数据
+
     return render_template(
         'gallery_index.html',
         files=files,
@@ -136,27 +157,24 @@ def index():
         marker=marker,
         next_marker=next_marker,
         limit=limit,
-        bg_audio_url=audio_url
+        bg_audio_url=audio_url,
+        can_manage=_can_manage(),
+        allowed_extensions=', '.join(sorted(ALLOWED_EXTENSIONS)),
     )
 
 
 @gallery_bp.route('/delete/<path:key>', methods=['POST'])
 @login_required
 def delete(key):
-    """
-    删除指定的 OSS 对象
-    """
+    if not _can_manage():
+        abort(403)
     delete_object(key)
-    flash(f'Deleted: {key}', 'warning')
-    # 删除后重定向到当前相册
+    flash(f'已删除：{key}', 'warning')
     return redirect(url_for('gallery.index', prefix=request.args.get('prefix', '')))
 
 
 @gallery_bp.context_processor
 def inject_helpers():
-    """
-    向模板注入 page_url 辅助函数，方便生成分页链接
-    """
     def page_url(marker, prefix=None, limit=None):
         args = {}
         if prefix:

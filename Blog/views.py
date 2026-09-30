@@ -1,12 +1,13 @@
 import os, math
 import re
 import random
-from flask import request, redirect, flash, render_template, abort, current_app, url_for
-import frontmatter, markdown
+from flask import request, redirect, flash, render_template, abort, current_app, url_for, jsonify
+import frontmatter
 from datetime import datetime
 from . import blog_bp
 from flask_login import login_required, current_user
-from typing import Final
+from Benlog.render import clean_html, is_draft, render_markdown
+from Benlog.security import clean_slug, editor_required, safe_slug
 
 # POSTS_DIR 存放 blog 模块的 Markdown 文件
 def _posts_dir() -> str:
@@ -27,40 +28,6 @@ BLUE_GRADIENTS = [
     ('#22d3ee', '#0ea5e9'),
     ('#93c5fd', '#3b82f6')
 ]
-
-MARKDOWN_EXTENSIONS: Final[list[str]] = [
-    'extra',
-    'admonition',
-    'codehilite',
-    'pymdownx.highlight',
-    'pymdownx.inlinehilite',
-    'pymdownx.superfences',
-    'pymdownx.tilde',
-    'pymdownx.tasklist',
-    'pymdownx.arithmatex',
-]
-
-MARKDOWN_EXTENSION_CONFIGS: Final[dict[str, dict]] = {
-    'codehilite': {
-        'guess_lang': False,
-        'linenums': False,
-        'noclasses': True,
-    },
-    'pymdownx.highlight': {
-        'guess_lang': False,
-        'anchor_linenums': True,
-    },
-    'pymdownx.superfences': {
-        'custom_fences': [
-            {
-                'name': 'mermaid',
-                'class': 'mermaid',
-                'format': '!!python/name:pymdownx.superfences.fence_code_format'
-            }
-        ]
-    },
-    'pymdownx.arithmatex': {'generic': True},
-}
 
 
 def hex_to_rgba(hex_color: str, alpha: float = 0.85) -> str:
@@ -165,24 +132,63 @@ def load_post_card(slug: str, last_modified: datetime):
         'gradient': pick_gradient(slug)
     }
 
-def get_all_posts():
+def get_all_posts(include_drafts=True):
     """返回按时间倒序排列的所有文章元信息列表"""
     posts = []
     posts_dir = _posts_dir()
-    if not os.path.exists(posts_dir):
-        abort(500, description=f"POSTS_DIR 不存在：{posts_dir}")
+    os.makedirs(posts_dir, exist_ok=True)
     for filename in os.listdir(posts_dir):
-        if filename.endswith(('.md', '.html')):
-            filepath = os.path.join(posts_dir, filename)
-            lm = datetime.fromtimestamp(os.path.getmtime(filepath))
-            slug = filename.rsplit('.', 1)[0]
-            posts.append({'slug': slug, 'last_modified': lm})
+        if not filename.endswith(('.md', '.html')):
+            continue
+        slug = filename.rsplit('.', 1)[0]
+        if not safe_slug(slug):
+            continue
+        filepath = os.path.join(posts_dir, filename)
+        metadata = {}
+        if filename.endswith('.md'):
+            try:
+                metadata = frontmatter.load(filepath).metadata or {}
+            except Exception:
+                metadata = {}
+        draft = is_draft(metadata)
+        if draft and not include_drafts:
+            continue
+        lm = datetime.fromtimestamp(os.path.getmtime(filepath))
+        posts.append({'slug': slug, 'last_modified': lm, 'draft': draft})
     posts.sort(key=lambda x: x['last_modified'], reverse=True)
     return posts
 
+def _can_edit():
+    return current_user.is_authenticated and (getattr(current_user, 'is_admin', False) or current_user.id == 1)
+
+
+def _locate_post(slug):
+    slug = safe_slug(slug)
+    if not slug:
+        abort(404)
+    posts_dir = _posts_dir()
+    for ext in ('md', 'html'):
+        path = os.path.join(posts_dir, f'{slug}.{ext}')
+        if os.path.isfile(path):
+            return path, ext
+    return None, None
+
+
+def _split_post(path, ext):
+    with open(path, 'r', encoding='utf-8') as handle:
+        raw = handle.read()
+    if ext != 'md':
+        return {}, raw, raw
+    try:
+        parsed = frontmatter.loads(raw)
+    except Exception:
+        return {}, raw, raw
+    metadata = dict(parsed.metadata or {})
+    return metadata, parsed.content or '', raw
+
+
 def allowed_file(filename: str) -> bool:
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def sanitize_filename(filename: str) -> str:
     # 去除路径，替换所有非字母数字、下划线、连字符、点 为下划线
@@ -235,8 +241,8 @@ def list_posts():
     if order not in ('asc', 'desc', 'random'):
         order = 'desc'
 
-    # 2. 拿到所有文章
-    all_posts = get_all_posts()  # 之前定义的函数
+    can_edit = _can_edit()
+    all_posts = get_all_posts(include_drafts=can_edit)
     if order == 'asc':
         all_posts.sort(key=lambda x: x['last_modified'])
     elif order == 'random':
@@ -269,7 +275,7 @@ def list_posts():
         card['url'] = url_for('blog.show_post', slug=entry['slug'])
         card_items.append(card)
 
-    can_edit = current_user.is_authenticated and (getattr(current_user, 'is_admin', False) or current_user.id == 1)
+    can_edit = _can_edit()
     random_url = url_for('blog.show_post', slug=random_slug) if (random_slug and not can_edit) else None
 
     return render_template(
@@ -286,46 +292,37 @@ def list_posts():
 @blog_bp.route('/<slug>')
 def show_post(slug):
     """支持显示 .md 或 .html 文件的文章"""
-    posts_dir = _posts_dir()
-    md_path = os.path.join(posts_dir, f"{slug}.md")
-    html_path = os.path.join(posts_dir, f"{slug}.html")
+    path, ext = _locate_post(slug)
+    if not path:
+        abort(404, description="没有找到该文章")
 
-    if os.path.exists(md_path):
-        # 解析 Markdown 文件
-        post_data = frontmatter.load(md_path)
-        content_md = post_data.content
-        metadata = post_data.metadata or {}
+    metadata, body, raw = _split_post(path, ext)
+    if is_draft(metadata) and not _can_edit():
+        abort(404, description="没有找到该文章")
+
+    if ext == 'md':
+        content_html = render_markdown(body)
         post_title = metadata.get('title') or slug
-        post_summary = metadata.get('description') or metadata.get('summary')
-        content_html = markdown.markdown(
-            content_md,
-            extensions=MARKDOWN_EXTENSIONS,
-            extension_configs=MARKDOWN_EXTENSION_CONFIGS
-        )
+        post_summary = metadata.get('description') or metadata.get('summary') or ''
         return render_template(
             'blog_post.html',
             post_content=content_html,
-            post_date=post_data.get('date', ''),
+            post_date=metadata.get('date', ''),
             frontmatter=metadata,
             post_title=post_title,
-            post_summary=post_summary or ''
+            post_summary=post_summary,
+            needs_math=True,
         )
 
-    elif os.path.exists(html_path):
-        # 直接读取 .html 文件内容并原样渲染
-        with open(html_path, 'r', encoding='utf-8') as f:
-            html_content = f.read()
-        return render_template(
-            'blog_post.html',
-            post_content=html_content,
-            post_date='',  # 或者你可以用某种方式提取日期
-            frontmatter={},
-            post_title=slug,
-            post_summary=''
-        )
-
-    else:
-        abort(404, description="没有找到该文章")
+    return render_template(
+        'blog_post.html',
+        post_content=clean_html(raw),
+        post_date='',
+        frontmatter={},
+        post_title=slug,
+        post_summary='',
+        needs_math=True,
+    )
 
 
 @blog_bp.route('/manage_posts')
@@ -364,22 +361,19 @@ def new_post():
     if not (current_user.is_admin or current_user.id == 1):
         abort(403)
 
-    # 生成新文件名，采用时间戳确保唯一性
-    timestamp = datetime.now().strftime('%Y%m%d')
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
     filename = f"post_{timestamp}.md"
     posts_dir = _posts_dir()
     filepath = os.path.join(posts_dir, filename)
     
-    # 定义默认 frontmatter 与内容 %H:%M:%S
     default_frontmatter = {
-        'title': 'New Post',
+        'title': '新文章',
         'date': datetime.now().strftime("%Y-%m-%d"),
-        'tags': ['life', 'note'],
-        'cover': 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d',
-        'summary': '写下你的想法……',
-        'status': 'draft'
+        'tags': ['note'],
+        'summary': '',
+        'status': 'published'
     }
-    default_content = "在此处编辑内容..."
+    default_content = "在这里写 Markdown。"
     post_data = frontmatter.Post(default_content, **default_frontmatter)
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(frontmatter.dumps(post_data))
@@ -391,41 +385,78 @@ def new_post():
 
 
 
+@blog_bp.route('/preview', methods=['POST'])
+@editor_required
+def preview_markdown():
+    html = render_markdown(request.form.get('content', ''))
+    return jsonify({'html': str(html)})
+
+
 @blog_bp.route('/<slug>/edit', methods=['GET', 'POST'])
-@login_required
+@editor_required
 def edit_post(slug):
-    # 定位文件
-    filepath = None
-    posts_dir = _posts_dir()
-    for ext in ('md', 'html'):
-        p = os.path.join(posts_dir, f"{slug}.{ext}")
-        if os.path.exists(p):
-            filepath = p
-            break
-    if filepath is None:
+    path, ext = _locate_post(slug)
+    if not path:
         abort(404, description="Post not found")
 
+    metadata, body, raw = _split_post(path, ext)
     if request.method == 'POST':
-        # 仅保存正文内容
-        new_content = request.form.get('content', '')
-        with open(filepath, 'w', encoding='utf-8') as f:
-            f.write(new_content)
+        if ext == 'md':
+            metadata['title'] = (request.form.get('title') or slug).strip() or slug
+            summary = (request.form.get('summary') or '').strip()
+            if summary:
+                metadata['summary'] = summary
+            elif 'summary' in metadata:
+                metadata.pop('summary')
+            tags = [tag.strip() for tag in (request.form.get('tags') or '').split(',') if tag.strip()]
+            if tags:
+                metadata['tags'] = tags
+            elif 'tags' in metadata:
+                metadata.pop('tags')
+            cover = (request.form.get('cover') or '').strip()
+            if cover:
+                metadata['cover'] = cover
+            elif 'cover' in metadata:
+                metadata.pop('cover')
+            status = (request.form.get('status') or 'published').strip().lower()
+            metadata['status'] = 'draft' if status == 'draft' else 'published'
+            new_body = request.form.get('content', '')
+            written = frontmatter.dumps(frontmatter.Post(new_body, **metadata))
+        else:
+            written = request.form.get('content', '')
+        with open(path, 'w', encoding='utf-8') as handle:
+            handle.write(written)
         flash("内容已保存", "success")
         return redirect(url_for('blog.show_post', slug=slug))
 
-    # GET：读取内容并渲染编辑页面
-    with open(filepath, 'r', encoding='utf-8') as f:
-        file_text = f.read()
-    return render_template('blog_edit.html', slug=slug, content=file_text)
+    tags = metadata.get('tags') or []
+    if isinstance(tags, (list, tuple)):
+        tags_text = ', '.join(str(tag) for tag in tags)
+    else:
+        tags_text = str(tags)
+    return render_template(
+        'blog_edit.html',
+        slug=slug,
+        is_markdown=ext == 'md',
+        title_value=metadata.get('title') or slug,
+        summary_value=metadata.get('summary') or metadata.get('description') or '',
+        tags_value=tags_text,
+        cover_value=metadata.get('cover') or '',
+        status_value='draft' if is_draft(metadata) else 'published',
+        content=body if ext == 'md' else raw,
+        preview_url=url_for('blog.preview_markdown'),
+    )
 
 @blog_bp.route('/<slug>/rename', methods=['POST'])
 @login_required
 def rename_post(slug):
+    if not safe_slug(slug):
+        abort(404)
     if not (current_user.is_admin or current_user.id == 1):
         abort(403)
-    new_slug = request.form.get('new_slug', '').strip()
+    new_slug = clean_slug(request.form.get('new_slug', ''))
     if not new_slug:
-        flash("新名称不能为空", "error")
+        flash("新名称无效。只保留字母、数字、中文、点、下划线和连字符。", "error")
         return redirect(url_for('blog.edit_post', slug=slug))
     posts_dir = _posts_dir()
     for ext in ('md', 'html'):
@@ -443,6 +474,8 @@ def rename_post(slug):
 @blog_bp.route('/<slug>/delete', methods=['POST'])
 @login_required
 def delete_post(slug):
+    if not safe_slug(slug):
+        abort(404)
     if not (current_user.is_admin or current_user.id == 1):
         abort(403)
     posts_dir = _posts_dir()

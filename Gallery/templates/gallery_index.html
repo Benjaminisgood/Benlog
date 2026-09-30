@@ -5,6 +5,13 @@
 {% endblock %}
 {% block content %}
   <h2>Photo Stream{% if prefix %} - {{ prefix.rstrip('/') }}{% endif %}</h2>
+  {% if can_manage %}
+  <form method="post" enctype="multipart/form-data" class="form-stack" style="margin-bottom: 1.5rem;">
+    <label for="file">继续上传到这个相册（{{ allowed_extensions }}）</label>
+    <input type="file" name="file" id="file" multiple required>
+    <button type="submit" class="glass-btn">上传</button>
+  </form>
+  {% endif %}
   <div class="photo-stream">
     <div class="grid-sizer"></div> <!-- Masonry column baseline -->
     {% for f in files %}

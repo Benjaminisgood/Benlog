@@ -4,32 +4,17 @@
 <div class="page-shell">
   <section class="page-hero-card">
     <div class="page-hero-main">
-      <span class="hero-badge">Edu 编辑</span>
+      <span class="hero-badge">笔记编辑</span>
       <h1 class="hero-title">编辑笔记</h1>
-      <p class="hero-subtitle">当前笔记：<strong>{{ slug }}</strong>。统一的卡片布局让学习内容维护更轻松。</p>
-    </div>
-    <div class="page-hero-aside">
-      <div class="hero-stats">
-        <strong>{{ current_user.username }}</strong>
-        <span>编辑者</span>
-      </div>
+      <p class="hero-subtitle">当前笔记：<strong>{{ slug }}</strong>。写完可以在旁边看预览。</p>
     </div>
   </section>
 
   <section class="card-panel form-card">
-    <form method="POST"
-          action="{{ url_for('edu.rename_note', slug=slug) }}"
-          class="form-stack">
+    <form method="POST" action="{{ url_for('edu.rename_note', slug=slug) }}" class="form-stack">
       <div class="form-group">
-        <label for="new_slug">重命名为</label>
-        <input
-          type="text"
-          name="new_slug"
-          id="new_slug"
-          value="{{ slug }}"
-          class="form-control"
-          required
-        >
+        <label for="new_slug">文件名</label>
+        <input type="text" name="new_slug" id="new_slug" value="{{ slug }}" class="form-control" required>
       </div>
       <div class="form-footer">
         <button type="submit" class="glass-btn alt">重命名</button>
@@ -38,24 +23,82 @@
   </section>
 
   <section class="card-panel form-card">
-    <form method="POST"
-          action="{{ url_for('edu.edit_note', slug=slug) }}"
-          class="form-stack">
-      <div class="form-group">
-        <label for="content">正文内容</label>
-        <textarea
-          name="content"
-          id="content"
-          rows="20"
-          class="form-control textarea-field editor-field"
-          required
-        >{{ content }}</textarea>
+    <form method="POST" action="{{ url_for('edu.edit_note', slug=slug) }}" class="form-stack">
+      {% if is_markdown %}
+      <div class="editor-meta">
+        <div class="form-group">
+          <label for="title">标题</label>
+          <input type="text" name="title" id="title" value="{{ title_value }}" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="summary">摘要</label>
+          <input type="text" name="summary" id="summary" value="{{ summary_value }}" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="tags">标签（逗号分隔）</label>
+          <input type="text" name="tags" id="tags" value="{{ tags_value }}" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="cover">封面地址</label>
+          <input type="text" name="cover" id="cover" value="{{ cover_value }}" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="status">状态</label>
+          <select name="status" id="status" class="form-control">
+            <option value="published" {% if status_value != 'draft' %}selected{% endif %}>发布</option>
+            <option value="draft" {% if status_value == 'draft' %}selected{% endif %}>草稿（仅自己可见）</option>
+          </select>
+        </div>
       </div>
+      <div class="editor-split">
+        <div class="form-group">
+          <label for="content">正文（Markdown）</label>
+          <textarea name="content" id="edu-content" rows="18" class="form-control textarea-field editor-field" required>{{ content }}</textarea>
+        </div>
+        <div class="form-group">
+          <label>预览</label>
+          <div id="edu-preview" class="markdown-preview markdown-body">预览会显示在这里。</div>
+        </div>
+      </div>
+      {% else %}
+      <div class="form-group">
+        <label for="content">HTML 正文</label>
+        <textarea name="content" id="edu-content" rows="20" class="form-control textarea-field editor-field" required>{{ content }}</textarea>
+      </div>
+      {% endif %}
       <div class="form-footer">
         <a href="{{ url_for('edu.manage_notes') }}" class="glass-btn ghost align-left">返回列表</a>
-        <button type="submit" class="glass-btn">保存内容</button>
+        <button type="submit" class="glass-btn">保存</button>
       </div>
     </form>
   </section>
 </div>
+{% endblock %}
+
+{% block script %}
+{% if is_markdown %}
+<script>
+  (function () {
+    const area = document.getElementById('edu-content');
+    const preview = document.getElementById('edu-preview');
+    const token = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+    if (!area || !preview) return;
+    let timer = null;
+    const render = () => {
+      const body = new FormData();
+      body.append('content', area.value);
+      body.append('csrf_token', token);
+      fetch({{ preview_url|tojson }}, { method: 'POST', body: body, credentials: 'same-origin' })
+        .then((response) => response.json())
+        .then((data) => { preview.innerHTML = data.html || ''; })
+        .catch(() => { preview.textContent = '预览暂时不可用。'; });
+    };
+    area.addEventListener('input', () => {
+      clearTimeout(timer);
+      timer = setTimeout(render, 280);
+    });
+    render();
+  })();
+</script>
+{% endif %}
 {% endblock %}

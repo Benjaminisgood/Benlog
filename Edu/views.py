@@ -1,13 +1,14 @@
 import os
 import random
-from flask import request, redirect, flash, render_template, abort, current_app, url_for
-import frontmatter, markdown
+from flask import request, redirect, flash, render_template, abort, current_app, url_for, jsonify
+import frontmatter
 from datetime import datetime
 from . import edu_bp
 from flask_login import login_required, current_user
 import re
 from math import ceil
-from typing import Final
+from Benlog.render import clean_html, is_draft, render_markdown
+from Benlog.security import clean_slug, editor_required, safe_slug
 
 def _notes_dir() -> str:
     return current_app.config.get('EDU_NOTES_DIR') or os.path.join(
@@ -28,39 +29,32 @@ BLUE_GRADIENTS = [
     ('#5eead4', '#14b8a6')
 ]
 
-MARKDOWN_EXTENSIONS: Final[list[str]] = [
-    'extra',
-    'admonition',
-    'codehilite',
-    'pymdownx.highlight',
-    'pymdownx.inlinehilite',
-    'pymdownx.superfences',
-    'pymdownx.tilde',
-    'pymdownx.tasklist',
-    'pymdownx.arithmatex',
-]
 
-MARKDOWN_EXTENSION_CONFIGS: Final[dict[str, dict]] = {
-    'codehilite': {
-        'guess_lang': False,
-        'linenums': False,
-        'noclasses': True,
-    },
-    'pymdownx.highlight': {
-        'guess_lang': False,
-        'anchor_linenums': True,
-    },
-    'pymdownx.superfences': {
-        'custom_fences': [
-            {
-                'name': 'mermaid',
-                'class': 'mermaid',
-                'format': '!!python/name:pymdownx.superfences.fence_code_format'
-            }
-        ]
-    },
-    'pymdownx.arithmatex': {'generic': True},
-}
+def _can_edit():
+    return current_user.is_authenticated and (getattr(current_user, 'is_admin', False) or current_user.id == 1)
+
+
+def _locate_note(slug):
+    slug = safe_slug(slug)
+    if not slug:
+        abort(404)
+    for ext in ('md', 'html'):
+        path = os.path.join(_notes_dir(), f'{slug}.{ext}')
+        if os.path.isfile(path):
+            return path, ext
+    return None, None
+
+
+def _split_note(path, ext):
+    with open(path, 'r', encoding='utf-8') as handle:
+        raw = handle.read()
+    if ext != 'md':
+        return {}, raw, raw
+    try:
+        parsed = frontmatter.loads(raw)
+    except Exception:
+        return {}, raw, raw
+    return dict(parsed.metadata or {}), parsed.content or '', raw
 
 
 def hex_to_rgba(hex_color: str, alpha: float = 0.85) -> str:
@@ -224,6 +218,16 @@ def list_notes():
             filepath = os.path.join(_notes_dir(), filename)
             lm = datetime.fromtimestamp(os.path.getmtime(filepath))
             slug, ext = filename.rsplit('.', 1)
+            if not safe_slug(slug):
+                continue
+            metadata = {}
+            if ext == 'md':
+                try:
+                    metadata = frontmatter.load(filepath).metadata or {}
+                except Exception:
+                    metadata = {}
+            if is_draft(metadata) and not _can_edit():
+                continue
             all_notes.append({'slug': slug, 'last_modified': lm})
     if order == 'asc':
         all_notes.sort(key=lambda x: x['last_modified'])
@@ -275,45 +279,38 @@ def list_notes():
 @edu_bp.route('/<slug>')
 def show_note(slug):
     """显示单个笔记，支持 .md 和 .html 文件"""
-    md_path = os.path.join(_notes_dir(), f"{slug}.md")
-    html_path = os.path.join(_notes_dir(), f"{slug}.html")
+    path, ext = _locate_note(slug)
+    if not path:
+        abort(404)
 
-    if os.path.exists(md_path):
-        note_data = frontmatter.load(md_path)
-        title = note_data.get('title', 'Untitled')
-        content_md = note_data.content
-        metadata = note_data.metadata or {}
-        note_summary = metadata.get('description') or metadata.get('summary')
-        content_html = markdown.markdown(
-            content_md,
-            extensions=MARKDOWN_EXTENSIONS,
-            extension_configs=MARKDOWN_EXTENSION_CONFIGS
-        )
+    metadata, body, raw = _split_note(path, ext)
+    if is_draft(metadata) and not _can_edit():
+        abort(404)
+
+    if ext == 'md':
+        title = metadata.get('title') or slug
+        note_summary = metadata.get('description') or metadata.get('summary') or ''
         return render_template(
             'edu_note.html',
             title=title,
             note_title=title,
-            note_summary=note_summary or '',
-            note_content=content_html,
-            note_date=note_data.get('date', ''),
-            frontmatter=metadata
+            note_summary=note_summary,
+            note_content=render_markdown(body),
+            note_date=metadata.get('date', ''),
+            frontmatter=metadata,
+            needs_math=True,
         )
 
-    elif os.path.exists(html_path):
-        with open(html_path, 'r', encoding='utf-8') as f:
-            html_content = f.read()
-        return render_template(
-            'edu_note.html',
-            title=slug,
-            note_title=slug,
-            note_summary='',
-            note_content=html_content,
-            note_date='',
-            frontmatter={}
-        )
-
-    else:
-        abort(404)
+    return render_template(
+        'edu_note.html',
+        title=slug,
+        note_title=slug,
+        note_summary='',
+        note_content=clean_html(raw),
+        note_date='',
+        frontmatter={},
+        needs_math=True,
+    )
 
 
 
@@ -368,21 +365,18 @@ def manage_notes():
 def new_note():
     if not (current_user.is_admin or current_user.id == 1):
         abort(403)
-    # 生成新文件名，格式例如 note_20250408123045.md %H:%M:%S
-    timestamp = datetime.now().strftime('%Y%m%d')
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
     filename = f"note_{timestamp}.md"
     filepath = os.path.join(_notes_dir(), filename)
     
-    # 定义默认 frontmatter 与内容 %H:%M:%S
     default_frontmatter = {
-        'title': 'New Note',
+        'title': '新笔记',
         'date': datetime.now().strftime("%Y-%m-%d"),
-        'tags': ['study', 'note'],
-        'cover': 'https://images.unsplash.com/photo-1498050108023-c5249f4df085',
-        'summary': '记录你的学习收获……',
-        'status': 'draft'
+        'tags': ['study'],
+        'summary': '',
+        'status': 'published'
     }
-    default_content = "在此处编辑内容..."
+    default_content = "在这里写 Markdown。"
     note_data = frontmatter.Post(default_content, **default_frontmatter)
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(frontmatter.dumps(note_data))
@@ -392,31 +386,62 @@ def new_note():
     return redirect(url_for('edu.edit_note', slug=slug))
 
 
+@edu_bp.route('/preview', methods=['POST'])
+@editor_required
+def preview_markdown():
+    return jsonify({'html': str(render_markdown(request.form.get('content', '')))})
+
+
 @edu_bp.route('/<slug>/edit', methods=['GET', 'POST'])
-@login_required
+@editor_required
 def edit_note(slug):
-    # 定位文件
-    filepath = None
-    for ext in ('md', 'html'):
-        p = os.path.join(_notes_dir(), f"{slug}.{ext}")
-        if os.path.exists(p):
-            filepath = p
-            break
-    if filepath is None:
+    path, ext = _locate_note(slug)
+    if not path:
         abort(404, description="Note not found")
 
+    metadata, body, raw = _split_note(path, ext)
     if request.method == 'POST':
-        # 仅保存正文内容
-        new_content = request.form.get('content', '')
-        with open(filepath, 'w', encoding='utf-8') as f:
-            f.write(new_content)
+        if ext == 'md':
+            metadata['title'] = (request.form.get('title') or slug).strip() or slug
+            summary = (request.form.get('summary') or '').strip()
+            if summary:
+                metadata['summary'] = summary
+            elif 'summary' in metadata:
+                metadata.pop('summary')
+            tags = [tag.strip() for tag in (request.form.get('tags') or '').split(',') if tag.strip()]
+            if tags:
+                metadata['tags'] = tags
+            elif 'tags' in metadata:
+                metadata.pop('tags')
+            cover = (request.form.get('cover') or '').strip()
+            if cover:
+                metadata['cover'] = cover
+            elif 'cover' in metadata:
+                metadata.pop('cover')
+            status = (request.form.get('status') or 'published').strip().lower()
+            metadata['status'] = 'draft' if status == 'draft' else 'published'
+            written = frontmatter.dumps(frontmatter.Post(request.form.get('content', ''), **metadata))
+        else:
+            written = request.form.get('content', '')
+        with open(path, 'w', encoding='utf-8') as handle:
+            handle.write(written)
         flash("内容已保存", "success")
         return redirect(url_for('edu.show_note', slug=slug))
 
-    # GET：读取内容并渲染编辑页面
-    with open(filepath, 'r', encoding='utf-8') as f:
-        file_text = f.read()
-    return render_template('edu_edit.html', slug=slug, content=file_text)
+    tags = metadata.get('tags') or []
+    tags_text = ', '.join(str(tag) for tag in tags) if isinstance(tags, (list, tuple)) else str(tags)
+    return render_template(
+        'edu_edit.html',
+        slug=slug,
+        is_markdown=ext == 'md',
+        title_value=metadata.get('title') or slug,
+        summary_value=metadata.get('summary') or metadata.get('description') or '',
+        tags_value=tags_text,
+        cover_value=metadata.get('cover') or '',
+        status_value='draft' if is_draft(metadata) else 'published',
+        content=body if ext == 'md' else raw,
+        preview_url=url_for('edu.preview_markdown'),
+    )
 
 
 @edu_bp.route('/<slug>/rename', methods=['POST'])
@@ -425,9 +450,9 @@ def rename_note(slug):
     if not (current_user.is_admin or current_user.id == 1):
         abort(403)
 
-    new_slug = request.form.get('new_slug', '').strip()
+    new_slug = clean_slug(request.form.get('new_slug', ''))
     if not new_slug:
-        flash("新名称不能为空", "error")
+        flash("新名称无效。只保留字母、数字、中文、点、下划线和连字符。", "error")
         return redirect(url_for('edu.edit_note', slug=slug))
 
     # 查找并重命名

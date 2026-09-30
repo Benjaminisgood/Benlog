@@ -31,38 +31,48 @@ import requests
 from typing import Any, Optional, List
 
 
+def _render_rich_token(token):
+    lowered = token.lower()
+    safe = escape(token)
+    if lowered.startswith(('http://', 'https://')):
+        if re.search(r'\.(png|jpe?g|gif|webp)$', lowered):
+            return f'<img src="{safe}" class="inline-img" loading="lazy" alt="">'
+        if re.search(r'\.(mp4|webm|mov)$', lowered):
+            return f'<video src="{safe}" class="inline-video" controls></video>'
+        return f'<a class="link-card" href="{safe}" target="_blank" rel="noopener">{safe}</a>'
+    if '@' in token and not token.startswith('@'):
+        return f'<a href="mailto:{safe}">{safe}</a>'
+    if token.startswith('@') and len(token) > 1:
+        name = escape(token[1:])
+        return f'<a href="/user/{name}" class="mention">@{name}</a>'
+    if token.startswith('#') and len(token) > 1:
+        tag = escape(token[1:])
+        return f'<span class="hashtag">#{tag}</span>'
+    return str(safe)
+
+
 def convert_rich_text(text):
-    """
-    多功能富文本转换器（先处理，后包装为 Markup）：
-    - URL => 链接
-    - 图片链接 => <img>
-    - 视频链接 => <video>
-    - @user => 用户链接
-    - #tag => 标签高亮
-    - 邮箱 => mailto:
-    """
-
-    # 👉 不转义，直接处理富文本（text 已经是纯文本了）
-    # 若数据库存储有恶意 HTML，请预处理
-    text = re.sub(r'(https?://[^\s]+\.(?:png|jpg|jpeg|gif|webp))',
-                  r'<img src="\1" class="inline-img" loading="lazy">', text)
-
-    text = re.sub(r'(https?://[^\s]+\.(?:mp4|webm|mov))',
-                  r'<video src="\1" class="inline-video" controls></video>', text)
-
-    text = re.sub(r'(https?://[^\s]+)',
-                  lambda m: f'<a class="link-card" href="{m.group(0)}" target="_blank" rel="noopener">{m.group(0)}</a>', text)
-
-    text = re.sub(r'\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b',
-                  r'<a href="mailto:\1">\1</a>', text)
-
-    text = re.sub(r'@(\w+)',
-                  r'<a href="/user/\1" class="mention">@\1</a>', text)
-
-    text = re.sub(r'#(\w+)',
-                  r'<span class="hashtag">#\1</span>', text)
-
-    return Markup(text)  # 👈 标记为“安全 HTML”
+    """Escape post text first, then turn URLs, mentions and tags into HTML."""
+    if not text:
+        return Markup('')
+    pattern = re.compile(
+        r'https?://[^\s<>"\']+|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|@\w+|#\w+',
+        re.IGNORECASE,
+    )
+    parts = []
+    last = 0
+    for match in pattern.finditer(text):
+        parts.append(str(escape(text[last:match.start()])))
+        token = match.group(0)
+        trail = ''
+        while token and token[-1] in '.,;:!?)]':
+            trail = token[-1] + trail
+            token = token[:-1]
+        parts.append(_render_rich_token(token) if token else '')
+        parts.append(str(escape(trail)))
+        last = match.end()
+    parts.append(str(escape(text[last:])))
+    return Markup(''.join(parts))
 
 IMAGE_QUALITY = 22
 REMOTE_LINKS_FILENAME = 'media_links.yaml'
@@ -891,7 +901,8 @@ def post_detail(title):
         abort(403)
 
     user_id = post.user_id
-    author = User.query.get(user_id).username
+    author_user = db.session.get(User, user_id)
+    author = author_user.username if author_user else '匿名'
 
     # 构建帖子文件夹路径：static/neibr/user_id/post_id
     folder_path = os.path.join(_neibr_storage_dir(), str(user_id), str(post.id))
@@ -1067,7 +1078,8 @@ def _handle_edit_post(post: Post):
         is_hidden = request.form.get('is_hidden')
         post.is_hidden = True if is_hidden else False
 
-        author_name = User.query.get(post.user_id).username
+        author_user = db.session.get(User, post.user_id)
+        author_name = author_user.username if author_user else '匿名'
         file_content = build_post_file_content(post, body_text, author_name, updated_at=datetime.utcnow())
         with open(os.path.join(folder_path, 'post.txt'), 'w') as f:
             f.write(file_content)
@@ -1096,9 +1108,13 @@ def _handle_edit_post(post: Post):
             _start_background_compression(compress_paths)
 
         delete_files = request.form.getlist('delete_files')
+        protected = {'post.txt', 'comments.yaml', REMOTE_LINKS_FILENAME}
         for filename in delete_files:
+            filename = os.path.basename(filename or '')
+            if not filename or filename in protected or filename.startswith('.'):
+                continue
             file_path = os.path.join(folder_path, filename)
-            if os.path.exists(file_path):
+            if os.path.isfile(file_path):
                 os.remove(file_path)
 
         remote_links = sanitize_remote_links(remote_links_raw)
@@ -1234,21 +1250,24 @@ def delete_post(post_id):
 
 
 @neibr_bp.route('/media/<user_id>/<post_id>/<path:filename>')
+@login_required
 def media_file(user_id, post_id, filename):
-    # 1) 校验后缀
+    if not str(user_id).isdigit() or not str(post_id).isdigit():
+        abort(404)
+    filename = os.path.basename(filename or '')
     if not allowed_file(filename):
-        abort(403)  # Forbidden，不在白名单里的类型一律拒绝
+        abort(403)
 
-    # 2) 计算真实路径
-    base = _neibr_storage_dir()
-    folder = os.path.join(base, user_id, post_id)
+    post = db.session.get(Post, int(post_id))
+    if not post or str(post.user_id) != str(user_id):
+        abort(404)
+    if post.is_hidden and post.user_id != current_user.id and not getattr(current_user, 'is_admin', False):
+        abort(403)
+
+    folder = os.path.join(_neibr_storage_dir(), str(user_id), str(post_id))
     full_path = os.path.join(folder, filename)
-
-    # 3) 文件存在性检查
     if not os.path.isfile(full_path):
         abort(404)
-
-    # 4) 安全地发送文件
     return send_from_directory(folder, filename)
 
 

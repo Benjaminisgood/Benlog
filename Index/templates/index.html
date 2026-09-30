@@ -12,7 +12,7 @@
           <path d="M20 20l-2.6-2.6"></path>
         </svg>
       </span>
-      <form action="{{ url_for('index.search') }}" method="get">
+      <form action="{{ url_for('index.search') }}" method="get" id="site-search">
         <input type="text" name="q" value="{{ request.args.get('q', '') }}" placeholder="支持站内搜索，暂不支持 AGI 和 LLM 聊天" required>
       </form>
     </div>
@@ -23,7 +23,7 @@
       {% for link in quick_links %}
         <article class="quick-card" data-quick-card>
           <div class="quick-card-surface">
-            <a href="{{ link.url }}" class="quick-card-link" target="_blank" rel="noopener">
+            <a href="{{ link.url|safe_href }}" class="quick-card-link" {% if link.url|safe_href != '#' %}target="_blank" rel="noopener"{% endif %}>
               <div class="quick-card-art" aria-hidden="true">
                 {% if link.icon %}
                   <img src="{{ link.icon }}" alt="" class="quick-icon" loading="lazy" decoding="async">
@@ -45,7 +45,7 @@
               {% if link.children %}
               <div class="quick-card-popup-block quick-card-popup-links">
                 {% for child in link.children %}
-                <a href="{{ child.url }}" class="quick-popup-chip" target="_blank" rel="noopener">{{ child.label }}</a>
+                <a href="{{ child.url|safe_href }}" class="quick-popup-chip" target="_blank" rel="noopener">{{ child.label }}</a>
                 {% endfor %}
               </div>
               {% endif %}
@@ -61,7 +61,7 @@
     <p class="friend-links">
       <span>友情链接：</span>
       {% for link in friend_links %}
-        <a href="{{ link.url }}" target="_blank" rel="noopener">{{ link.label }}</a>{% if not loop.last %}<span>·</span>{% endif %}
+        <a href="{{ link.url|safe_href }}" target="_blank" rel="noopener">{{ link.label }}</a>{% if not loop.last %}<span>·</span>{% endif %}
       {% endfor %}
     </p>
   {% endif %}

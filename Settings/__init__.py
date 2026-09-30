@@ -23,6 +23,9 @@ def init_app(app):
     # 定义用户加载函数
     @login_manager.user_loader
     def load_user(user_id):
-        from ..Settings.models import User
-        return User.query.get(int(user_id))
+        from Settings.models import User
+        try:
+            return db.session.get(User, int(user_id))
+        except (TypeError, ValueError):
+            return None
     

@@ -1,3 +1,3 @@
 <div class="link-element">
-  <a href="{{ elm.href }}" target="_blank">{{ elm.text or elm.href }}</a>
+  <a href="{{ elm.href|safe_href }}" target="_blank" rel="noopener">{{ elm.text or elm.href }}</a>
 </div>
