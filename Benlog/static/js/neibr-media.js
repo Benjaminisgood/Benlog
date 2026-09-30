@@ -787,7 +787,7 @@
         method,
         headers: {
           'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': (document.querySelector('meta[name="csrf-token"]') || {}).content || '',
         },
         credentials: 'same-origin',
       };

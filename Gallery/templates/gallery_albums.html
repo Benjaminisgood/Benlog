@@ -3,6 +3,20 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/gallery.css') }}">
 {% endblock %}
 {% block content %}
+<div class="page-shell">
+  {% if can_manage %}
+  <section class="card-panel form-card">
+    <h2>新建相册并上传</h2>
+    <p>文件保存在本机 instance/Gallery/media。允许：{{ allowed_extensions }}。</p>
+    <form method="post" enctype="multipart/form-data" class="form-stack">
+      <label for="album">相册名称</label>
+      <input type="text" name="album" id="album" class="form-control" required placeholder="例如 trip">
+      <label for="file">文件</label>
+      <input type="file" name="file" id="file" multiple required>
+      <button type="submit" class="glass-btn">上传</button>
+    </form>
+  </section>
+  {% endif %}
 <div class="album-stream">
   <div class="grid-sizer"></div>
   {% for album in albums %}
@@ -24,6 +38,7 @@
       </a>
     </div>
   {% endfor %}
+</div>
 </div>
 
 <!-- 必要依赖 -->

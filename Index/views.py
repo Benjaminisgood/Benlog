@@ -2,23 +2,22 @@
 from flask import render_template, abort, request, jsonify, current_app
 from flask import Blueprint, redirect, url_for, flash
 import requests
-import urllib3
 from . import index_bp
 import os
 from os.path import join
-import openai
 import random  # 引入 random 模块
 import logging
 import json
 from flask_login import login_required, current_user
 import re
 import frontmatter
-import markdown
 from datetime import datetime
 from html.parser import HTMLParser
 from markupsafe import Markup, escape
 from Neibr.models import Post as NeibrPost
+from Settings.extensions import db
 from Settings.models import User
+from Benlog.render import clean_html, is_draft, plain_text_from_markdown
 
 
 def _blog_posts_dir() -> str:
@@ -63,6 +62,19 @@ def _dynamic_links_dir() -> str:
     )
     os.makedirs(path, exist_ok=True)
     return path
+
+
+def _viewer_can_see_drafts() -> bool:
+    return current_user.is_authenticated and (
+        getattr(current_user, 'is_admin', False) or current_user.id == 1
+    )
+
+
+PAGE_NAME_RE = re.compile(r'^[A-Za-z0-9_-]{1,80}$')
+DYNAMIC_COMPONENT_TYPES = {
+    'quote', 'code', 'image', 'html', 'text', 'card', 'gallery',
+    'faq', 'title', 'link', 'flipcard',
+}
 
 
 class _HTMLStripper(HTMLParser):
@@ -155,10 +167,11 @@ def search_blog_posts(query: str):
         try:
             if filename.endswith('.md'):
                 post_data = frontmatter.load(filepath)
+                if is_draft(post_data.metadata) and not _viewer_can_see_drafts():
+                    continue
                 title = post_data.get('title') or slug
                 body_markdown = post_data.content or ''
-                html_content = markdown.markdown(body_markdown)
-                plain_text = strip_html(html_content)
+                plain_text = plain_text_from_markdown(body_markdown)
                 tags = post_data.get('tags')
                 metadata_blob = metadata_to_blob(post_data.metadata)
                 search_blob = ' '.join(filter(None, [title, plain_text, metadata_blob]))
@@ -221,10 +234,11 @@ def search_edu_notes(query: str):
         try:
             if filename.endswith('.md'):
                 note_data = frontmatter.load(filepath)
+                if is_draft(note_data.metadata) and not _viewer_can_see_drafts():
+                    continue
                 title = note_data.get('title') or slug
                 body_markdown = note_data.content or ''
-                html_content = markdown.markdown(body_markdown)
-                plain_text = strip_html(html_content)
+                plain_text = plain_text_from_markdown(body_markdown)
                 tags = note_data.get('tags')
                 metadata_blob = metadata_to_blob(note_data.metadata)
                 search_blob = ' '.join(filter(None, [title, plain_text, metadata_blob]))
@@ -316,7 +330,7 @@ def search_neibr_posts(query: str):
             continue
 
         if post.user_id not in user_cache:
-            user_cache[post.user_id] = User.query.get(post.user_id)
+            user_cache[post.user_id] = db.session.get(User, post.user_id)
 
         author = user_cache[post.user_id].username if user_cache[post.user_id] else '匿名'
         snippet = build_snippet(search_blob, query)
@@ -391,24 +405,29 @@ def search():
 
 @index_bp.route('/<page>', methods=['GET'])
 def dynamic_page(page):
-    """
-    公共预览：读取 JSON，按数字键排序组装组件列表，
-    filename 退化为 URL 中的 page 参数
-    """
+    """公共预览：读取 JSON，按数字键排序组装组件列表。"""
+    if not PAGE_NAME_RE.match(page or ''):
+        abort(404)
     json_path = os.path.join(_dynamic_pages_dir(), f"{page}.json")
-    if not os.path.exists(json_path):
+    if not os.path.isfile(json_path):
         abort(404, "页面未找到")
 
-    data = json.load(open(json_path, 'r', encoding='utf-8'))
-    # 取 filename，若无则用 URL 参数
+    with open(json_path, 'r', encoding='utf-8') as handle:
+        data = json.load(handle)
     filename = data.get('filename', page)
 
-    # 按数字键排序，构建页面组件列表
-    page_components = [
-        data[key] for key in sorted(
-            [k for k in data if k.isdigit()], key=lambda x: int(x)
-        )
-    ]
+    page_components = []
+    for key in sorted([k for k in data if str(k).isdigit()], key=lambda x: int(x)):
+        comp = data[key]
+        if not isinstance(comp, dict):
+            continue
+        ctype = comp.get('type')
+        if ctype not in DYNAMIC_COMPONENT_TYPES:
+            continue
+        if ctype == 'html':
+            comp = dict(comp)
+            comp['content'] = clean_html(comp.get('content') or '')
+        page_components.append(comp)
 
     return render_template(
         'dynamic_viewer.html',
@@ -424,6 +443,10 @@ def edit_dynamic_page(page):
       GET  渲染编辑表单
       POST 保存 JSON，并在文件名（filename）变更时重命名文件
     """
+    if not PAGE_NAME_RE.match(page or ''):
+        abort(404)
+    if not _viewer_can_see_drafts():
+        abort(403)
     # 旧的 JSON 路径
     old_json_path = os.path.join(_dynamic_pages_dir(), f"{page}.json")
     if not os.path.exists(old_json_path):
@@ -528,44 +551,39 @@ def edit_dynamic_page(page):
 
 logging.basicConfig(level=logging.INFO)
 
-api_key = os.getenv("OPENAI_API_KEY")
-if not api_key:
-    logging.warning("OPENAI_API_KEY 环境变量未设置，请先设置！")
 
-@index_bp.route('/llm', methods=['POST'])
+@index_bp.route('/llm', methods=['GET', 'POST'])
+@login_required
 def llm_query():
-    query = request.form.get('query')
-    # 1. 设置正确的 API URL（使用 OpenAI 的 completions 端点）
-    gpt_api_url = "https://api.openai.com/v1/completions"
-
-    # 2. 构造 HTTP Header，包含 API Key
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
-    
-    # 3. 构造 payload，参数可以根据需要进行调整
-    payload = {
-        "model": "text-davinci-003",  # 或者你所使用的其他模型，例如 gpt-3.5-turbo (注意对应调用接口不同)
-        "prompt": query,
-        "max_tokens": 150,
-        #"temperature": 0.7
-    }
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-    try:
-        # 4. 发送请求到 OpenAI API，并解析返回结果
-        response = requests.post(gpt_api_url, headers=headers, json=payload, verify=False)
-        response.raise_for_status()
-        data = response.json()
-        if "choices" in data and len(data["choices"]) > 0:
-            answer = data["choices"][0]["text"].strip()
+    """可选的问答页。没有 API key 时不会访问外网。"""
+    query = (request.form.get('query') or '').strip()
+    answer = ''
+    api_key = current_app.config.get('OPENAI_API_KEY') or ''
+    if request.method == 'POST':
+        if not api_key:
+            answer = '还没有配置 OPENAI_API_KEY，所以这里不会发出请求。'
+        elif not query:
+            answer = '请先写一个问题。'
         else:
-            answer = "没有返回答案"
-    except Exception as e:
-        answer = "请求出错：" + str(e)
-    
-    return render_template('llm.html', query=query, answer=answer)
+            url = current_app.config.get('OPENAI_BASE_URL', 'https://api.openai.com/v1') + '/chat/completions'
+            payload = {
+                'model': current_app.config.get('OPENAI_MODEL') or 'gpt-4o-mini',
+                'messages': [{'role': 'user', 'content': query}],
+                'max_tokens': 400,
+            }
+            headers = {
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json',
+            }
+            try:
+                response = requests.post(url, headers=headers, json=payload, timeout=30)
+                response.raise_for_status()
+                data = response.json()
+                answer = data['choices'][0]['message']['content'].strip()
+            except Exception as exc:
+                current_app.logger.warning('LLM 请求失败: %s', exc)
+                answer = '请求失败。请检查 API 地址、模型和密钥。'
+    return render_template('llm.html', query=query, answer=answer, configured=bool(api_key))
 
 
 # Helper: 确保目录和文件存在

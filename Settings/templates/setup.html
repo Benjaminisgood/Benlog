@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block extra_styles %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+{% block content %}
+<section class="auth-wrapper">
+  <article class="auth-card glass-card">
+    <header>
+      <p class="auth-badge">首次使用</p>
+      <h1>创建管理员</h1>
+      <p class="auth-sub">数据库里还没有账号。设置邮箱、用户名和密码后，这个页面会关闭。密码不会写进代码。</p>
+    </header>
+    <form method="POST" class="auth-form">
+      <label for="email">邮箱</label>
+      <input type="email" name="email" id="email" required placeholder="name@example.com">
+
+      <label for="username">用户名</label>
+      <input type="text" name="username" id="username" required placeholder="你的名字" autocomplete="username">
+
+      <label for="password">密码</label>
+      <input type="password" name="password" id="password" required minlength="8" placeholder="至少 8 位" autocomplete="new-password">
+
+      <label for="confirm_password">再输入一次</label>
+      <input type="password" name="confirm_password" id="confirm_password" required minlength="8" autocomplete="new-password">
+
+      <button type="submit" class="primary-btn full">创建并继续</button>
+    </form>
+  </article>
+</section>
+{% endblock %}

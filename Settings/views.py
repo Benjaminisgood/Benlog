@@ -1,29 +1,16 @@
 from . import setting_bp
-from flask import app, request, send_from_directory
 from Settings.models import User
-from flask import Blueprint, request, render_template, redirect, url_for, flash
-from flask_login import login_user, logout_user
-from werkzeug.security import generate_password_hash, check_password_hash
-from Settings.models import User
+from flask import request, render_template, redirect, url_for, flash, session, abort, current_app
+from flask_login import login_user, logout_user, login_required, current_user
+from werkzeug.security import check_password_hash
 from Settings.extensions import db
-from flask_login import login_required, current_user
+from Benlog.render import safe_href
+from Benlog.security import hash_password, password_is_acceptable, safe_next_url
 import os
-import shutil
-from werkzeug.utils import secure_filename
 import json
-from flask import session
-import time
 import re
-from datetime import timedelta
-from flask import Blueprint, render_template, current_app
-from pathlib import Path
-
-
-
-# --------------- 视图文件顶部新增导入 ---------------
 from pathlib import Path
 from Gallery.oss_utils import load_visible_albums
-# --------------------------------------------------
 
 def _resolve_storage_path(config_key: str, *fallback_parts: str) -> Path:
     value = current_app.config.get(config_key)
@@ -130,6 +117,12 @@ def edit_user(user_id):
         user.username = request.form.get('username')
         user.email = request.form.get('email')
         user.is_admin = True if request.form.get('is_admin') == 'on' else False
+        new_password = request.form.get('password') or ''
+        if new_password:
+            if not password_is_acceptable(new_password, user.username or ''):
+                flash('密码至少 8 位，且不能与用户名相同。', 'error')
+                return render_template('edit_user.html', user=user)
+            user.password = hash_password(new_password)
         db.session.commit()
         flash("用户信息已更新！", "success")
         return redirect(url_for('setting.manage_users'))
@@ -161,12 +154,11 @@ def add_user():
             flash("用户名或邮箱已存在", "error")
             return render_template('add_user.html')
 
-        # 创建 User 对象
         user = User(email=email, username=username, is_admin=is_admin)
-
-        # 对密码进行哈希化
-        if password:
-            user.password = generate_password_hash(password, method='pbkdf2:sha256')
+        if not password_is_acceptable(password, username):
+            flash('密码至少 8 位，且不能与用户名相同。', 'error')
+            return render_template('add_user.html')
+        user.password = hash_password(password)
 
         # 将用户对象添加到数据库
         db.session.add(user)
@@ -247,6 +239,38 @@ def delete_user(user_id):
 #########################################################################################
 #app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=30)
 
+@setting_bp.route('/setup', methods=['GET', 'POST'])
+def setup():
+    """数据库里还没有用户时，创建第一位管理员。创建后此页关闭。"""
+    if User.query.first():
+        abort(404)
+    if request.method == 'POST':
+        email = (request.form.get('email') or '').strip()
+        username = (request.form.get('username') or '').strip()
+        password = request.form.get('password') or ''
+        confirm_password = request.form.get('confirm_password') or ''
+        if not all([email, username, password, confirm_password]):
+            flash('所有字段均为必填项。', 'error')
+        elif password != confirm_password:
+            flash('两次输入的密码不一致。', 'error')
+        elif not password_is_acceptable(password, username):
+            flash('密码至少 8 位，且不能与用户名相同。', 'error')
+        elif User.query.filter((User.email == email) | (User.username == username)).first():
+            flash('邮箱或用户名已存在。', 'error')
+        else:
+            user = User(
+                email=email,
+                username=username,
+                password=hash_password(password),
+                is_admin=True,
+            )
+            db.session.add(user)
+            db.session.commit()
+            flash('管理员已创建，现在可以登录。', 'success')
+            return redirect(url_for('setting.login'))
+    return render_template('setup.html')
+
+
 @setting_bp.route('/register', methods=['GET', 'POST'])
 def register():
     """
@@ -258,6 +282,9 @@ def register():
         GET - 渲染 register.html 模板。
         POST - 成功则重定向到登录页面，失败则重新渲染表单。
     """
+    if not current_app.config.get('ALLOW_REGISTRATION'):
+        flash('当前未开放注册。请让管理员在后台添加账号。', 'error')
+        return redirect(url_for('setting.login'))
     if request.method == 'POST':
         email = request.form.get('email')
         username = request.form.get('username')
@@ -270,11 +297,14 @@ def register():
         if password != confirm_password:
             flash('密码不匹配。', 'error')
             return render_template('register.html')
+        if not password_is_acceptable(password, username):
+            flash('密码至少 8 位，且不能与用户名相同。', 'error')
+            return render_template('register.html')
         if User.query.filter_by(email=email).first() or User.query.filter_by(username=username).first():
             flash('邮箱或用户名已存在。', 'error')
             return render_template('register.html')
 
-        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+        hashed_password = hash_password(password)
         user = User(email=email, username=username, password=hashed_password)
         db.session.add(user)
         db.session.commit()
@@ -305,8 +335,8 @@ def login():
             login_user(user, remember=remember)
             session.permanent = True
 
-            next_page = request.args.get('next')  # 获取 next 参数
-            return redirect(next_page or url_for('setting.index'))  # 如果 next 存在就重定向到 next 页面，否则跳转到后台首页
+            next_page = safe_next_url(request.args.get('next'))
+            return redirect(next_page or url_for('setting.index'))
         flash('邮箱或密码错误。', 'error')
     
     return render_template('login.html')  # 确保使用的是 login.html 页面，而不是 index.html
@@ -419,6 +449,8 @@ def delete_dynamic_page(page):
     """
     删除 JSON 页面文件，仅管理员或 id==1 用户可操作
     """
+    if not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', page or ''):
+        abort(404)
     if not (current_user.is_admin or current_user.id == 1):
         abort(403)
     file_path = os.path.join(_dynamic_pages_dir(), f"{page}.json")
@@ -520,7 +552,10 @@ def save_quick_links(links):
 
 # 显示所有快捷链接，并支持删除和添加
 @setting_bp.route('/quick-links', methods=['GET', 'POST'])
+@login_required
 def manage_quick_links():
+    if not (getattr(current_user, 'is_admin', False) or current_user.id == 1):
+        abort(403)
     quick_links = load_quick_links()  # Load the quick links
 
     # Handle form submission for adding, updating or deleting quick links
@@ -567,9 +602,15 @@ def manage_quick_links():
                 payload["children"] = child_pairs
 
             if action == 'add':
+                if safe_href(url) == '#':
+                    flash('链接只接受站内路径，或以 http/https 开头的地址。', 'error')
+                    return redirect(url_for('setting.manage_quick_links'))
                 quick_links.append(payload)
                 save_quick_links(quick_links)
             elif action == 'update' and index is not None and 0 <= index < len(quick_links):
+                if safe_href(url) == '#':
+                    flash('链接只接受站内路径，或以 http/https 开头的地址。', 'error')
+                    return redirect(url_for('setting.manage_quick_links'))
                 quick_links[index] = payload
                 save_quick_links(quick_links)
             else:
@@ -611,7 +652,10 @@ def save_friend_links(links):
 
 # 显示所有友链，并支持删除和添加
 @setting_bp.route('/friend-links', methods=['GET', 'POST'])
+@login_required
 def manage_friend_links():
+    if not (getattr(current_user, 'is_admin', False) or current_user.id == 1):
+        abort(403)
     friend_links = load_friend_links()  # Load the friend links
 
     # Handle form submission for adding or deleting links
@@ -628,6 +672,9 @@ def manage_friend_links():
                 save_friend_links(friend_links)  # Save the updated list
 
         elif url and label:  # Handle add (adding a new link)
+            if safe_href(url) == '#':
+                flash('链接只接受站内路径，或以 http/https 开头的地址。', 'error')
+                return redirect(url_for('setting.manage_friend_links'))
             friend_links.append({"url": url, "label": label})
             save_friend_links(friend_links)  # Save the updated list
 
@@ -657,8 +704,12 @@ from Gallery.oss_utils import list_objects, load_visible_albums, save_visible_al
 def manage_gallery_visibility():
     from Gallery.oss_utils import list_objects, load_visible_albums, save_visible_albums
 
-    # 获取 OSS 所有路径前缀
-    keys, _ = list_objects(prefix='', max_keys=1000)
+    try:
+        keys, _ = list_objects(prefix='', max_keys=1000)
+    except Exception as exc:
+        current_app.logger.exception('读取图库失败')
+        flash(f'读取图库失败：{exc}', 'error')
+        keys = []
     albums = sorted({key.split('/')[0] + '/' for key in keys if '/' in key})
 
     # 加载已保存的显示配置

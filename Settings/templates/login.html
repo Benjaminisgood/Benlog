@@ -26,8 +26,15 @@
     </form>
 
     <footer class="auth-footer">
-      <span>没有账户？</span>
-      <a href="{{ url_for('setting.register') }}">立即注册</a>
+      {% if needs_setup %}
+        <span>还没有管理员？</span>
+        <a href="{{ url_for('setting.setup') }}">创建第一位管理员</a>
+      {% elif allow_registration %}
+        <span>没有账户？</span>
+        <a href="{{ url_for('setting.register') }}">立即注册</a>
+      {% else %}
+        <span>账号由管理员创建。</span>
+      {% endif %}
     </footer>
   </article>
 </section>

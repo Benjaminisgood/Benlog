@@ -1,17 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ title if title else "My Personal Site" }}</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{{ title if title else "Benlog" }}</title>
   <script>
     (function() {
       const theme = localStorage.getItem('theme') || 'light';
       document.documentElement.setAttribute('data-theme', theme);
     })();
   </script>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}" type="image/png">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/content.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/article.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/editor.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='images/logo.svg') }}" type="image/svg+xml">
   {% block extra_styles %}{% endblock %}
 </head>
 <body data-user-id="{{ current_user.id }}">
@@ -66,7 +75,7 @@
     <nav class="glass-nav">
       <div class="nav-brand">
         <a href="{{ url_for('index.home') }}" class="brand-link">
-          <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="brand-logo">
+          <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" class="brand-logo">
           <span class="brand-title">Benlog</span>
         </a>
       </div>
@@ -113,20 +122,24 @@
   <script defer src="{{ url_for('static', filename='js/flash.js') }}"></script>
   <script defer src="{{ url_for('static', filename='js/theme-toggle.js') }}"></script>
   <script defer src="{{ url_for('static', filename='js/header-scroll.js') }}"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-  <script defer src="{{ url_for('static', filename='js/pseudo-bg.js') }}"></script>
   <script defer src="{{ url_for('static', filename='js/clickimg.js') }}"></script>
   <script defer src="{{ url_for('static', filename='js/main.js') }}"></script>
-
   <script>
-    MathJax = {
-      tex: {
-        packages: {'[+]': ['mhchem']}
+    (function () {
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var narrow = window.matchMedia('(max-width: 720px)').matches;
+      if (reduce || narrow) {
+        return;
       }
-    };
-    </script>
-    <script type="text/javascript" async
-      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
-    </script>
+      var three = document.createElement('script');
+      three.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js';
+      three.onload = function () {
+        var bg = document.createElement('script');
+        bg.src = {{ url_for('static', filename='js/pseudo-bg.js')|tojson }};
+        document.body.appendChild(bg);
+      };
+      document.body.appendChild(three);
+    })();
+  </script>
 </body>
 </html>
